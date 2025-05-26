@@ -45,7 +45,7 @@ This section guides you through the core workflow of ​PTMdecoder​ for deconv
 
 Required files:
 
-(Example data have been provided along with the  standalone executable for all the following three types of files)
+(Example data for all the following three types of files is provided along with the standalone executable. After installation, you can access these files in the ***demo*** folder located in the application’s installation directory)
 
 - **Mass Spectra Files**: Raw spectra in mgf/ms1/ms2 formats (pre-converted via [pParse](https://pfind.net/software/pParse/index.html)). See User Manual for the pParse version and usage.
 - **​Search Results File**: currently supports only a custom "peptide spectra list" (.txt) format. See User Manual for the details about the format.
