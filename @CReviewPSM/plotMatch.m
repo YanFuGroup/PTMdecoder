@@ -30,6 +30,7 @@ if length(precursor_index) > 1
 end
 
 % Plot 
+figure
 set(gcf,'position',[50,50,900,600], 'color','white')
 set(gca,'LooseInset',get(gca,'TightInset'));
 hold on

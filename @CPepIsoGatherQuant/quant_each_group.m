@@ -114,7 +114,7 @@ while idx_PSM <= length(sort_rts)
     XIC_peaks(i_Xp).right_bound = idx_first_rt;
     min_peak_inten = smoothed_intensity(idx_first_rt);
     min_peak_iter = idx_first_rt;
-    for iter_rt = idx_first_rt:length(rt_grid)
+    for iter_rt = idx_first_rt+1:length(rt_grid)
         % find check whether reach the next rt of identified MS/MS precursor
         if idx_PSM<length(sort_rts) && rt_grid(iter_rt)>sort_rts(idx_PSM+1)
             XIC_peaks(i_Xp).right_bound = iter_rt;
@@ -148,7 +148,7 @@ while idx_PSM <= length(sort_rts)
     XIC_peaks(i_Xp).left_bound = idx_first_rt;
     min_peak_inten = smoothed_intensity(idx_first_rt);
     min_peak_iter = idx_first_rt;
-    for iter_rt = idx_first_rt:-1:1
+    for iter_rt = idx_first_rt-1:-1:1
         % update the local maximum
         if max_peak_inten < smoothed_intensity(iter_rt)
             max_peak_inten = smoothed_intensity(iter_rt);
