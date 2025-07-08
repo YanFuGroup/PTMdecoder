@@ -30,7 +30,6 @@ fgetl(fin);
 fgetl(fin);
 fgetl(fin);
 prot_name = '';
-rt_ranges_temp = struct('rt_start',{},'rt_end',{},'check_label',{});
 while ~feof(fin)
     strline = fgetl(fin);
     % Show progress
@@ -79,9 +78,6 @@ obj.m_cMgfDatasetIO = CMgfDatasetIO;
 obj.m_cMgfDatasetIO.Init(obj.m_specPath);
 obj.m_cMgfDatasetIO.SetMap();
 obj.m_cMgfDatasetIO.SetFidmap();
-
-% Initial the fasta IO
-obj.m_cFastaIO = CFastaIO(obj.m_fastaFile, obj.m_regular_express);
 
 % Read and process
 fin = fopen(checked_pep_path, 'r');
@@ -196,26 +192,6 @@ end
 
 
 
-% Add one element to peptide -> protein map
-function pep_prot_map = add_one_to_pep_prot_map(pep_prot_map,key_mod_pep,prot_name)
-% Input:
-%   pep_rtrange_map
-%       the modified peptide -> retention time range structure
-%   key_mod_pep
-%       the modified peptide name
-%   rt_ranges_temp
-%       the retention time ranges structure
-
-if isempty(key_mod_pep) || isempty(prot_name)
-    return;
-end
-
-% Add one record
-pep_prot_map(key_mod_pep) = prot_name;
-end
-
-
-
 % Get the rt range and check label
 function [rt_left, rt_right, check_label] = get_rt_range_check_label(strline)
 % Input:
@@ -243,27 +219,6 @@ end
 rt_left = numbers(1);
 rt_right = numbers(2);
 check_label = numbers(4);
-end
-
-
-
-% Add one rt ranges to the pep_rtrange struct
-function pep_rtrange_map = add_one_to_pep_rtrange_map(pep_rtrange_map,key_mod_pep,rt_ranges_temp)
-% Input:
-%   pep_rtrange_map
-%       the modified peptide -> retention time range structure
-%   key_mod_pep
-%       the modified peptide name
-%   rt_ranges_temp
-%       the retention time ranges structure
-
-% Skip the first line calling or empty-range peptide.
-if isempty(key_mod_pep) || isempty(rt_ranges_temp)
-    return;
-end
-
-% Create a new peptide record
-pep_rtrange_map(key_mod_pep) = rt_ranges_temp;
 end
 
 

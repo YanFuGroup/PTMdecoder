@@ -72,9 +72,11 @@ classdef CMSMSPepDeconv
                 obj.m_ms2_tolerance = ms2_tolerance;
                 obj.m_alpha = alpha;
                 obj.m_resFilterThres = resFilterThres;
-                obj.m_ionTypes = ionTypes;
                 obj.m_enzyme = enzyme;
                 obj.m_outputDir = outputDir;
+                if nargin >= 17
+                    obj.m_ionTypes = ionTypes;
+                end
                 if nargin >= 18
                     obj.m_checked_peptides_res_path = checked_peptides_res_path;
                 end
