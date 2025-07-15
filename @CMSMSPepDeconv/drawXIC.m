@@ -24,52 +24,12 @@ else
     checked_pep_path = obj.m_checked_peptides_res_path;
 end
 
-fin = fopen(checked_pep_path, 'r');
-if fin < 0
-    error(['Cannot open the checked peptide level result:"',checked_pep_path,'"!']);
+pep_res_reader = CPepResReader();
+pep_res_reader = pep_res_reader.read_from_pep_res_file(checked_pep_path);
+pep_rtrange_map = pep_res_reader.get_pep_rtrange_map();
+if isempty(pep_rtrange_map)
+    error(['The checked peptide result file "', checked_pep_path, '" is empty!']);
 end
-file_total_length = dir(checked_pep_path).bytes;
-if file_total_length == 0
-    fprintf(['Warning: The file "', checked_pep_path, '" is empty']);
-end
-print_progress = CPrintProgress(file_total_length);
-fprintf('Reading the checked peptide results...');
-
-% Initial the [mod_pep -> rt_range] data structure
-pep_rtrange_map = containers.Map();
-
-% Read the file and construct the [mod_pep -> rt_range] data structure
-% Skip the first three lines (Header lines)
-fgetl(fin);
-fgetl(fin);
-fgetl(fin);
-key_mod_pep = '';
-rt_ranges_temp = struct('rt_start',{},'rt_end',{},'check_label',{});
-while ~feof(fin)
-    strline = fgetl(fin);
-    % Show progress
-    now_bytes = ftell(fin);
-    print_progress = print_progress.update_show(now_bytes);
-    if isempty(strline)
-        continue;
-    elseif strline(1) == '@'
-        % Record one retention time range line
-        rt_ranges_temp = add_one_to_rt_ranges(rt_ranges_temp, strline);
-    elseif strline(1) == '*'
-        % Record one IMP line
-        pep_rtrange_map = add_one_to_pep_rtrange_map(pep_rtrange_map,key_mod_pep,rt_ranges_temp);
-        key_mod_pep = get_mod_pep_from_string(strline);
-        rt_ranges_temp = struct('rt_start',{},'rt_end',{},'check_label',{});
-    else
-        % Record one protein-site line
-        continue;
-    end
-end
-% Record once more at the end of the file
-pep_rtrange_map = add_one_to_pep_rtrange_map(pep_rtrange_map,key_mod_pep,rt_ranges_temp);
-fclose(fin);
-print_progress.last_update();
-fprintf('done.\n');
 
 %% Read the msms results and requantify the IMPs
 if isempty(obj.m_msms_res_path)
@@ -139,70 +99,6 @@ print_progress.last_update();
 fprintf('done.\n');
 % fclose(fin);
 obj.m_cMgfDatasetIO.CloseAllFile();
-end
-
-
-
-% Add one rt range to rt ranges
-function rt_ranges = add_one_to_rt_ranges(rt_ranges, strline)
-% Input:
-%   rt_ranges
-%       rt ranges of current IMP
-%   strline
-%       the current line
-
-reg_exp_pat = '\d*\.?\d+';
-% Use regexp to find all matches
-matches = regexp(strline, reg_exp_pat, 'match');
-numbers = str2double(matches);
-
-% Check the size of the input numbers
-if length(numbers) < 4
-    error(['The line: "',strline,'" representing the RT ranges are in an unexpected format!']);
-end
-
-% Add one rt range to the rt ranges struct
-idx = length(rt_ranges) + 1;
-rt_ranges(idx).rt_start = numbers(1);
-rt_ranges(idx).rt_end = numbers(2);
-rt_ranges(idx).check_label = numbers(4);
-end
-
-
-
-% Add one rt ranges to the pep_rtrange struct
-function pep_rtrange_map = add_one_to_pep_rtrange_map(pep_rtrange_map,key_mod_pep,rt_ranges_temp)
-% Input:
-%   pep_rtrange_map
-%       the modified peptide -> retention time range structure
-%   key_mod_pep
-%       the modified peptide name
-%   rt_ranges_temp
-%       the retention time ranges structure
-
-% Skip the first line calling or empty-range peptide.
-if isempty(key_mod_pep) || isempty(rt_ranges_temp)
-    return;
-end
-
-% Create a new peptide record
-pep_rtrange_map(key_mod_pep) = rt_ranges_temp;
-end
-
-
-
-% Get the key of mod peptide with a string
-function key_mod_pep = get_mod_pep_from_string(strline)
-% Input:
-%   strline
-%       the input string, read from report_peptide_all_checked
-% Output:
-%   key_mod_pep
-%       the modified peptide strings
-
-segment = regexp(strline,'\t','split');
-% Need the modified peptide (2), charge (3) and dataset name (4)
-key_mod_pep = [segment{2},'_',segment{3},'_',segment{4}];
 end
 
 

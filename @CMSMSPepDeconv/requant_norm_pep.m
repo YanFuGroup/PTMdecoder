@@ -26,6 +26,7 @@ pep_prot_map = containers.Map();
 
 % Read the file and construct the [mod_pep -> rt_range] data structure
 % Skip the first three lines (Header lines)
+% TODO: Use CPepResReader
 fgetl(fin);
 fgetl(fin);
 fgetl(fin);
@@ -94,6 +95,7 @@ fprintf('Re-quantifying at peptide level...')
 
 % Read the file and construct the [mod_pep -> rt_range] data structure
 % Skip the first three lines (Header lines)
+% TODO: Use CPepResReader
 fgetl(fin);
 fgetl(fin);
 fgetl(fin);
