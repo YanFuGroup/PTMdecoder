@@ -5,6 +5,7 @@ if fin < 0
 end
 
 obj.m_pep_res = containers.Map();  % Initialize the overall peptide results
+obj.m_prot_pep_res = {};  % Initialize the protein-peptide mapping as empty cell array
 
 % Read the file and construct the [mod_pep -> rt_range] data structure
 % Skip the first three lines (Header lines)
@@ -19,7 +20,8 @@ dataset_name = '';
 mean_mz = 0;
 lb_mz = 0;
 ub_mz = 0;
-rt_ranges_temp = struct('rt_start',{},'rt_end',{},'check_label',{});
+rt_ranges_temp = struct('rt_start',{},'rt_end',{},'ratio',{},'check_label',{});
+ori_pep_line = '';
 
 while ~feof(fin)
     strline = fgetl(fin);
@@ -27,29 +29,34 @@ while ~feof(fin)
         continue;
     elseif strline(1) == '@'
         % Record one retention time range line
-        [rt_start, rt_end, check_label] = extract_rt_ranges(strline);
-        rt_ranges_temp(end+1) = struct('rt_start', rt_start, 'rt_end', rt_end, 'check_label', check_label); %#ok<AGROW> 
+        [rt_start, rt_end, ratio, check_label] = extract_rt_ranges(strline);
+        rt_ranges_temp(end+1) = struct('rt_start', rt_start, 'rt_end', rt_end, 'ratio', ratio, 'check_label', check_label); %#ok<AGROW> 
     elseif strline(1) == '*'
         % Record one IMP line
-        obj = append_one_pep_rtrange(obj, key_mod_pep, charge_state, dataset_name, mean_mz, lb_mz, ub_mz, rt_ranges_temp);
+        obj = obj.append_one_pep(key_mod_pep, charge_state, dataset_name, mean_mz, lb_mz, ub_mz, rt_ranges_temp, ori_pep_line);
         [key_mod_pep, charge_state, dataset_name, mean_mz, lb_mz, ub_mz] = get_pep_info_from_line(strline);
-        rt_ranges_temp = struct('rt_start',{},'rt_end',{},'check_label',{});
+        % Add peptide to the most recent protein's peptide list
+        if ~isempty(obj.m_prot_pep_res)
+            obj.m_prot_pep_res{end, 2}{end+1} = key_mod_pep;
+        end
+        ori_pep_line = strline;  % Store the original peptide line
+        rt_ranges_temp = struct('rt_start',{},'rt_end',{},'ratio',{},'check_label',{});
     else
         % Record one protein-site line
-        continue;
+        obj.m_prot_pep_res{end+1, 1} = strline;  % Store protein name
+        obj.m_prot_pep_res{end, 2} = {};           % Initialize peptide list
     end
 end
 % Record once more at the end of the file
-obj = append_one_pep_rtrange(obj, key_mod_pep, charge_state, dataset_name, mean_mz, lb_mz, ub_mz, rt_ranges_temp);
+obj = obj.append_one_pep(key_mod_pep, charge_state, dataset_name, mean_mz, lb_mz, ub_mz, rt_ranges_temp, ori_pep_line);
 fclose(fin);
-fprintf('done.\n');
 
 end
 
 
 
 % Add one rt range to rt ranges
-function [rt_start, rt_end, check_label] = extract_rt_ranges(strline)
+function [rt_start, rt_end, ratio, check_label] = extract_rt_ranges(strline)
 % Input:
 %   strline
 %       the current line
@@ -67,6 +74,7 @@ end
 % Extract RT ranges from the string
 rt_start = numbers(1);
 rt_end = numbers(2);
+ratio = numbers(3);
 check_label = numbers(4);
 end
 
