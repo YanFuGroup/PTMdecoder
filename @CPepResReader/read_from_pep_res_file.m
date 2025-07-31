@@ -15,11 +15,13 @@ fgetl(fin);
 
 % Initialize variables
 key_mod_pep = '';
+peptidoform_name = '';
 charge_state = 0;
 dataset_name = '';
 mean_mz = 0;
 lb_mz = 0;
 ub_mz = 0;
+quant_value = 0;
 rt_ranges_temp = struct('rt_start',{},'rt_end',{},'ratio',{},'check_label',{});
 ori_pep_line = '';
 
@@ -33,11 +35,12 @@ while ~feof(fin)
         rt_ranges_temp(end+1) = struct('rt_start', rt_start, 'rt_end', rt_end, 'ratio', ratio, 'check_label', check_label); %#ok<AGROW> 
     elseif strline(1) == '*'
         % Record one IMP line
-        obj = obj.append_one_pep(key_mod_pep, charge_state, dataset_name, mean_mz, lb_mz, ub_mz, rt_ranges_temp, ori_pep_line);
-        [key_mod_pep, charge_state, dataset_name, mean_mz, lb_mz, ub_mz] = get_pep_info_from_line(strline);
+        obj = obj.append_one_pep(key_mod_pep, peptidoform_name, charge_state, dataset_name, ...
+            mean_mz, lb_mz, ub_mz, quant_value, rt_ranges_temp, ori_pep_line);
+        [key_mod_pep, peptidoform_name, charge_state, dataset_name, mean_mz, lb_mz, ub_mz, quant_value] = get_pep_info_from_line(strline);
         % Add peptide to the most recent protein's peptide list
         if ~isempty(obj.m_prot_pep_res)
-            obj.m_prot_pep_res{end, 2}{end+1} = key_mod_pep;
+            obj.m_prot_pep_res{end, 2}{end+1} = peptidoform_name;
         end
         ori_pep_line = strline;  % Store the original peptide line
         rt_ranges_temp = struct('rt_start',{},'rt_end',{},'ratio',{},'check_label',{});
@@ -48,7 +51,8 @@ while ~feof(fin)
     end
 end
 % Record once more at the end of the file
-obj = obj.append_one_pep(key_mod_pep, charge_state, dataset_name, mean_mz, lb_mz, ub_mz, rt_ranges_temp, ori_pep_line);
+obj = obj.append_one_pep(key_mod_pep, peptidoform_name, charge_state, dataset_name, ...
+    mean_mz, lb_mz, ub_mz, quant_value, rt_ranges_temp, ori_pep_line);
 fclose(fin);
 
 end
@@ -81,13 +85,16 @@ end
 
 
 % Get the key of mod peptide with a string
-function [key_mod_pep, charge_state, dataset_name, mean_mz, lb_mz, ub_mz] = get_pep_info_from_line(strline)
+function [key_mod_pep, peptidoform_name, charge_state, dataset_name, ...
+    mean_mz, lb_mz, ub_mz, quant_value] = get_pep_info_from_line(strline)
 % Input:
 %   strline
 %       the input string, read from report_peptide_all_checked
 % Output:
 %   key_mod_pep
 %       the modified peptide strings
+%   peptidoform_name
+%       the modified peptide name
 %   charge_state
 %       the charge_state state of the peptide
 %   dataset_name
@@ -98,13 +105,17 @@ function [key_mod_pep, charge_state, dataset_name, mean_mz, lb_mz, ub_mz] = get_
 %       the lower bound m/z value
 %   ub_mz
 %       the upper bound m/z value
+%   quant_value
+%       the quantification value of the peptide
 
 segment = regexp(strline,'\t','split');
 % Key is the combination of the modified peptide (2), charge_state (3) and dataset name (4)
 key_mod_pep = [segment{2},'_',segment{3},'_',segment{4}];
+peptidoform_name = segment{2};
 charge_state = segment{3};
 dataset_name = segment{4};
 mean_mz = str2double(segment{5});
 lb_mz = str2double(segment{6});
 ub_mz = str2double(segment{7});
+quant_value = str2double(segment{8});
 end

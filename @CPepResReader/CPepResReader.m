@@ -6,7 +6,7 @@ classdef CPepResReader
     
     properties
         m_pep_res;       % The overall peptide results, structured as:
-        %   Map('mod_peptide_key':'charge',{}'dataset_name',{},'mean_mz',{},'lb_mz',{},'ub_mz',{},'rt_ranges',{},'ori_pep_line',{});
+        %   Map('mod_peptide_key':'peptidoform_name',{},'charge',{}'dataset_name',{},'mean_mz',{},'lb_mz',{},'ub_mz',{},'quant_value',{},'rt_ranges',{},'ori_pep_line',{});
         m_prot_pep_res;  % The peptide results for each protein, structured as:
         %   cell('protein_name','mod_peptide_key');
     end
@@ -18,7 +18,8 @@ classdef CPepResReader
         end
 
         % Append one peptide result
-        obj = append_one_pep(obj, key_mod_pep, charge_state, dataset_name, mean_mz, lb_mz, ub_mz, rt_ranges_temp, ori_pep_line);
+        obj = append_one_pep(obj, key_mod_pep, peptidoform_name, charge_state, dataset_name, ...
+            mean_mz, lb_mz, ub_mz, quant_value, rt_ranges_temp, ori_pep_line);
 
         % Read from a peptide result file
         obj = read_from_pep_res_file(obj, pep_res_path);
@@ -28,5 +29,11 @@ classdef CPepResReader
 
         % Get the map of modified peptide to retention time ranges
         pep_rtrange_map = get_pep_rtrange_map(obj);
+
+        % Get the peptide-protein mapping
+        pep_prot_map = get_pep_prot_map(obj);
+
+        % Get the peptide result structure
+        pep_res = get_pep_res(obj);
     end
 end
