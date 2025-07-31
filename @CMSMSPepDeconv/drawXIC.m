@@ -28,7 +28,7 @@ pep_res_reader = CPepResReader();
 pep_res_reader = pep_res_reader.read_from_pep_res_file(checked_pep_path);
 pep_rtrange_map = pep_res_reader.get_pep_rtrange_map();
 if isempty(pep_rtrange_map)
-    error(['The checked peptide result file "', checked_pep_path, '" is empty!']);
+    warning(['The checked peptide result file "', checked_pep_path, '" is empty!']);
 end
 
 %% Read the msms results and requantify the IMPs
@@ -65,7 +65,7 @@ msms_reader = CMSMSResReader();
 msms_reader = msms_reader.read_from_msms_res_file(each_PSM_results_path);
 print_progress = CPrintProgress(length(msms_reader.m_peps_specs_forms));
 
-fprintf('Re-quantifying at peptide level...');
+fprintf('Drawing XIC...');
 for idx_psf = 1:length(msms_reader.m_peps_specs_forms)
     % Show progress
     print_progress = print_progress.update_show(idx_psf);

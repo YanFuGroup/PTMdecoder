@@ -395,26 +395,52 @@ totalxic_plot = plot(total_xic{1}(total_idx_start:total_idx_end), total_xic{2}(t
     'k', 'DisplayName','Total XIC');
 set(totalxic_plot, 'LineWidth', all_line_width);
 
-% Plot the XIC of each IMP
+% Collect plot information for sorting
+plot_info = struct('x_data', {}, 'y_data', {}, 'legend_string', {}, 'color', {});
+plot_count = 0;
+
+% Helper function to generate hash-based color from string to distinguish similar strings with different character orders
+string_to_color = @(str) hsv2rgb([mod(hash_string_positional(str), 360)/360, 0.7, 0.9]);
+
+% Collect information for each IMP plot
 for idx_iso = 1:size(ric, 1)
     if trapz(ric{idx_iso, 1}, ric{idx_iso, 2}) < 1e-6
         continue;
     end
+    
+    plot_count = plot_count + 1;
+    plot_info(plot_count).x_data = ric{idx_iso, 1};
+    plot_info(plot_count).y_data = ric{idx_iso, 2};
+    
     if ~isempty(legend_map) && ~isempty(color_map)
-        legend_string = ['XIC of ',legend_map(current_iso_name{idx_iso})];
-        isoxic_plot = plot(ric{idx_iso, 1}, ric{idx_iso, 2}, ...
-            'DisplayName', legend_string, 'Color', color_map(current_iso_name{idx_iso}));
+        plot_info(plot_count).legend_string = ['XIC of ',legend_map(current_iso_name{idx_iso})];
+        plot_info(plot_count).color = color_map(current_iso_name{idx_iso});
     else
         legend_string = ['XIC of ',current_iso_name{idx_iso}];
         legend_string = strrep(legend_string, '_', '\_');
         legend_string = strrep(legend_string, '{', '\{');
         legend_string = strrep(legend_string, '}', '\}');
+        plot_info(plot_count).legend_string = legend_string;
+        
         if ~isempty(color_map)
-            isoxic_plot = plot(ric{idx_iso, 1}, ric{idx_iso, 2}, 'DisplayName', legend_string, 'Color', color_map(current_iso_name{idx_iso}));
+            plot_info(plot_count).color = color_map(current_iso_name{idx_iso});
         else
-            isoxic_plot = plot(ric{idx_iso, 1}, ric{idx_iso, 2}, 'DisplayName', legend_string);
+            % Generate hash-based color from string
+            plot_info(plot_count).color = string_to_color(current_iso_name{idx_iso});
         end
     end
+end
+
+% Sort plot information by legend string
+if plot_count > 0
+    [~, sort_idx] = sort({plot_info.legend_string});
+    plot_info = plot_info(sort_idx);
+end
+
+% Plot the XIC of each IMP in sorted order
+for idx_plot = 1:plot_count
+    isoxic_plot = plot(plot_info(idx_plot).x_data, plot_info(idx_plot).y_data, ...
+        'DisplayName', plot_info(idx_plot).legend_string, 'Color', plot_info(idx_plot).color);
     set(isoxic_plot, 'LineWidth', all_line_width);
 end
 
@@ -425,4 +451,35 @@ ylabel('Absolute intensity', 'FontSize', all_font_size)
 h_legend = legend('show');
 set(h_legend, 'FontSize', all_font_size);
 saveas(f, file_name);
+end
+
+
+
+% Position-sensitive string hash function
+function hash_val = hash_string_positional(str)
+    if isempty(str)
+        hash_val = 0;
+        return;
+    end
+    
+    % Convert string to double array
+    char_codes = double(str);
+    
+    % Method 1: Position-weighted polynomial hash (Horner's method)
+    hash1 = 0;
+    base = 31; % Prime number for better distribution
+    for i = 1:length(char_codes)
+        hash1 = mod(hash1 * base + char_codes(i), 2^32);
+    end
+    
+    % Method 2: Position-indexed weighting
+    positions = 1:length(char_codes);
+    hash2 = sum(char_codes .* positions .* 137); % 137 is prime
+    
+    % Method 3: Alternating sign with position
+    signs = (-1).^(positions - 1);
+    hash3 = sum(char_codes .* signs .* positions);
+    
+    % Combine all three methods for maximum differentiation
+    hash_val = mod(hash1 + hash2 * 17 + abs(hash3) * 23, 360);
 end
