@@ -16,6 +16,7 @@ classdef CMSMSPepDeconv
         m_outputDir;        % Output folder
         m_checked_peptides_res_path; % File path for manually checked peptide results
         m_msms_res_path;    % File path for MSMS results
+        m_min_MSMS_num;     % Minimum number of deconvoluted MSMS spectra for a peptide to be considered
         m_ionTypes;         % Ion types used for matching
 
         m_fixedModNameMass;     % Specified fixed modifications: name, specificity, and mass
@@ -55,6 +56,7 @@ classdef CMSMSPepDeconv
                 obj.m_enzyme.limits = taskParam.m_enzyme_limits;
                 obj.m_checked_peptides_res_path = taskParam.m_checked_peptides_res_path;
                 obj.m_msms_res_path = taskParam.m_msms_res_path;
+                obj.m_min_MSMS_num = taskParam.m_min_MSMS_num;
                 % Generate variable modification "name-mass" dictionary using user-specified target modification strings and modification library
                 mapModification = readModifyInfo(obj.m_modFile);
                 obj.m_fixedModNameMass = obj.getModMassName(taskParam.m_fixed_mod,mapModification);
@@ -74,6 +76,7 @@ classdef CMSMSPepDeconv
                 obj.m_resFilterThres = resFilterThres;
                 obj.m_enzyme = enzyme;
                 obj.m_outputDir = outputDir;
+                obj.m_min_MSMS_num = 1;
                 if nargin >= 17
                     obj.m_ionTypes = ionTypes;
                 end

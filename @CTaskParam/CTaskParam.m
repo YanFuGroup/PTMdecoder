@@ -30,6 +30,7 @@ classdef CTaskParam
         m_output_dir_path;
         m_checked_peptides_res_path;
         m_msms_res_path;
+        m_min_MSMS_num;    % Minimum number of MSMS spectra for a peptide to be considered
 
         % Parameter on site level processing
         m_protein_name_abbr_num;

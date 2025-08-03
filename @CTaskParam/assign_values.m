@@ -101,6 +101,13 @@ obj.m_enzyme_limits = str2num(task_param_map('enzyme_limit_C_term_possible_mod')
 % About the output file, including the path
 obj.m_output_dir_path = task_param_map('output_dir_path');
 
+% About min_MSMS_num parameter
+if task_param_map.isKey('min_MSMS_num')
+    obj.m_min_MSMS_num = str2double(task_param_map('min_MSMS_num'));
+else
+    obj.m_min_MSMS_num = 1; % Default value
+end
+
 % About the checked peptides result path and msms result path (not used in this process)
 obj.m_checked_peptides_res_path = [];
 obj.m_msms_res_path = [];
@@ -151,6 +158,13 @@ obj.m_enzyme_limits = str2num(task_param_map('enzyme_limit_C_term_possible_mod')
 
 % About the output file, including the path
 obj.m_output_dir_path = task_param_map('output_dir_path');
+
+% About min_MSMS_num parameter
+if task_param_map.isKey('min_MSMS_num')
+    obj.m_min_MSMS_num = str2double(task_param_map('min_MSMS_num'));
+else
+    obj.m_min_MSMS_num = 1; % Default value
+end
 
 % About the checked peptides result path and msms result path
 obj.m_checked_peptides_res_path = task_param_map('checked_peptides_res_path');

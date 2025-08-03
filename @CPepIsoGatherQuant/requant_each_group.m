@@ -61,6 +61,17 @@ sort_inten(tmp) = []; %#ok<NASGU>
 sort_rts(tmp) = [];
 sort_ratioMatrix(tmp,:) = [];
 
+if (obj.hasMinRows(sort_ratioMatrix, obj.m_minMSMSnum) == false)
+    % If the ratio matrix has less than 3 rows, skip this group
+    bhave_non_zeros = false;
+    idxNonZero = [];
+    auxic = [];
+    rt_bound = [];
+    max_label = [];
+    ratio_each_XIC_peak = [];
+    return;
+end
+
 % find the XIC filtered by m/z of base peak [low_mz_bound, high_mz_bound]
 %   and -1,+0,+1,+2,+3
 % MS1_index (scan, retention time, peak number, baseline, injection time)
@@ -181,101 +192,6 @@ for idx_iso = 1:num_iso
 end
 % normalize the ratio in every available retention time
 esti_ratio = esti_ratio./(sum(esti_ratio,2)+eps);
-
-% Hypothesis: The retention time bounds revised manually cannot be wrong.
-%   No need to recognize and delete the low abundance IMP in revised file.
-% Filter low abundance IMP according to the relative AUXIC
-% intensityMatrix = esti_ratio.*smoothed_intensity;
-% for i_Xp = 1:length(XIC_peaks)
-%     area_filter = zeros(num_iso,1);
-%     for idx_iso = 1:num_iso
-%         area_filter(idx_iso) = trapz(rt_grid(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound),...
-%             intensityMatrix(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,idx_iso));
-%     end
-%     % If the AUC of the peak of an IMP is less than 10% of the maximum,
-%     % filter, remove the proportion.
-%     esti_ratio(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,area_filter<max(area_filter)*obj.m_resFilterThres) = 0;
-% end
-% esti_ratio = esti_ratio./(sum(esti_ratio,2)+eps);
-
-% % calculate XIC of each IMPs using total XIC and ratio curve
-% intensityMatrix = esti_ratio.*smoothed_intensity;
-% auxic = zeros(num_iso,1);
-% rt_bound = repmat(struct('start',0,'end',0), num_iso, length(XIC_peaks));
-% idx_selected = zeros(num_iso,1);
-% ratio_each_XIC_peak = zeros(num_iso,length(XIC_peaks));
-% for idx_iso = 1:num_iso
-%     max_proportions = zeros(length(XIC_peaks),1);
-%     %     each_area = zeros(length(XIC_peaks),1);
-%     fwhm = zeros(length(XIC_peaks),1);
-%     for i_Xp = 1:length(XIC_peaks)
-%         max_proportions(i_Xp) = max(esti_ratio(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,idx_iso));
-%         % calculate the fwhm for XIC selection
-%         peak_rt = rt_grid(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound);
-%         peak_intens = intensityMatrix(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,idx_iso);
-%         % the area of each peak
-%         % find two ranges of half maxima
-%         half_maxima = max(peak_intens)/2;
-%         if half_maxima==0
-%             continue;
-%         end
-%         % the two point around the left half maxima, find left half bound
-%         left_right = find(peak_intens>half_maxima, 1);
-%         left_left = left_right - 1;
-%         if left_left > 0
-%             left_half_point = peak_rt(left_left)+(half_maxima-peak_intens(left_left))*...
-%                 (peak_rt(left_right)-peak_rt(left_left))/(peak_intens(left_right)-peak_intens(left_left));
-%         else
-%             % when the left half maxima is smaller than the most left point in
-%             %   this peak, use the most left point to measure the peak width
-%             left_half_point = 1;
-%         end
-%         % the two point around the right half maxima, find right half bound
-%         right_left = find(peak_intens>half_maxima, 1, 'last');
-%         right_right = right_left + 1;
-%         if right_right < length(peak_rt)
-%             right_half_point = peak_rt(right_right)-(half_maxima-peak_intens(right_right))*...
-%                 (peak_rt(right_right)-peak_rt(right_left))/(peak_intens(right_left)-peak_intens(right_right));
-%         else
-%             % when the left half maxima is smaller than the most left point in
-%             %   this peak, use the most left point to measure the peak width
-%             right_half_point = length(peak_rt);
-%         end
-%         fwhm(i_Xp) = right_half_point - left_half_point;
-%         %         each_area(i_Xp) = trapz(rt_grid(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound),...
-%         %             intensityMatrix(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,idx_iso))*60;
-%         ratio_each_XIC_peak(idx_iso, i_Xp) = ...
-%             trapz(rt_grid(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound),...
-%             intensityMatrix(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,idx_iso))*60;
-%     end
-%     % When there are more than one XIC peak counting for an IMP,
-%     % only record one XIC peak, the choosing critera are:
-%     % 1. the peak with max proportion, ratio shows the XIC belong more to this IMP;
-%     % 2. the peak with largest fwhm (full width of half maximum).
-%     [val_max, idx_selected(idx_iso)] = max(max_proportions);
-%     if length(find(abs(val_max-max_proportions)<eps)) > 1
-%         % If the proportion can not select the only one, choose according
-%         %   to the fwhm
-%         [~, idx_selected(idx_iso)] = max(fwhm);
-%         %         % If the proportion can not select the only one, choose according
-%         %         %   to the AUC
-%         %         [~, idx_max] = max(each_area);
-%     end
-%     final_rt_start = XIC_peaks(idx_selected(idx_iso)).left_bound;
-%     if final_rt_start ~= 1
-%         final_rt_start = final_rt_start - 1;
-%     end
-%     final_rt_end = XIC_peaks(idx_selected(idx_iso)).right_bound;
-%     if final_rt_end ~= length(rt_grid)
-%         final_rt_end = final_rt_end + 1;
-%     end
-%     auxic(idx_iso,1) = trapz(rt_grid(final_rt_start:final_rt_end),...
-%         [0;intensityMatrix(final_rt_start+1:final_rt_end-1,idx_iso);0])*60;
-%     for idx_p = 1:length(XIC_peaks)
-%         rt_bound(idx_iso,idx_p).start = rt_grid(XIC_peaks(idx_p).left_bound);
-%         rt_bound(idx_iso,idx_p).end = rt_grid(XIC_peaks(idx_p).right_bound);
-%     end
-% end
 
 % Requantification using revised RT
 intensityMatrix = esti_ratio.*smoothed_intensity;

@@ -63,6 +63,11 @@ sort_inten(tmp) = []; %#ok<NASGU>
 sort_rts(tmp) = [];
 sort_ratioMatrix(tmp,:) = [];
 
+if (obj.hasMinRows(sort_ratioMatrix, obj.m_minMSMSnum) == false)
+    % If the ratio matrix has less than 3 rows, skip this group
+    return;
+end
+
 % find the XIC filtered by m/z of base peak [low_mz_bound, high_mz_bound]
 %   and -1,+0,+1,+2,+3
 % MS1_index (scan, retention time, peak number, baseline, injection time)

@@ -9,6 +9,7 @@ classdef CPepIsoGatherQuant
         m_ms1_tolerance;    % the tolerance of MS1
         m_alpha;            % the filter threshold factor, thres is max*alpha
         m_outputPath;       % output path of the result file
+        m_minMSMSnum;      % Minimum number of MSMS spectra for a peptide to be considered
         m_resStr;           % result string
         m_mapRawNames;      % the map of raw names to which cell in m_curRts et.al.
 
@@ -28,7 +29,7 @@ classdef CPepIsoGatherQuant
     
     methods
         function obj = CPepIsoGatherQuant(prot_names_pos,cMs12DatasetIO,...
-                resFilterThres,ms1_tolerance, alpha, outputPath)
+                resFilterThres,ms1_tolerance, alpha, outputPath, minMSMSnum)
             % common
             obj.m_buff_length = 50;
             obj.m_prot_names_pos = prot_names_pos;
@@ -37,6 +38,10 @@ classdef CPepIsoGatherQuant
             obj.m_ms1_tolerance = ms1_tolerance;
             obj.m_alpha = alpha;
             obj.m_outputPath = outputPath;
+            if nargin < 7
+                minMSMSnum = 1; % Default minimum number of MSMS spectra
+            end
+            obj.m_minMSMSnum = minMSMSnum;
             obj.m_resStr = [];
             obj.m_mapRawNames = containers.Map();
             % different in different raw
@@ -90,6 +95,9 @@ classdef CPepIsoGatherQuant
             current_inten, low_mz_bound, high_mz_bound, selected_charge,...
             current_iso_rt_range, current_iso_name, current_iso_mass,...
             current_charge, dir_save, color_map, legend_map)
+
+        % Check whether the XIC peaks have at least min_rows PSMs
+        is_reserved = hasMinRows(obj, ratio_matrix, min_rows);
     end
 end
 

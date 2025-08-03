@@ -72,7 +72,7 @@ for idx_psf = 1:length(msms_reader.m_peps_specs_forms)
     cell_prot_name_pos = obj.m_cFastaIO.get_protein_name_pos(peptide_sequence);
     % Initialize the CPepIsoGatherQuant object
     pepIsoGatherIMSLQ = CPepIsoGatherQuant(cell_prot_name_pos,obj.m_cMs12DatasetIO,...
-        obj.m_resFilterThres,obj.m_ms1_tolerance,obj.m_alpha,each_peptide_results_path);
+        obj.m_resFilterThres,obj.m_ms1_tolerance,obj.m_alpha,each_peptide_results_path,obj.m_min_MSMS_num);
     % Get the spectrum list
     for idx_spec = 1:length(msms_reader.m_peps_specs_forms(idx_psf).spectrum_list)
         % Get the dataset name and spectrum name
