@@ -378,9 +378,8 @@ function plot_each_xic_group(ric, total_xic, categorized_intervals, current_iso_
 
 % Init plot
 f = figure('visible','off');
-%set(gcf,'position',[50,50,1600,900], 'color','white')
-% set(gcf,'position',[50, 50, 800, 450], 'color','white')
-set(gcf,'position',[50, 50, 300, 200], 'color','white')
+set(gcf,'position',[50, 50, 600, 200], 'color','white')
+% set(gcf,'position',[50, 50, 300, 200], 'color','white')
 all_font_size = 7;
 all_line_width = 1;
 set(gca,'LooseInset',get(gca,'TightInset'), 'FontSize', all_font_size);
@@ -453,7 +452,8 @@ end
 xlabel('Retention Time (min)', 'FontSize', all_font_size)
 ylabel('Absolute intensity', 'FontSize', all_font_size)
 
-h_legend = legend('show');
+h_legend = legend('show', 'Location', 'northwest');
+xlim([5.5 9]);
 set(h_legend, 'FontSize', all_font_size);
 saveas(f, file_name);
 end
