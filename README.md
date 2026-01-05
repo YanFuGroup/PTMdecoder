@@ -47,7 +47,7 @@ Required files:
 
 (Example data for all the following three types of files is provided along with the standalone executable. After installation, you can access these files in the ***demo*** folder located in the application’s installation directory)
 
-- **Mass Spectra Files**: Raw spectra in mgf/ms1/ms2 formats (pre-converted via [pParse](https://pfind.net/software/pParse/index.html)). See User Manual for the pParse version and usage.
+- **Mass Spectra Files**: Raw spectra in mgf/ms1/ms2 formats (pre-converted via [pParse](https://pfind.net/software/pParse/index.html)). See User Manual for the pParse version and usage. Please rename the ms1 and ms2 files so that they share the same suffix as the corresponding mgf file (e.g., `_HCDFT`).
 - **​Search Results File**: currently supports only a custom "peptide spectra list" (.txt) format. See User Manual for the details about the format.
 - ​**Protein Sequence Database**: FASTA file containing protein sequences.
 
