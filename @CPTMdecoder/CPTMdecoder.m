@@ -1,8 +1,8 @@
-classdef CPTMdecoder
+classdef CPTMDecoder
     % Main workflow of CPTMDecoder
 
     methods
-        function obj = CPTMdecoder(varargin)
+        function obj = CPTMDecoder(varargin)
             if nargin == 0
                 % Default constructor
                 error('No input arguments');
