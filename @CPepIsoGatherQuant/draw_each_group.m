@@ -416,22 +416,24 @@ for idx_iso = 1:size(ric, 1)
     plot_info(plot_count).x_data = ric{idx_iso, 1};
     plot_info(plot_count).y_data = ric{idx_iso, 2};
     
-    if ~isempty(legend_map) && ~isempty(color_map)
+    is_in_legend_map = ~isempty(legend_map) && legend_map.isKey(current_iso_name{idx_iso});
+    is_in_color_map = ~isempty(color_map) && color_map.isKey(current_iso_name{idx_iso});
+
+    if is_in_legend_map
         plot_info(plot_count).legend_string = ['XIC of ',legend_map(current_iso_name{idx_iso})];
-        plot_info(plot_count).color = color_map(current_iso_name{idx_iso});
     else
         legend_string = ['XIC of ',current_iso_name{idx_iso}];
         legend_string = strrep(legend_string, '_', '\_');
         legend_string = strrep(legend_string, '{', '\{');
         legend_string = strrep(legend_string, '}', '\}');
         plot_info(plot_count).legend_string = legend_string;
-        
-        if ~isempty(color_map)
-            plot_info(plot_count).color = color_map(current_iso_name{idx_iso});
-        else
-            % Generate hash-based color from string
-            plot_info(plot_count).color = string_to_color(current_iso_name{idx_iso});
-        end
+    end
+
+    if is_in_color_map
+        plot_info(plot_count).color = color_map(current_iso_name{idx_iso});
+    else
+        % Generate hash-based color from string
+        plot_info(plot_count).color = string_to_color(current_iso_name{idx_iso});
     end
 end
 
@@ -453,7 +455,6 @@ xlabel('Retention Time (min)', 'FontSize', all_font_size)
 ylabel('Absolute intensity', 'FontSize', all_font_size)
 
 h_legend = legend('show', 'Location', 'northwest');
-xlim([5.5 9]);
 set(h_legend, 'FontSize', all_font_size);
 saveas(f, file_name);
 end
