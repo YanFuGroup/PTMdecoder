@@ -456,7 +456,7 @@ ylabel('Absolute intensity', 'FontSize', all_font_size)
 
 h_legend = legend('show', 'Location', 'northwest');
 set(h_legend, 'FontSize', all_font_size);
-saveas(f, file_name);
+print(f, file_name, '-dsvg', '-r300');
 end
 
 
