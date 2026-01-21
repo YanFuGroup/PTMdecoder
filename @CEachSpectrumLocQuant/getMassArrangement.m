@@ -10,6 +10,7 @@ function [ bSuccess,inxSites,massArrangement,warning_msg ] = getMassArrangement(
 %   warning_msg - the warning message
 
 warning_msg = [];
+bSuccess = false;
 
 % Calculate the mass shift contributed by modifications, experimental minus theoretical (with variable modifications) precursor mass
 deltamass=obj.m_dPrecursorMass-obj.getNeutralPeptideTheoryMass(fixedPosMod);
@@ -62,7 +63,6 @@ else
 
     if is_too_many_candidate
         massArrangement = [];
-        bSuccess = false;
         warning_msg = ['There are too many candidate peptidoforms for ',...
             obj.m_pepSeq, ' in ', obj.m_strSpecName, '!\n'];
         return
@@ -95,11 +95,16 @@ else
     end
 end
 
-bSuccess = ~isempty(massArrangement);
-if ~bSuccess
+if isempty(massArrangement)
     warning_msg = ['There is no feasible modification configurations for ',...
         obj.m_pepSeq, ' in ', obj.m_strSpecName, '!\n'];
+elseif size(massArrangement,1) > 5000
+    warning_msg = ['There are too many candidate peptidoforms for ',...
+        obj.m_pepSeq, ' in ', obj.m_strSpecName, '!\n'];
+else
+    bSuccess = true;
 end
+
 end
 
 function [modComb]=getModComb_multi(massShiftEachMod,deltmass,eachSpecfinVariList,maxNumEachAA,maxNumEachMod,ms1_tolerance)
