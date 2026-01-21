@@ -12,10 +12,10 @@ if nargin == 0
                'Example: PTMdecoder_core.exe task1.param task2.param\n' ...
                'Please refer to the user manual for details on setting up the parameter files.']));
 else
-    % Although there is a member function in CPTMDecoder to check parameter files, 
+    % Although there is a member function in CPTMdecoder to check parameter files, 
     % it is necessary to check the parameter files before running the program with all parameter files.
     check_param_files(varargin);
-    CPTMDecoder(varargin{:});
+    CPTMdecoder(varargin{:});
 end
 
 end

@@ -1,8 +1,8 @@
-classdef CPTMDecoder
-    % Main workflow of CPTMDecoder
+classdef CPTMdecoder
+    % Main workflow of CPTMdecoder
 
     methods
-        function obj = CPTMDecoder(varargin)
+        function obj = CPTMdecoder(varargin)
             if nargin == 0
                 % Default constructor
                 error('No input arguments');
@@ -21,7 +21,7 @@ classdef CPTMDecoder
         % Check if the files exist
         check_files_existence(obj, varargin);
 
-        % Load the files and run PTMDecoder iteratively
+        % Load the files and run PTMdecoder iteratively
         main_processes(obj, varargin);
     end
 end
