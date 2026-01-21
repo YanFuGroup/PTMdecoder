@@ -57,8 +57,17 @@ if isempty(modComb) || ~all(sum(modComb,2)) % Cannot be matched or is an unmodif
     massArrangement=[];
 else
     % If there are any possible modification combinatioin, use it to establish the modification arrangement
-    massArrangement=getMassArrangementUsingComb(modComb,obj.m_variableModNameMass, ...
-        eachSpecfinVariList,maxNumEachAA);
+    [massArrangement, is_too_many_candidate] = getMassArrangementUsingComb(...
+        modComb,obj.m_variableModNameMass, eachSpecfinVariList,maxNumEachAA);
+
+    if is_too_many_candidate
+        massArrangement = [];
+        bSuccess = false;
+        warning_msg = ['There are too many candidate peptidoforms for ',...
+            obj.m_pepSeq, ' in ', obj.m_strSpecName, '!\n'];
+        return
+    end
+
     % The first row is the positions on the sequence, each subsequent row is the mass shift at each position
     sortSitesArrang=(sortrows([inxSites;massArrangement]'))';% Sort the above matrix by columns
     inxSites=sortSitesArrang(1,:);
@@ -286,7 +295,7 @@ end
 end
 
 
-function [massArrangement]=getMassArrangementUsingComb(modComb,variModNameMass, ...
+function [massArrangement, is_too_many_candidate]=getMassArrangementUsingComb(modComb,variModNameMass, ...
     eachSpecfinVariList,maxNumEachAA)
 % Calculate all combinations of modification mass + modification sites (just the order of potential modifications on the sequence, not the actual positions)
 % Input: 
@@ -296,7 +305,9 @@ function [massArrangement]=getMassArrangementUsingComb(modComb,variModNameMass, 
 %   maxNumEachAA - the number of positions where various amino acids may be modified on the peptide sequence
 % Output: 
 %   massArrangement - a matrix of various combinations of modification masses, each row is a case, each column is the mass shift at several possible modification sites, the columns are organized by amino acids (block matrix) and cannot be used directly, some processing is needed.
+%   is_too_many_candidate - whether there are too many candidate peptidoforms
 massArrangement=[];
+is_too_many_candidate = false;
 for idxComb=1:size(modComb,1)
     massArraEachComb=[];
     for idxAA=1:size(eachSpecfinVariList,1) % Traverse various specificities
@@ -321,6 +332,12 @@ for idxComb=1:size(modComb,1)
                 end
             end
         end
+        
+        if length(massConfigH)>10
+            is_too_many_candidate = true;
+            return
+        end
+        
         massArraEachAA=perms(massConfigH);% Use combinations to get all permutations
         massArraEachAA=unique(massArraEachAA,'rows');% Remove duplicates by row
 
