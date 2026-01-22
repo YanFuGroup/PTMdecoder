@@ -19,6 +19,8 @@ classdef CMS12DatasetIO<CDatasetIO
         success = load_MS1_file(obj,ms1_fullfile);
         % Generate spectrum index MS2_index and peak index MS2_peaks using .ms2 file
         success = load_MS2_file(obj,ms2_fullfile);
+        % Generate mapping between MS1 and MS2 scans using .ms2 file
+        success = load_MS1_MS2_mapping(obj, ms2_fullfile);
         % Build a dictionary mapping spectrum names to corresponding index or peaks
         SetMap(obj);
         % Output more accurate mass-to-charge ratio

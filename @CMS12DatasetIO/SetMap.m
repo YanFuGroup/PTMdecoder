@@ -16,7 +16,7 @@ for i_ds=1:length(ms1_dataset_files)
 
     % get the MS2 info, and write to _MS2scan(peak)s.mat
     ms2_file_path = fullfile(ms2_dataset_files(i_ds).folder, ms2_dataset_files(i_ds).name);
-    if 0==obj.load_MS2_file(ms2_file_path)   % Generate MS2 spectrum index file (_MS2scans.mat) and peak file (_MS2peaks.mat)
+    if 0==obj.load_MS1_MS2_mapping(ms2_file_path)   % Generate MS2 spectrum index file (_MS2scans.mat) and peak file (_MS2peaks.mat)
         error('Error in loading MS2 file: %s', ms2_file_path);
     end
     MS1_scanfile = fullfile(ms1_dataset_files(i_ds).folder,[ms1_dataset_files(i_ds).name(1:end-4),'_MS1scans.mat']);

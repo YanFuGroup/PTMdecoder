@@ -33,7 +33,7 @@ function pep_quant = readSearchResult(obj, fin, input_file_path, ms12DatasetIO, 
                 MS2_index = ms12DatasetIO.m_mapNameMS2Index(mgf_name);
                 
                 % Find the corresponding index of ms2
-                tmp_idx = MS2_index(:,3) == MS2ScanI;
+                tmp_idx = MS2_index(:,2) == MS2ScanI;
                 if ~any(tmp_idx)
                     error('No matching MS2 scan found for scan number %d in %s', MS2ScanI, mgf_name); % No matching MS2 scan found
                 end

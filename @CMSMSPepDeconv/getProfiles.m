@@ -18,7 +18,7 @@ spec_name = regexp(spectrum_name,'\.','split');
 MS2ScanI = str2double(spec_name{2});
 [~, cur_ch, cur_mz] = obj.m_cMgfDatasetIO.read_oneSpec(mgf_name,spectrum_name);
 MS2_index = obj.m_cMs12DatasetIO.m_mapNameMS2Index(erase(mgf_name,'.mgf'));
-idx_cur_scan = MS2_index(:,3)==MS2ScanI; % Find the corresponding scan
+idx_cur_scan = MS2_index(:,2)==MS2ScanI; % Find the corresponding scan
 MS1Scan = MS2_index(idx_cur_scan,1); % Record the scan number of MS1
 % MS1_index (scan, retention time, peak number, baseline, injection time)
 % MS1_peaks (m/z, intensity)

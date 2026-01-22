@@ -1,3 +1,5 @@
+% Deprecated: use load_MS1_MS2_mapping instead
+
 function success = load_MS2_file(obj,ms2_fullfile)
 % Save the ms2 file as two files: "Spectrum Index" and "Peak Index"
 % "Spectrum Index" (*_MS2_index.mat) stores the index of ten items such as spectrum name, as follows:
