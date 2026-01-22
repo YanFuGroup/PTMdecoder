@@ -10,7 +10,7 @@ obj.check_whether_ms12_mgf_name_match();
 
 % Load protein sequences from fasta file
 if isempty(obj.m_cFastaIO)
-    obj.m_cFastaIO = CFastaIO(obj.m_fastaFile, obj.m_regular_express);
+    obj.m_cFastaIO = CFastaIO(obj.m_fastaFile, obj.m_regular_express, obj.m_filtered_res_file_path);
 end
 
 % Indexing the mgf

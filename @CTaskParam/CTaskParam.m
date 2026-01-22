@@ -21,6 +21,7 @@ classdef CTaskParam
         m_fasta_file_path;
         m_regular_express;
         m_pep_spec_file_path;
+        m_filtered_res_file_path;
         m_model;
         m_method;
         m_lambda;

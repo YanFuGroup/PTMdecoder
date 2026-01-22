@@ -58,7 +58,7 @@ obj.m_cMgfDatasetIO.SetMap();
 obj.m_cMgfDatasetIO.SetFidmap();
 
 % Initial the fasta IO
-obj.m_cFastaIO = CFastaIO(obj.m_fastaFile, obj.m_regular_express);
+obj.m_cFastaIO = CFastaIO(obj.m_fastaFile, obj.m_regular_express, obj.m_filtered_res_file_path);
 
 % Read and process
 msms_reader = CMSMSResReader();

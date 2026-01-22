@@ -87,6 +87,7 @@ obj.m_regular_express = task_param_map('regular_express');
 
 % About the pep_spec file, including the path
 obj.m_pep_spec_file_path = task_param_map('pep_spec_file_path');
+obj.m_filtered_res_file_path = task_param_map('filtered_res_file_path');
 
 % About the parameters for the core algorithm
 obj.m_model = str2double(task_param_map('model'));
@@ -145,6 +146,7 @@ obj.m_regular_express = task_param_map('regular_express');
 % About the pep_spec file, including the path
 % obj.m_pep_spec_file_path = task_param_map('pep_spec_file_path');
 obj.m_pep_spec_file_path = [];
+obj.m_filtered_res_file_path = task_param_map('filtered_res_file_path');
 
 % About the parameters for the core algorithm
 obj.m_model = str2double(task_param_map('model'));
@@ -202,6 +204,7 @@ obj.m_regular_express = task_param_map('regular_express');
 
 % About the pep_spec file, including the path
 obj.m_pep_spec_file_path = [];
+obj.m_filtered_res_file_path = task_param_map('filtered_res_file_path');
 
 % About the parameters for the core algorithm
 obj.m_model = str2double(task_param_map('model'));

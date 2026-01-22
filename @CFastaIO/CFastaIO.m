@@ -4,15 +4,18 @@ classdef CFastaIO
     properties
         m_strFilePath;  % fasta file path
         m_regular_exp;  % regular expression to parse the protein name
-        m_strOneLine;   % Represent the entire fasta file as a single string
-        m_strProtName;  % the name of all proteins, using regular expression '>([^ ,]*)'
-        m_strProtPos;   % the position of all proteins in single line (m_strProtSeq)
+        m_mapProt;      % Map of protein name to sequence
+        m_pep_prot_mapper; % CPeptideProteinMap object for peptide to protein mapping
+        % m_strOneLine;   % Represent the entire fasta file as a single string
+        % m_strProtName;  % the name of all proteins, using regular expression '>([^ ,]*)'
+        % m_strProtPos;   % the position of all proteins in single line (m_strProtSeq)
     end
     
     methods
-        function obj = CFastaIO(strFilePath, regular_exp)
+        function obj = CFastaIO(strFilePath, regular_exp, filtered_res_file_path)
             obj.m_strFilePath = strFilePath;
             obj.m_regular_exp = regular_exp;
+            obj.m_pep_prot_mapper = CPeptideProteinMap(filtered_res_file_path);
             obj = Init(obj);
         end
         
