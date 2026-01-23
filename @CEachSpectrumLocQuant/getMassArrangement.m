@@ -107,27 +107,6 @@ end
 
 end
 
-function [modComb]=getModComb_multi(massShiftEachMod,deltmass,eachSpecfinVariList,maxNumEachAA,maxNumEachMod,ms1_tolerance)
-% Use deltamass to calculate all possible modification combinations
-% Input: 
-%   massShiftEachMod - the mass of the user-specified modifications, must be a column vector
-%   deltmass - precursor delta mass (experimental minus theoretical)
-%   eachSpecfinVariList - a table of [amino acid, number of modification types with this specificity site, positions of this amino acid in the user-specified list]
-%   maxNumEachAA - the number of positions where various amino acids may be modified
-%   maxNumEachMod - the number of positions where various modifications may occur, all modifications are the maximum number
-%   ms1_tolerance - precursor matching error
-% Output: 
-%   modComb - all possible modification combinations that explain deltamass
-
-% Get a combination matrix of possible numbers of various modifications
-modComb = initModComb_multi(maxNumEachMod);
-
-% Filter using distance
-modComb = modCombFilter_dist(modComb,massShiftEachMod,deltmass,ms1_tolerance);
-
-% Filter using the number of modifications
-modComb = modCombFilter_modNum(modComb,eachSpecfinVariList,maxNumEachAA);
-end
 
 function all_res = get_weights_comb(each_mass_shift, each_max_num, delta_mass, ...
     tolerance, eachSpecfinVariList, maxNumEachAA)
@@ -238,65 +217,6 @@ while top > 0
 end
 all_res(all_res_idx+1:end,:) = [];
 % Return all valid combinations found
-end
-
-function modComb=initModComb_multi(maxNumEachMod)
-% Use the maximum possible number of modifications occurrences to establish a combination matrix of possible numbers
-% Input: 
-%   maxNumEachMod - the number of positions where various modifications may occur
-% Output: 
-%   modComb - a combination matrix of possible numbers of various modifications for subsequent attempts
-if length(maxNumEachMod)==1
-    modComb=(0:maxNumEachMod)';
-else
-    p=0:maxNumEachMod(1);
-    q=0:maxNumEachMod(2);
-    [x,y]=meshgrid(p,q);
-    % Establish combinations and merge
-    modComb=[x(:),y(:)];
-    if length(maxNumEachMod)>=3
-        % When there are more than 3, append an increasing number to the end of each previous matrix, recursively increasing the dimension
-        for l=3:length(maxNumEachMod)
-            modCombTemp=[];
-            for i=0:maxNumEachMod(l)
-                modCombTemp=[modCombTemp;modComb,repmat(i,size(modComb,1),1)];
-            end
-            modComb=modCombTemp;
-        end
-    end
-end
-end
-
-function [ modComb ] = modCombFilter_dist( modComb,massShiftEachMod,deltmass,ms1_tolerance )
-% Filter out modification combinations that do not meet the criteria using distance
-% Input: 
-%   modComb - a combination matrix of possible numbers of various modifications
-%   massShiftEachMod - the mass of various modifications, must be a column vector
-%   deltmass - precursor mass shift, experimental minus theoretical
-%   ms1_tolerance - precursor ion matching error
-% Output: 
-%   modComb - a combination matrix of possible numbers of various modifications
-
-% Only keep columns with distances less than the threshold
-modComb = modComb(abs(modComb*massShiftEachMod-deltmass) <= ms1_tolerance,:);
-
-end
-
-function [ modComb ] = modCombFilter_modNum( modComb,eachSpecfinVariList,maxNumEachAA )
-% Filter possible modification combinations using the number of modifications
-% Input: 
-%   modComb - a combination matrix of possible numbers of various modifications
-%   eachSpecfinVariList - a table of [amino acid, number of modification types with this specificity site, positions of this amino acid modification in the user-specified list]
-%   maxNumEachAA - the number of positions where various amino acids may be modified, a column vector
-% Output: 
-%   modComb - a combination matrix of possible numbers of various modifications
-
-% Filter once for each target amino acid modification
-for idxModAA=1:size(eachSpecfinVariList,1)
-    % Sum the positions corresponding to the amino acid in a row, which cannot exceed the maximum possible number of modifications on the amino acid
-    modComb = modComb(sum(modComb(:,eachSpecfinVariList{idxModAA,3}),2)<=maxNumEachAA(idxModAA),:);
-end
-
 end
 
 
