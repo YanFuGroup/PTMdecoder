@@ -59,27 +59,27 @@ fclose(fout);
 
 % Read and process
 msms_reader = CMSMSResReader();
-msms_reader = msms_reader.read_from_msms_res_file(each_PSM_results_path);
-print_progress = CPrintProgress(length(msms_reader.m_peps_specs_forms));
+msms_result = msms_reader.read_from_msms_res_file(each_PSM_results_path);
+print_progress = CPrintProgress(length(msms_result.Peptides));
 
 fprintf('Quantifying at peptide level...')
-for idx_psf = 1:length(msms_reader.m_peps_specs_forms)
+for idx_psf = 1:length(msms_result.Peptides)
     % Show progress
     print_progress = print_progress.update_show(idx_psf);
     % Get the peptide sequence
-    peptide_sequence = msms_reader.m_peps_specs_forms(idx_psf).peptide_sequence;
+    peptide_sequence = msms_result.Peptides(idx_psf).peptide_sequence;
     % Get the protein name and position
     cell_prot_name_pos = obj.CPepProtService.get_protein_name_pos(peptide_sequence);
     % Initialize the CPepIsoGatherQuant object
     pepIsoGatherIMSLQ = CPepIsoGatherQuant(cell_prot_name_pos,obj.m_cMs12DatasetIO,...
         obj.m_resFilterThres,obj.m_ms1_tolerance,obj.m_alpha,each_peptide_results_path,obj.m_min_MSMS_num);
     % Get the spectrum list
-    for idx_spec = 1:length(msms_reader.m_peps_specs_forms(idx_psf).spectrum_list)
+    for idx_spec = 1:length(msms_result.Peptides(idx_psf).spectrum_list)
         % Get the dataset name and spectrum name
-        dataset_name = msms_reader.m_peps_specs_forms(idx_psf).spectrum_list(idx_spec).dataset_name;
-        spectrum_name = msms_reader.m_peps_specs_forms(idx_psf).spectrum_list(idx_spec).spectrum_name;
-        peptidoform_strs = msms_reader.m_peps_specs_forms(idx_psf).spectrum_list(idx_spec).peptidoform_list_str;
-        peptidoform_abuns = msms_reader.m_peps_specs_forms(idx_psf).spectrum_list(idx_spec).peptidoform_list_abun;
+        dataset_name = msms_result.Peptides(idx_psf).spectrum_list(idx_spec).dataset_name;
+        spectrum_name = msms_result.Peptides(idx_psf).spectrum_list(idx_spec).spectrum_name;
+        peptidoform_strs = msms_result.Peptides(idx_psf).spectrum_list(idx_spec).peptidoform_list_str;
+        peptidoform_abuns = msms_result.Peptides(idx_psf).spectrum_list(idx_spec).peptidoform_list_abun;
         % Get the profiles
         [isorts,c_ref_isointens,c_mz,cur_ch] = obj.getProfiles(dataset_name,spectrum_name);
         % Get the masses of IMPs
