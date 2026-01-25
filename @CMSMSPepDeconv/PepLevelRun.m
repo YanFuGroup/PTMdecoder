@@ -9,8 +9,8 @@ function obj = PepLevelRun(obj)
 obj.check_whether_ms12_mgf_name_match();
 
 % Load protein sequences from fasta file
-if isempty(obj.m_cFastaIO)
-    obj.m_cFastaIO = CFastaIO(obj.m_fastaFile, obj.m_regular_express, obj.m_filtered_res_file_path);
+if isempty(obj.CPepProtService)
+    obj.CPepProtService = CPepProtService(obj.m_fastaFile, obj.m_regular_express, obj.m_filtered_res_file_path);
 end
 
 % Indexing the mgf
@@ -69,7 +69,7 @@ for idx_psf = 1:length(msms_reader.m_peps_specs_forms)
     % Get the peptide sequence
     peptide_sequence = msms_reader.m_peps_specs_forms(idx_psf).peptide_sequence;
     % Get the protein name and position
-    cell_prot_name_pos = obj.m_cFastaIO.get_protein_name_pos(peptide_sequence);
+    cell_prot_name_pos = obj.CPepProtService.get_protein_name_pos(peptide_sequence);
     % Initialize the CPepIsoGatherQuant object
     pepIsoGatherIMSLQ = CPepIsoGatherQuant(cell_prot_name_pos,obj.m_cMs12DatasetIO,...
         obj.m_resFilterThres,obj.m_ms1_tolerance,obj.m_alpha,each_peptide_results_path,obj.m_min_MSMS_num);

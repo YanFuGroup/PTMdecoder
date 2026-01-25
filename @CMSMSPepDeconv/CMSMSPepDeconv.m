@@ -24,7 +24,7 @@ classdef CMSMSPepDeconv
         m_variableModNameMass;  % Specified variable modifications: name, specificity, and mass
         m_cMgfDatasetIO;        % Record MGF spectra
         m_cMs12DatasetIO;       % Record MS1 and MS2 spectra
-        m_cFastaIO;             % Record protein sequences database
+        CPepProtService;             % Record protein sequences database
 
         m_matFragInfo;      % Information of ions, three columns represent [b/y type, position, charge], each row is a fragment ion
         m_matFragEff;       % Fragmentation efficiency matrix of ions, each row corresponds to m_matFragInfo, each column is a solvable MS2 spectrum

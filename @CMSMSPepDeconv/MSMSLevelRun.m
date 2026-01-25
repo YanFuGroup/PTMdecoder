@@ -7,8 +7,8 @@ function obj = MSMSLevelRun(obj, is_record_fragment_information)
 %   obj - The CMSMSPepDeconv object
 
 % Load protein sequences from fasta file
-if isempty(obj.m_cFastaIO)
-    obj.m_cFastaIO = CFastaIO(obj.m_fastaFile, obj.m_regular_express, obj.m_filtered_res_file_path);
+if isempty(obj.CPepProtService)
+    obj.CPepProtService = CPepProtService(obj.m_fastaFile, obj.m_regular_express, obj.m_filtered_res_file_path);
 end
 
 % Indexing the mgf
@@ -62,7 +62,7 @@ while ~feof(fin)
     else
         % meet a spectrum for an old peptide
         str = regexp(strLine,'\t','split');
-        [isProtN,isProtC] = obj.m_cFastaIO.getWhetherProtNC(pepSeq);
+        [isProtN,isProtC] = obj.CPepProtService.getWhetherProtNC(pepSeq);
         eachSpecIMSLQ = CEachSpectrumLocQuant(pepSeq,isProtN,isProtC, ...
             obj.m_cMgfDatasetIO,str{1},str{2},obj.m_fixedModNameMass, ...
             obj.m_variableModNameMass,obj.m_model,obj.m_method,obj.m_lambda, ...

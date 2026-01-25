@@ -58,7 +58,7 @@ obj.m_cMgfDatasetIO.SetMap();
 obj.m_cMgfDatasetIO.SetFidmap();
 
 % Initial the fasta IO
-obj.m_cFastaIO = CFastaIO(obj.m_fastaFile, obj.m_regular_express, obj.m_filtered_res_file_path);
+obj.CPepProtService = CPepProtService(obj.m_fastaFile, obj.m_regular_express, obj.m_filtered_res_file_path);
 
 % Read and process
 msms_reader = CMSMSResReader();
@@ -72,7 +72,7 @@ for idx_psf = 1:length(msms_reader.m_peps_specs_forms)
     % Get the peptide sequence
     peptide_sequence = msms_reader.m_peps_specs_forms(idx_psf).peptide_sequence;
     % Get the protein name and position
-    cell_prot_name_pos = obj.m_cFastaIO.get_protein_name_pos(peptide_sequence);
+    cell_prot_name_pos = obj.CPepProtService.get_protein_name_pos(peptide_sequence);
     % Initialize the CPepIsoGatherQuant object
     pepIsoGatherIMSLQ = CPepIsoGatherQuant(cell_prot_name_pos,obj.m_cMs12DatasetIO,...
         obj.m_resFilterThres,obj.m_ms1_tolerance,obj.m_alpha,'');
