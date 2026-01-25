@@ -34,8 +34,8 @@ while ~feof(fin)
         end
         currentSeq = '';
     else
-        % Concatenate sequence lines
-        currentSeq = [currentSeq, strLine]; %#ok<AGROW>
+        % Concatenate sequence lines, removing any whitespace
+        currentSeq = [currentSeq, regexprep(strLine, '\s+', '')]; %#ok<AGROW>
     end
 end
 
