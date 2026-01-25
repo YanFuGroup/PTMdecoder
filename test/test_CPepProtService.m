@@ -21,7 +21,7 @@ fclose(fid);
 
 % Create Filtered Res File (Tab-delimited)
 % Columns: peptide, protein
-resContent = sprintf('peptide\tprotein\nMKAWVLK\tP12345\nKAW\tP12345\nWVLK\tP12345\nMULTI\tP_MULTI_1,tP_MULTI_2\nXXXXX\tP67890');
+resContent = sprintf('peptide\tprotein\nMKAWVLK\tP12345\nKAW\tP12345\nWVLK\tP12345\nMULTI\tP_MULTI_1,P_MULTI_2\nXXXXX\tP67890');
                 
 testCase.TestData.resParams.filename = 'temp_service_res.txt';
 fid = fopen(testCase.TestData.resParams.filename, 'w');
