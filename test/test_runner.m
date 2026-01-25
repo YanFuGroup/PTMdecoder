@@ -8,7 +8,8 @@ function test_runner()
     
     % Configure test data
     testDataDir = fullfile(currentDir, 'data');
-    paramFile = fullfile(testDataDir, 'msms_pep_site.param'); % Ensure this points to your test parameter file
+    msms_pep_paramFile = fullfile(testDataDir, 'msms_pep_site.param');
+    pep_requant_paramFile = fullfile(testDataDir, 'requant_pep_site.param');
     goldenDir = fullfile(currentDir, 'golden');
     outputDir = fullfile(currentDir, 'output');
     
@@ -28,8 +29,11 @@ function test_runner()
     
     fprintf('=== Start running tests ===\n');
     
-    fprintf('Running main procedure...\n');
-    main(paramFile); 
+    fprintf('Running msms-pep procedure...\n');
+    main(msms_pep_paramFile); 
+
+    fprintf('Running pep-requant procedure...\n');
+    main(pep_requant_paramFile);
     
     fprintf('Running drawXIC test...\n');
     test_draw_xic(projectDir, testDataDir, outputDir);
