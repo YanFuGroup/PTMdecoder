@@ -1,4 +1,4 @@
-function test_runner()
+function system_test_runner()
     fclose all;
 
     % Set path
@@ -36,7 +36,7 @@ function test_runner()
     main(pep_requant_paramFile);
     
     fprintf('Running drawXIC test...\n');
-    test_draw_xic(projectDir, testDataDir, outputDir);
+    helper_test_draw_xic(projectDir, testDataDir, outputDir);
 
     fprintf('Run completed, start comparing results...\n');
     

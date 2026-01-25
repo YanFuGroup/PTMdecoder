@@ -1,5 +1,5 @@
-function test_draw_xic(projectRootDir, testDataDir, outputDir)
-% TEST_DRAW_XIC Runs the drawXIC test case
+function helper_test_draw_xic(projectRootDir, testDataDir, outputDir)
+% HELPER_TEST_DRAW_XIC Runs the drawXIC test case
 %
 % Inputs:
 %   projectRootDir - Root of the codebase
