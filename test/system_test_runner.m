@@ -41,41 +41,7 @@ function system_test_runner()
     fprintf('Run completed, start comparing results...\n');
     
     % Comparison section
-    files = dir(fullfile(goldenDir, '*.*'));
-    allMatch = true;
-    
-    for i = 1:length(files)
-        if files(i).isdir, continue; end
-        fileName = files(i).name;
-        
-        goldenPath = fullfile(goldenDir, fileName);
-        outputPath = fullfile(outputDir, fileName); % Assume output file names are identical
-        
-        if ~isfile(outputPath)
-            fprintf('[Missing] New result did not generate file: %s\n', fileName);
-            allMatch = false;
-            continue;
-        end
-        
-        % Decide comparison method based on file extension
-        [~, ~, ext] = fileparts(fileName);
-        isTextFile = any(strcmpi(ext, {'.txt'}));
-        
-        if isTextFile
-            % Use tolerance-based comparison for text files (handles 1e-6 differences)
-            passed = compare_text_files(goldenPath, outputPath, 1e-5);
-        else
-            % Binary exact match for other files
-            passed = compare_binary_files(goldenPath, outputPath);
-        end
-
-        if passed
-            fprintf('[Pass] %s\n', fileName);
-        else
-            fprintf('[Fail] %s content inconsistent!\n', fileName);
-            allMatch = false;
-        end
-    end
+    allMatch = compare_dir_recursive(goldenDir, goldenDir, outputDir);
     
     if allMatch
         fprintf('\n=== Test passed: Refactoring safe ===\n');
@@ -166,4 +132,50 @@ function isMatch = compare_text_files(file1, file2, tol)
     end
     
     isMatch = true;
+end
+
+function allMatch = compare_dir_recursive(currentDir, rootGoldenDir, rootOutputDir)
+    files = dir(currentDir);
+    allMatch = true;
+    
+    for i = 1:length(files)
+        if strcmp(files(i).name, '.') || strcmp(files(i).name, '..')
+            continue;
+        end
+        
+        fullGoldenPath = fullfile(currentDir, files(i).name);
+        % Calculate relative path assuming rootGoldenDir does not end with separator
+        % and fullGoldenPath starts with rootGoldenDir + separator
+        relativePath = fullGoldenPath(length(rootGoldenDir)+2:end);
+        
+        if files(i).isdir
+            if ~compare_dir_recursive(fullGoldenPath, rootGoldenDir, rootOutputDir)
+                allMatch = false;
+            end
+        else
+            outputPath = fullfile(rootOutputDir, relativePath);
+            
+            if ~isfile(outputPath)
+                fprintf('[Missing] New result did not generate file: %s\n', relativePath);
+                allMatch = false;
+                continue;
+            end
+            
+            [~, ~, ext] = fileparts(files(i).name);
+            isTextFile = any(strcmpi(ext, {'.txt'}));
+            
+            if isTextFile
+                passed = compare_text_files(fullGoldenPath, outputPath, 1e-5);
+            else
+                passed = compare_binary_files(fullGoldenPath, outputPath);
+            end
+    
+            if passed
+                fprintf('[Pass] %s\n', relativePath);
+            else
+                fprintf('[Fail] %s content inconsistent!\n', relativePath);
+                allMatch = false;
+            end
+        end
+    end
 end

@@ -31,6 +31,8 @@ if isempty(pep_rtrange_map)
     warning(['The checked peptide result file "', checked_pep_path, '" is empty!']);
 end
 
+mkdir(dir_save);
+
 %% Read the msms results and requantify the IMPs
 if isempty(obj.m_msms_res_path)
     each_PSM_results_path = fullfile(obj.m_outputDir, 'report_msms.txt');

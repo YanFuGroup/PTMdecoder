@@ -33,6 +33,8 @@ print_progress = CPrintProgress(file_total_length);
 fprintf('Quantifying at PSM level...')
 warning_message = [];
 
+mkdir(obj.m_outputDir);
+
 each_PSM_results_path = fullfile(obj.m_outputDir,'report_msms.txt');
 fout = fopen(each_PSM_results_path,'w');
 if fout <= 0

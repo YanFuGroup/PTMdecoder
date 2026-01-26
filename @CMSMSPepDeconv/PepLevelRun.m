@@ -28,6 +28,8 @@ if isempty(obj.m_cMs12DatasetIO)
     obj.m_cMs12DatasetIO.SetMap();
 end
 
+mkdir(obj.m_outputDir);
+
 % Check the report_msms.txt file
 if isempty(obj.m_msms_res_path)
     each_PSM_results_path = fullfile(obj.m_outputDir, 'report_msms.txt');
