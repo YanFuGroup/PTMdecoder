@@ -28,7 +28,7 @@ Free for academic uses. Licensed under BSD-3-Clause-Clear license.
 
 **Installation:** To install the compiled standalone software of PTMdecoder:
 
-1. Download the installer *"PTMdecoder Setup \<version>.exe"*
+1. Download the installer `PTMdecoder Setup \<version>.exe`
 2. Execute the installer and follow its instructions.
 
    You may see a Windows Defender Warning, since our installer is not digitally signed.
@@ -53,17 +53,17 @@ Required files:
 
 ## Step 2: Set Parameters
 
-1. Launch *"PTMdecoder.exe"* and select the *"Single Run Deconvolution"* workflow. Enable "MS/MS and Peptidoform Level Analysis" analysis and disable "Site Level Analysis".
-2. Set the basic parameters like *"Modifications"*.
+1. Launch `PTMdecoder.exe` and select the `Single Run Deconvolution` workflow. Enable "MS/MS and Peptidoform Level Analysis" analysis and disable "Site Level Analysis".
+2. Set the basic parameters like "Modifications".
 3. Specify the file paths:
    - **Protein Database:** demo/database/human_histone_H4_E_coli_comb_rev.fasta
    - **Spectra Directory:** demo/spectra/
    - **Peptide Spectra List File Path:** demo/pepSpecFile.txt
-   - **Output Directory:** demo/result/
+   - **Output Directory:** demo/results/
 
 ## Step 3: Execute Analysis
 
-Click the ​**Save Parameter & Run**​ button to generate a reusable *".param"* parameter file in the *"Output Directory"* and start IMP discrimination and quantification.
+Click the ​**Save Parameter & Run**​ button to generate a reusable `.param` parameter file in the `Output Directory` and start IMP discrimination and quantification.
 
 **Runtime:**
 
@@ -76,13 +76,12 @@ Click the ​**Save Parameter & Run**​ button to generate a reusable *".param"
 
 ## Reuse Parameter File
 
-1. Launch "PTMdecoder.exe" and select the "Single Run Deconvolution" workflow. Enable "MS/MS and Peptidoform Level Analysis" and disable "Site Level Analysis".
-2. Click the ​​"Load parameter from previous task parameter file"​​ button under the ​MS/MS and Peptidoform Level Analysis​ section to browse and load a pre-saved parameter file (.param), which will automatically fill all relevant configurations. (*"demo/task.param"* in demo dataset)
+1. Launch `PTMdecoder.exe` and select the `Single Run Deconvolution` workflow. Enable "MS/MS and Peptidoform Level Analysis" and disable "Site Level Analysis".
+2. Click the ​​"Load parameter from previous task parameter file"​​ button under the ​MS/MS and Peptidoform Level Analysis​ section to browse and load a pre-saved parameter file (.param), which will automatically fill all relevant configurations. (`demo/task.param` in demo dataset)
 3. Check the Results:
 
-   - The results are saved in the *"Output Directory"* (e.g. "demo/result/" folder).
-   - The expected results are in the same *"result"* folder with the prefix *"expected_"* for comparison.
-
+   - The results are saved in the `Output Directory` (e.g. "demo/results/" folder).
+   - The expected results are in the `expected_results` folder with the same directory structure for comparison.
 ---
 
 For more information about PTMdecoder and more test data, please see [PTMdecoder website](http://fugroup.amss.ac.cn/software/PTMdecoder/PTMdecoder.html).
