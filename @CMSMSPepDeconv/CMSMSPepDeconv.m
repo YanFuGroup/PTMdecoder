@@ -61,10 +61,8 @@ classdef CMSMSPepDeconv
                 obj.m_checked_peptides_res_path = taskParam.m_checked_peptides_res_path;
                 obj.m_msms_res_path = taskParam.m_msms_res_path;
                 obj.m_min_MSMS_num = taskParam.m_min_MSMS_num;
-                % Generate variable modification "name-mass" dictionary using user-specified target modification strings and modification library
-                mapModification = readModifyInfo(obj.m_modFile);
-                obj.m_fixedModNameMass = obj.getModMassName(taskParam.m_fixed_mod,mapModification);
-                obj.m_variableModNameMass = obj.getModMassName(taskParam.m_variable_mod,mapModification);
+                fixedMod = taskParam.m_fixed_mod;
+                variableMod = taskParam.m_variable_mod;
             else
                 obj.m_specPath = specPath;
                 obj.m_modFile = modFile_or_taskparamobj;
@@ -93,20 +91,18 @@ classdef CMSMSPepDeconv
                 if nargin >= 20
                     obj.m_filtered_res_file_path = filtered_res_file_path;
                 end
-                % Generate variable modification "name-mass" dictionary using user-specified target modification strings and modification library
-                mapModification = readModifyInfo(obj.m_modFile);
-                obj.m_fixedModNameMass = obj.getModMassName(fixedMod,mapModification);
-                obj.m_variableModNameMass = obj.getModMassName(variableMod,mapModification);
             end
+
+            % Generate variable modification "name-mass" dictionary using user-specified target modification strings and modification library
+            mapModification = readModifyInfo(obj.m_modFile);
+            obj.m_fixedModNameMass = obj.getModMassName(fixedMod,mapModification);
+            obj.m_variableModNameMass = obj.getModMassName(variableMod,mapModification);
             
             % Ensure file mapper is initialized
             if isempty(obj.m_cMsFileMapper)
                 obj.m_cMsFileMapper = CMsFileMapper(obj.m_specPath);
             end
         end
-
-        % Check whether spectra names match
-        check_whether_ms12_mgf_name_match(obj);
 
         % Run at MSMS level and peptide level
         obj = startRun(obj, is_record_fragment_information)

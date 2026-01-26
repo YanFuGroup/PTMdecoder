@@ -1,10 +1,9 @@
-classdef test_check_ms12_mgf_match < matlab.unittest.TestCase
-    % Test checking MS1/MGF filename matching logic in CMSMSPepDeconv
+classdef test_CMsFileMapper < matlab.unittest.TestCase
+    % Test checking MS1/MGF filename matching logic in CMsFileMapper
     
     properties
         RepoRoot
         TestDir
-        Obj
     end
     
     methods(TestClassSetup)
@@ -14,16 +13,11 @@ classdef test_check_ms12_mgf_match < matlab.unittest.TestCase
             addpath(genpath(testCase.RepoRoot)); % Add all code to path
             
             % Create temporary directory for test files
-            testCase.TestDir = fullfile(testCase.RepoRoot, 'test', 'temp_ms12_test');
+            testCase.TestDir = fullfile(testCase.RepoRoot, 'test', 'temp_ms12_test_mapper');
             if exist(testCase.TestDir, 'dir')
                 rmdir(testCase.TestDir, 's');
             end
             mkdir(testCase.TestDir);
-            
-            % Create Object
-            mockParam = testCase.createMockTaskParam();
-            % Instantiate the class
-            testCase.Obj = CMSMSPepDeconv(mockParam);
         end
     end
     
@@ -55,7 +49,7 @@ classdef test_check_ms12_mgf_match < matlab.unittest.TestCase
             testCase.createFile('file1.ms1');
             
             % Function should run without error
-            testCase.verifyWarningFree(@() testCase.Obj.check_whether_ms12_mgf_name_match());
+            testCase.verifyWarningFree(@() CMsFileMapper(testCase.TestDir));
         end
         
         function testSuffixMatchHCDFT(testCase)
@@ -65,7 +59,7 @@ classdef test_check_ms12_mgf_match < matlab.unittest.TestCase
             testCase.createFile('file2.ms1');
             
             % Function should run without error
-            testCase.verifyWarningFree(@() testCase.Obj.check_whether_ms12_mgf_name_match());
+            testCase.verifyWarningFree(@() CMsFileMapper(testCase.TestDir));
         end
         
         function testSuffixMatchCIDIT(testCase)
@@ -75,7 +69,7 @@ classdef test_check_ms12_mgf_match < matlab.unittest.TestCase
             testCase.createFile('file3.ms1');
             
             % Function should run without error
-            testCase.verifyWarningFree(@() testCase.Obj.check_whether_ms12_mgf_name_match());
+            testCase.verifyWarningFree(@() CMsFileMapper(testCase.TestDir));
         end
         
         function testMissingMS1(testCase)
@@ -84,7 +78,7 @@ classdef test_check_ms12_mgf_match < matlab.unittest.TestCase
             testCase.createFile('file4.mgf');
             
             try
-                testCase.Obj.check_whether_ms12_mgf_name_match();
+                CMsFileMapper(testCase.TestDir);
                 testCase.verifyFail('Expected error was not thrown');
             catch ME
                 testCase.verifyTrue(contains(ME.message, 'does not have a corresponding .ms1 file'), ...
@@ -100,49 +94,35 @@ classdef test_check_ms12_mgf_match < matlab.unittest.TestCase
             testCase.createFile('file5_HCDFT.ms1'); 
             
             % Function should run without error
-            testCase.verifyWarningFree(@() testCase.Obj.check_whether_ms12_mgf_name_match());
+            testCase.verifyWarningFree(@() CMsFileMapper(testCase.TestDir));
         end
 
         function testReviewPSM_NoMatch(testCase)
             % Test 6: Suffix present but no matching MS1 file. (Should Error)
             testCase.createFile('file6_HCDFT.mgf');
-            testCase.createFile('file5_HCDFT.ms1');
+            testCase.createFile('file5_HCDFT.ms1'); % Mismatch name
             
             try
-                testCase.Obj.check_whether_ms12_mgf_name_match();
+                CMsFileMapper(testCase.TestDir);
                 testCase.verifyFail('Expected error was not thrown');
             catch ME
                 testCase.verifyTrue(contains(ME.message, 'does not have a corresponding .ms1 file'), ...
                     'Error message did not contain expected text.');
             end
         end
+        
+        function testMappingCorrectness(testCase)
+           % Test 7: Verify that the mapping is actually correct
+           testCase.createFile('file7_HCDFT.mgf');
+           testCase.createFile('file7.ms1');
+           
+           mapper = CMsFileMapper(testCase.TestDir);
+           ms1_name = mapper.get_ms1_stem('file7_HCDFT');
+           testCase.verifyEqual(ms1_name, 'file7');
+        end
     end
     
     methods (Access = private)
-        function mockParam = createMockTaskParam(testCase)
-            mockParam.m_spec_dir_path = testCase.TestDir;
-            mockParam.m_mod_file_path = fullfile(testCase.RepoRoot, 'modify.ini'); % Point to existing file
-            mockParam.m_fasta_file_path = '';
-            mockParam.m_regular_express = '';
-            mockParam.m_pep_spec_file_path = '';
-            mockParam.m_filtered_res_file_path = '';
-            mockParam.m_output_dir_path = '';
-            mockParam.m_model = '';
-            mockParam.m_method = '';
-            mockParam.m_lambda = 0;
-            mockParam.m_ms1_tolerance = 0;
-            mockParam.m_ms2_tolerance = 0;
-            mockParam.m_alpha = 0;
-            mockParam.m_result_filter_threshold = 0;
-            mockParam.m_enzyme_name = 'Trypsin';
-            mockParam.m_enzyme_limits = [];
-            mockParam.m_checked_peptides_res_path = '';
-            mockParam.m_msms_res_path = '';
-            mockParam.m_min_MSMS_num = 1;
-            mockParam.m_fixed_mod = {};
-            mockParam.m_variable_mod = {};
-        end
-        
         function createFile(testCase, name)
             fullpath = fullfile(testCase.TestDir, name);
             fid = fopen(fullpath, 'w');
