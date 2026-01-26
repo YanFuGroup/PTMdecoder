@@ -61,7 +61,9 @@ fclose(fin);
 print_progress.last_update();
 fprintf('done.\n');
 
-mkdir(obj.m_outputDir);
+if ~isfolder(obj.m_outputDir)
+    mkdir(obj.m_outputDir);
+end
 
 %% Requantify the normalization peptides
 output_path = fullfile(obj.m_outputDir, 'peptide4normalization_requant.txt');

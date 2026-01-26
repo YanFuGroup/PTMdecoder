@@ -28,7 +28,9 @@ if isempty(obj.m_cMs12DatasetIO)
     obj.m_cMs12DatasetIO.SetMap();
 end
 
-mkdir(obj.m_outputDir);
+if ~isfolder(obj.m_outputDir)
+    mkdir(obj.m_outputDir);
+end
 
 % Check the report_msms.txt file
 if isempty(obj.m_msms_res_path)

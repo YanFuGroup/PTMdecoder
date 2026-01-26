@@ -10,6 +10,7 @@ function system_test_runner()
     testDataDir = fullfile(currentDir, 'data');
     msms_pep_paramFile = fullfile(testDataDir, 'msms_pep_site.param');
     pep_requant_paramFile = fullfile(testDataDir, 'requant_pep_site.param');
+    demo_paramFile = fullfile(testDataDir, 'demo.param');
     goldenDir = fullfile(currentDir, 'golden');
     outputDir = fullfile(currentDir, 'output');
     
@@ -34,6 +35,9 @@ function system_test_runner()
 
     fprintf('Running pep-requant procedure...\n');
     main(pep_requant_paramFile);
+
+    fprintf('Running demo in website...\n');
+    main(demo_paramFile)
     
     fprintf('Running drawXIC test...\n');
     helper_test_draw_xic(projectDir, testDataDir, outputDir);

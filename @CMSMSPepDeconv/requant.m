@@ -15,7 +15,9 @@ if isempty(pep_rtrange_map)
     error(['The checked peptide result file "', checked_pep_path, '" is empty!']);
 end
 
-mkdir(obj.m_outputDir);
+if ~isfolder(obj.m_outputDir)
+    mkdir(obj.m_outputDir);
+end
 
 %% Read the msms results and requantify the IMPs
 if isempty(obj.m_msms_res_path)
