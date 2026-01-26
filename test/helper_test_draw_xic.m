@@ -13,7 +13,7 @@ function helper_test_draw_xic(projectRootDir, testDataDir, outputDir)
     msms_pep_site_dir = fullfile(testDataDir, 'msms_pep_site');
     
     % Input files
-    pepSpec_path = fullfile(draw_xic_data_dir, 'pepSpecFile.txt');
+    pepSpec_path = fullfile(msms_pep_site_dir, 'pepSpecFile.txt');
     filtered_res_path = fullfile(msms_pep_site_dir, 'filtered_result_mascot.txt');
     checked_res_path = fullfile(draw_xic_data_dir, 'report_peptide_all.txt');
     msms_res_path = fullfile(draw_xic_data_dir, 'report_msms.txt');
