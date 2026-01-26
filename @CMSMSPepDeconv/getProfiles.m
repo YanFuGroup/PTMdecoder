@@ -17,13 +17,18 @@ function [isorts,c_ref_isointens,cur_mz,cur_ch] = getProfiles(obj,mgf_name,spect
 spec_name = regexp(spectrum_name,'\.','split');
 MS2ScanI = str2double(spec_name{2});
 [~, cur_ch, cur_mz] = obj.m_cMgfDatasetIO.read_oneSpec(mgf_name,spectrum_name);
-MS2_index = obj.m_cMs12DatasetIO.m_mapNameMS2Index(erase(mgf_name,'.mgf'));
+
+% Use mapper to get correct MS1 stem
+mgf_stem = erase(mgf_name,'.mgf');
+ms12_stem = obj.m_cMsFileMapper.get_ms1_stem(mgf_stem);
+
+MS2_index = obj.m_cMs12DatasetIO.m_mapNameMS2Index(ms12_stem);
 idx_cur_scan = MS2_index(:,2)==MS2ScanI; % Find the corresponding scan
 MS1Scan = MS2_index(idx_cur_scan,1); % Record the scan number of MS1
 % MS1_index (scan, retention time, peak number, baseline, injection time)
 % MS1_peaks (m/z, intensity)
-MS1_index = obj.m_cMs12DatasetIO.m_mapNameMS1Index(erase(mgf_name,'.mgf'));
-MS1_peaks = obj.m_cMs12DatasetIO.m_mapNameMS1Peaks(erase(mgf_name,'.mgf'));
+MS1_index = obj.m_cMs12DatasetIO.m_mapNameMS1Index(ms12_stem);
+MS1_peaks = obj.m_cMs12DatasetIO.m_mapNameMS1Peaks(ms12_stem);
 index_starts_MS1 = [1;MS1_index(1:size(MS1_index,1),3)]; % Starting position of each spectrum
 ino = find(MS1_index(:,1)==MS1Scan); % Find the position of the MS1 scan number
 isorts = MS1_index(ino,2); % Get its retention time

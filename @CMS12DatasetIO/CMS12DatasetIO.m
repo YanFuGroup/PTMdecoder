@@ -5,6 +5,7 @@ classdef CMS12DatasetIO<CDatasetIO
         m_mapNameMS1Peaks;  % Dictionary from file name to ms1_peaks
         m_mapNameMS2Index;  % Dictionary from file name to ms2_index
         m_ms1_tolerance;    % the mass tolerance of MS1
+        m_cMsFileMapper;    % Handle to CMsFileMapper for MGF<->MS1 mapping
     end
 
     methods  
@@ -14,6 +15,7 @@ classdef CMS12DatasetIO<CDatasetIO
             obj.m_mapNameMS1Peaks = containers.Map();
             obj.m_mapNameMS2Index = containers.Map();
             obj.m_ms1_tolerance = ms1_tolerance;
+            obj.m_cMsFileMapper = CMsFileMapper(strDatasetFoldname);
         end
         % Generate spectrum index MS1_index and peak index MS1_peaks using .ms1 file
         success = load_MS1_file(obj,ms1_fullfile);

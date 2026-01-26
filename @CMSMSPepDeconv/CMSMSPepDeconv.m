@@ -26,6 +26,8 @@ classdef CMSMSPepDeconv
         m_cMs12DatasetIO;       % Record MS1 and MS2 spectra
         CPepProtService;             % Record protein sequences database
 
+        m_cMsFileMapper;    % Handle to CMsFileMapper for MGF<->MS1 mapping
+        
         m_matFragInfo;      % Information of ions, three columns represent [b/y type, position, charge], each row is a fragment ion
         m_matFragEff;       % Fragmentation efficiency matrix of ions, each row corresponds to m_matFragInfo, each column is a solvable MS2 spectrum
         m_matFragIntens;    % Sum of experimental peak intensities of ions, each row corresponds to m_matFragInfo, each column is a solvable MS2 spectrum
@@ -95,6 +97,11 @@ classdef CMSMSPepDeconv
                 mapModification = readModifyInfo(obj.m_modFile);
                 obj.m_fixedModNameMass = obj.getModMassName(fixedMod,mapModification);
                 obj.m_variableModNameMass = obj.getModMassName(variableMod,mapModification);
+            end
+            
+            % Ensure file mapper is initialized
+            if isempty(obj.m_cMsFileMapper)
+                obj.m_cMsFileMapper = CMsFileMapper(obj.m_specPath);
             end
         end
 

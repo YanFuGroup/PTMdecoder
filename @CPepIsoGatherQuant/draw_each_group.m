@@ -72,8 +72,10 @@ end
 %   and -1,+0,+1,+2,+3
 % MS1_index (scan, retention time, peak number, baseline, injection time)
 % MS1_peaks (m/z, intensity)
-MS1_index = obj.m_cMs12DatasetIO.m_mapNameMS1Index(erase(raw_name,'.mgf'));
-MS1_peaks = obj.m_cMs12DatasetIO.m_mapNameMS1Peaks(erase(raw_name,'.mgf'));
+mgf_stem = erase(raw_name,'.mgf');
+ms1_stem = obj.m_cMs12DatasetIO.m_cMsFileMapper.get_ms1_stem(mgf_stem);
+MS1_index = obj.m_cMs12DatasetIO.m_mapNameMS1Index(ms1_stem);
+MS1_peaks = obj.m_cMs12DatasetIO.m_mapNameMS1Peaks(ms1_stem);
 rt_grid = MS1_index(:,2);
 isotope_num = [-1,0,1,2,3,4];
 intensity = zeros(size(MS1_index,1),length(isotope_num)); % retention time -> intensity, XIC

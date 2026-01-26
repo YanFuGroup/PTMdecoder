@@ -30,7 +30,8 @@ function pep_quant = readSearchResult(obj, fin, input_file_path, ms12DatasetIO, 
                 
                 % Find MS2 index
                 mgf_name = erase(segment{2}, '.mgf');
-                MS2_index = ms12DatasetIO.m_mapNameMS2Index(mgf_name);
+                ms2_name = ms12DatasetIO.m_cMsFileMapper.get_ms2_stem(mgf_name);
+                MS2_index = ms12DatasetIO.m_mapNameMS2Index(ms2_name);
                 
                 % Find the corresponding index of ms2
                 tmp_idx = MS2_index(:,2) == MS2ScanI;
@@ -42,8 +43,8 @@ function pep_quant = readSearchResult(obj, fin, input_file_path, ms12DatasetIO, 
                 MS1Scan = MS2_index(tmp_idx, 1);
                 
                 % Get MS1 data
-                MS1_index = ms12DatasetIO.m_mapNameMS1Index(mgf_name);
-                MS1_peaks = ms12DatasetIO.m_mapNameMS1Peaks(mgf_name);
+                MS1_index = ms12DatasetIO.m_mapNameMS1Index(ms1_name);
+                MS1_peaks = ms12DatasetIO.m_mapNameMS1Peaks(ms1_name);
                 
                 ino = find(MS1_index(:,1) == MS1Scan);
                 if isempty(ino)

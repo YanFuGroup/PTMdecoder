@@ -6,8 +6,6 @@ function obj = PepLevelRun(obj)
 % Output:
 %   obj - The CMSMSPepDeconv object
 
-obj.check_whether_ms12_mgf_name_match();
-
 % Load protein sequences from fasta file
 if isempty(obj.CPepProtService)
     obj.CPepProtService = CPepProtService(obj.m_fastaFile, obj.m_regular_express, obj.m_filtered_res_file_path);

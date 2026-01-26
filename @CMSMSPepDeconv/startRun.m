@@ -6,7 +6,11 @@ if nargin < 2
 end
 
 % Check whether the name of ms1/ms2 is matched with mgf
-obj.check_whether_ms12_mgf_name_match();
+% obj.check_whether_ms12_mgf_name_match();
+% Initialize the file mapper
+if isempty(obj.m_cMsFileMapper)
+    obj.m_cMsFileMapper = CMsFileMapper(obj.m_specPath);
+end
 
 % Indexing the mgf
 obj.m_cMgfDatasetIO = CMgfDatasetIO;
