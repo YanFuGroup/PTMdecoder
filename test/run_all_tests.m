@@ -40,4 +40,12 @@ result = runner.run(suite);
 
 % Display summary
 table(result)
+
+% Summarize results
+numFailed = sum([result.Failed]);
+if numFailed == 0
+    fprintf('\nAll tests passed successfully!\n');
+else
+    fprintf('\nSome tests failed. Number of failed tests: %d\n', numFailed);
+end
 end
