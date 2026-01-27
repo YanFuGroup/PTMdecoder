@@ -29,15 +29,15 @@ function system_test_runner()
     end
     
     fprintf('=== Start running tests ===\n');
+
+    fprintf('Running demo in website...\n');
+    main(demo_paramFile)
     
     fprintf('Running msms-pep procedure...\n');
     main(msms_pep_paramFile); 
 
     fprintf('Running pep-requant procedure...\n');
     main(pep_requant_paramFile);
-
-    fprintf('Running demo in website...\n');
-    main(demo_paramFile)
     
     fprintf('Running drawXIC test...\n');
     helper_test_draw_xic(projectDir, testDataDir, outputDir);

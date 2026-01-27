@@ -40,7 +40,7 @@ eps_rt_print = 1e-6;
 
 bhave_non_zeros = false;
 num_iso = size(current_ratioMatrix,2);
-rt_error_tol = 1; % RT match tolerance, choose 1 arbitrarily
+rt_error_tol = 1; % RT tolerance in minutes
 % A vector showing is needed to skip this IMP.
 %   Cannot delete because other filter can also change this vector
 is_skip_vec = cellfun(@isempty,current_iso_rt_range);
@@ -88,65 +88,27 @@ for idx_iso = 1:num_iso
     final_XIC_peak_for_IMP(idx_iso).right_bound = current_iso_rt_range{idx_iso}(idx_max).rt_end;
 end
 
-% Calculate the ratio on each XIC points using kernel method, and normalize
-% using Nadaraya-Waston kernel averaging method
-esti_ratio = zeros(length(rt_grid),num_iso);
-% % bandwidth = (4/(3*size(sort_rts,1)))^0.2*std(sort_rts);
+% Convert RT bounds to index bounds for CChromatogramUtils
+peak_ranges = repmat(struct('left_bound',0,'right_bound',0), num_iso, 1);
 for idx_iso = 1:num_iso
-    % Check if need to consider this IMP
-    if is_skip_vec(idx_iso)
-        continue;
-    end
-
-    % Gaussian kernel function
-    Ker_Gaussian = @(u) (1/sqrt(2*pi))*exp(-0.5*u.^2);
-    % Epanechnikov kernel function
-    %     Ker_Epanechnikov = @(u) (3/4)*(1-u.^2).*(abs(u)<=1);
+    if is_skip_vec(idx_iso), continue; end
     
-    % Retention time bound of current IMP
-    cur_iso_rt_left = final_XIC_peak_for_IMP(idx_iso).left_bound;
-    cur_iso_rt_right = final_XIC_peak_for_IMP(idx_iso).right_bound;
-    [rt_diff, idx_rt_left] = min(abs(rt_grid-cur_iso_rt_left));
-    if rt_diff > rt_error_tol
+    [diff_l, peak_ranges(idx_iso).left_bound] = min(abs(rt_grid-final_XIC_peak_for_IMP(idx_iso).left_bound));
+    if diff_l > rt_error_tol
         error(['Cannot find the spectra on the specified retention time: ', ...
-            num2str(cur_iso_rt_left)]);
+            num2str(final_XIC_peak_for_IMP(idx_iso).left_bound)]);
     end
-    [rt_diff, idx_rt_right] = min(abs(rt_grid-cur_iso_rt_right));
-    if rt_diff > rt_error_tol
+    
+    [diff_r, peak_ranges(idx_iso).right_bound] = min(abs(rt_grid-final_XIC_peak_for_IMP(idx_iso).right_bound));
+    if diff_r > rt_error_tol
         error(['Cannot find the spectra on the specified retention time: ', ...
-            num2str(cur_iso_rt_right)]);
+            num2str(final_XIC_peak_for_IMP(idx_iso).right_bound)]);
     end
-
-    % Collect all of the rts states within current XIC peak
-    idxs_ident_rt = sort_rts>=cur_iso_rt_left-eps_rt_print & sort_rts<=cur_iso_rt_right+eps_rt_print;
-    rts_current = sort_rts(idxs_ident_rt);
-
-    % Calculate bandwidth and weights for each XIC peak
-    bandwidth = (4/(3*size(rts_current,1)))^0.2*std(rts_current);
-    weights = zeros(idx_rt_right-idx_rt_left+1, length(rts_current));
-    for idx_PSM = 1:length(rts_current)
-        if bandwidth == 0
-            break;
-        end
-        % set kernel weights
-        weights(:,idx_PSM) = Ker_Gaussian(...
-            (rt_grid(idx_rt_left:idx_rt_right)-rts_current(idx_PSM))/bandwidth);
-    end
-    % Check if there are nearly no weights in some retention time for all
-    %   IMP, or the bandwidth is just zero
-    if bandwidth == 0 || any(all(weights<1e-15/length(sort_rts),2))
-        bandwidth = min(cur_iso_rt_right-cur_iso_rt_left,1);
-        for idx_PSM = 1:length(rts_current)
-            weights(:,idx_PSM) = Ker_Gaussian(...
-                (rt_grid(idx_rt_left:idx_rt_right)-rts_current(idx_PSM))/bandwidth);
-        end
-    end
-    % Calculate the ratio using normalized weights and ratioMatrix
-    esti_ratio(idx_rt_left:idx_rt_right,idx_iso) = ...
-        (weights * sort_ratioMatrix(idxs_ident_rt,idx_iso))./(sum(weights,2)+eps);
 end
-% normalize the ratio in every available retention time
-esti_ratio = esti_ratio./(sum(esti_ratio,2)+eps);
+
+% Calculate the ratio on each XIC points using kernel method
+esti_ratio = CChromatogramUtils.calculate_kernel_ratio(rt_grid, sort_rts, sort_ratioMatrix, peak_ranges, false);
+
 
 % Requantification using revised RT
 intensityMatrix = esti_ratio.*smoothed_intensity;

@@ -59,148 +59,15 @@ end
     CChromatogramUtils.get_smoothed_xic(obj.m_cMs12DatasetIO, raw_name, low_mz_bound, high_mz_bound, selected_charge);
 
 % Extract the XIC peaks around the identified MSMS precursor
-% Extract from left to right, each peak is record by 
-% [left_bound, right_bound]. Finally record the peaks in cell.
-idx_PSM = 1;
-XIC_peaks = struct('left_bound',{},'right_bound',{});
-i_Xp = 1;
-while idx_PSM <= length(sort_rts)
-    % index of rt for first identified MS/MS in this peak
-    [~, idx_first_rt] = min(abs(rt_grid-sort_rts(idx_PSM)));
-    max_peak_inten = smoothed_intensity(idx_first_rt);
-    if max_peak_inten == 0
-        % An identification with intensity of zero means the a
-        %   mis-identification, which can not pass the isotopic filtering.
-        %   So these identifications should be skipped.
-        idx_PSM = idx_PSM + 1;
-        continue;
-    end
+XIC_peaks = CChromatogramUtils.detect_xic_peaks(rt_grid, smoothed_intensity, intensity, sort_rts, obj.m_alpha);
 
-    % look after the right boundary
-    XIC_peaks(i_Xp).right_bound = idx_first_rt;
-    min_peak_inten = smoothed_intensity(idx_first_rt);
-    min_peak_iter = idx_first_rt;
-    for iter_rt = idx_first_rt+1:length(rt_grid)
-        % find check whether reach the next rt of identified MS/MS precursor
-        if idx_PSM<length(sort_rts) && rt_grid(iter_rt)>sort_rts(idx_PSM+1)
-            XIC_peaks(i_Xp).right_bound = iter_rt;
-            idx_PSM = idx_PSM + 1;
-        end
-        % update the local maximum
-        if max_peak_inten < smoothed_intensity(iter_rt)
-            max_peak_inten = smoothed_intensity(iter_rt);
-            % update the min peak to ensure that the local minima is at
-            %   right of the left maxima
-            min_peak_inten = max_peak_inten;
-            min_peak_iter = iter_rt;
-        end
-        % find the local minimum
-        if smoothed_intensity(iter_rt) < min_peak_inten
-            min_peak_inten = smoothed_intensity(iter_rt);
-            min_peak_iter = iter_rt;
-        end
-        % find the right bound
-        % two criteria: 1. the right is too low; 2. the local minimum is too low
-        if smoothed_intensity(iter_rt) < max_peak_inten*obj.m_alpha
-            XIC_peaks(i_Xp).right_bound = iter_rt - 1;
-            break;
-        elseif min_peak_inten < 0.5 * min(smoothed_intensity(iter_rt),max_peak_inten)
-            XIC_peaks(i_Xp).right_bound = min_peak_iter;
-            break;
-        end
-    end
-
-    % look after the left boundary
-    XIC_peaks(i_Xp).left_bound = idx_first_rt;
-    min_peak_inten = smoothed_intensity(idx_first_rt);
-    min_peak_iter = idx_first_rt;
-    for iter_rt = idx_first_rt-1:-1:1
-        % update the local maximum
-        if max_peak_inten < smoothed_intensity(iter_rt)
-            max_peak_inten = smoothed_intensity(iter_rt);
-            % update the min peak to ensure that the local minima is at
-            %   right of the left maxima
-            min_peak_inten = max_peak_inten;
-            min_peak_iter = iter_rt;
-        end
-        % find the local minimum
-        if smoothed_intensity(iter_rt) < min_peak_inten
-            min_peak_inten = smoothed_intensity(iter_rt);
-            min_peak_iter = iter_rt;
-        end
-        % find the left bound
-        % two criteria: 1. the left is too low; 2. the minimum is too low
-        if smoothed_intensity(iter_rt) < max_peak_inten*obj.m_alpha
-            XIC_peaks(i_Xp).left_bound = iter_rt + 1;
-            break;
-        elseif min_peak_inten < 0.5 * min(smoothed_intensity(iter_rt),max_peak_inten)
-            XIC_peaks(i_Xp).left_bound = min_peak_iter;
-            break;
-        end
-    end
-
-    % prepare for next peak extraction
-    i_Xp = i_Xp + 1;
-    idx_PSM = idx_PSM + 1;
-end
-
-% remove the XIC peaks only with less than 5 point
-for i_Xp = length(XIC_peaks):-1:1
-    if sum(intensity(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound)~=0) < 5
-        XIC_peaks(i_Xp) = [];
-    end
-end
 if isempty(XIC_peaks)
     return;
 end
 
-% Calculate the ratio on each XIC points using kernel method, and normalize
-% using Nadaraya-Waston kernel averaging method
-esti_ratio = zeros(length(rt_grid),num_iso);
-for idx_iso = 1:num_iso
-    % Gaussian kernel function
-    Ker_Gaussian = @(u) (1/sqrt(2*pi))*exp(-0.5*u.^2);
-    % Epanechnikov kernel function
-%     Ker_Epanechnikov = @(u) (3/4)*(1-u.^2).*(abs(u)<=1);
-    % set kernel weights
-    for i_Xp = 1:length(XIC_peaks)
-        % Collect all of the rts states within current XIC peak
-        idxs_rt = sort_rts>=rt_grid(XIC_peaks(i_Xp).left_bound) &...
-            sort_rts<=rt_grid(XIC_peaks(i_Xp).right_bound);
-        rts_current = sort_rts(idxs_rt);
-        % Calculate bandwidth and weights for each XIC peak
-        bandwidth = (4/(3*size(rts_current,1)))^0.2*std(rts_current);
-        weights = zeros(length(rt_grid), length(rts_current));
-        for idx_PSM = 1:length(rts_current)
-            if bandwidth == 0
-                break;
-            end
-            weights(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,idx_PSM) = ...
-                Ker_Gaussian((rt_grid(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound)...
-                -rts_current(idx_PSM))/bandwidth);
-        end
-        % Check if there are nearly no weights in some retention time for all
-        %   IMP, or the bandwidth is just zero
-        %         if ~all(weights(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,:))
-        if bandwidth == 0 ||...
-                any(all(weights(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,:)<1e-15/length(sort_rts),2))
-            bandwidth = min(rt_grid(XIC_peaks(i_Xp).right_bound)-rt_grid(XIC_peaks(i_Xp).left_bound),1);
-            for idx_PSM = 1:length(rts_current)
-                weights(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,idx_PSM) = ...
-                    Ker_Gaussian((rt_grid(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound)...
-                    -rts_current(idx_PSM))/bandwidth);
-            end
-        end
-        % Calculate the ratio using normalized weights and ratioMatrix
-        esti_ratio(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,idx_iso) = ...
-            esti_ratio(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,idx_iso) + ...
-            (weights(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,:) * ...
-            sort_ratioMatrix(idxs_rt,idx_iso))./ ...
-            (sum(weights(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,:),2)+eps);
-    end
-end
-% normalize the ratio in every available retention time
-esti_ratio = esti_ratio./(sum(esti_ratio,2)+eps);
+% Calculate the ratio on each XIC points using kernel method
+esti_ratio = CChromatogramUtils.calculate_kernel_ratio(rt_grid, sort_rts, sort_ratioMatrix, XIC_peaks, true);
+
 
 % Filter low abundance IMP according to the relative AUXIC
 intensityMatrix = esti_ratio.*smoothed_intensity;
