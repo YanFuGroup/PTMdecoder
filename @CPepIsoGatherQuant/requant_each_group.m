@@ -45,24 +45,11 @@ rt_error_tol = 1; % RT match tolerance, choose 1 arbitrarily
 %   Cannot delete because other filter can also change this vector
 is_skip_vec = cellfun(@isempty,current_iso_rt_range);
 
-% Sort MS1 signal (pair of retention time and intensity) by time
-sort_rts = [(1:length(current_rts))',current_rts]; % Add an ordered number in front
-sort_rts = sortrows(sort_rts,2); % Sort in ascending order by the second column
-sort_idx = sort_rts(:,1);
-sort_rts = sort_rts(:,2);
-sort_inten = current_inten(sort_idx);
-sort_ratioMatrix = current_ratioMatrix(sort_idx,:); % Rearrange the matrix according to time order
+% Preprocess inputs (Sort, Smooth, Denoise)
+[sort_rts, sort_inten, sort_ratioMatrix, is_valid] = ...
+    CChromatogramUtils.preprocess_ms1_inputs(current_rts, current_inten, current_ratioMatrix, obj.m_minMSMSnum);
 
-% Smooth sort_inten, denoise using a relative abundance threshold method
-sort_inten = smooth(sort_inten,0.05,'loess'); %0.05,'loess'
-maxInten = max(sort_inten);
-tmp = sort_inten<0.05*maxInten; % Find results where intensity is less than 0.05 of the maximum value and discard them
-sort_inten(tmp) = []; %#ok<NASGU>
-sort_rts(tmp) = [];
-sort_ratioMatrix(tmp,:) = [];
-
-if (obj.hasMinRows(sort_ratioMatrix, obj.m_minMSMSnum) == false)
-    % If the ratio matrix has less than 3 rows, skip this group
+if ~is_valid
     bhave_non_zeros = false;
     idxNonZero = [];
     auxic = [];
@@ -72,43 +59,9 @@ if (obj.hasMinRows(sort_ratioMatrix, obj.m_minMSMSnum) == false)
     return;
 end
 
-% find the XIC filtered by m/z of base peak [low_mz_bound, high_mz_bound]
-%   and -1,+0,+1,+2,+3
-% MS1_index (scan, retention time, peak number, baseline, injection time)
-% MS1_peaks (m/z, intensity)
-mgf_stem = erase(raw_name,'.mgf');
-ms1_stem = obj.m_cMs12DatasetIO.m_cMsFileMapper.get_ms1_stem(mgf_stem);
-MS1_index = obj.m_cMs12DatasetIO.m_mapNameMS1Index(ms1_stem);
-MS1_peaks = obj.m_cMs12DatasetIO.m_mapNameMS1Peaks(ms1_stem);
-rt_grid = MS1_index(:,2);
-isotope_num = [-1,0,1,2,3,4];
-intensity = zeros(size(MS1_index,1),length(isotope_num)); % retention time -> intensity, XIC
-% record the isotopic XIC
-for idx_iso = 1:length(isotope_num)
-    idxs_target_peaks = find(MS1_peaks(:,1)>low_mz_bound+isotope_num(idx_iso)*CConstant.unitdiff/selected_charge...
-        & MS1_peaks(:,1)<high_mz_bound+isotope_num(idx_iso)*CConstant.unitdiff/selected_charge);
-    for idx_itp = 1:length(idxs_target_peaks)
-        intensity(find(MS1_index(:,3)>idxs_target_peaks(idx_itp),1),idx_iso) = ...
-            MS1_peaks(idxs_target_peaks(idx_itp),2);
-    end
-end
-% filter with two criteria:
-% 1. the intensity of -1 peak should not greater than monoisotopic
-% 2. the intensity of isotopic cluster peak should be enough similar with
-%   the IPV matrix.
-for idx_inten = 1:size(intensity,1)
-    if intensity(idx_inten,1)>intensity(idx_inten,2) % the first criterion
-        intensity(idx_inten,:) = 0;
-    elseif ~any(intensity(idx_inten,:))
-        continue;
-    elseif 1-pdist([CConstant.IPV(int64((high_mz_bound+low_mz_bound)/2),:);...
-            intensity(idx_inten,2:end)],'cosine') < 0.6
-        intensity(idx_inten,:) = 0;
-    end
-end
-intensity = intensity(:,2);
-smoothed_intensity = smoothdata(intensity,'movmean',5);
-% smoothed_intensity = smoothdata(intensity,'gaussian',1,'SamplePoints',rt_grid);
+% Get Smoothed XIC
+[rt_grid, smoothed_intensity, intensity] = ...
+    CChromatogramUtils.get_smoothed_xic(obj.m_cMs12DatasetIO, raw_name, low_mz_bound, high_mz_bound, selected_charge);
 
 % Extract the rt bound of XIC peak
 final_XIC_peak_for_IMP = repmat(struct('left_bound',0,'right_bound',0), num_iso, 1);
