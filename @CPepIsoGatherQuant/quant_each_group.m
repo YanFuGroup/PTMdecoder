@@ -68,23 +68,43 @@ end
 % Calculate the ratio on each XIC points using kernel method
 esti_ratio = CChromatogramUtils.calculate_kernel_ratio(rt_grid, sort_rts, sort_ratioMatrix, XIC_peaks, true);
 
-
-% Filter low abundance IMP according to the relative AUXIC
+% For each XIC peak, calculate the area of each IMP. If an IMP's area is
+% less than a threshold (max_area * resFilterThres), remove it from that peak.
+% Then, scale the remaining IMPs uniformly within the peak to preserve the
+% total peak area (= sum of all pre-filter IMP areas in that peak).
 intensityMatrix = esti_ratio.*smoothed_intensity;
 for i_Xp = 1:length(XIC_peaks)
+    curr_start = XIC_peaks(i_Xp).left_bound;
+    curr_end = XIC_peaks(i_Xp).right_bound;
+
+    % Calculate area for each IMP in this peak
     area_filter = zeros(num_iso,1);
     for idx_iso = 1:num_iso
         area_filter(idx_iso) = CChromatogramUtils.calculate_area(...
             rt_grid, intensityMatrix(:,idx_iso), ...
-            XIC_peaks(i_Xp).left_bound, XIC_peaks(i_Xp).right_bound);
+            curr_start, curr_end);
     end
-    % If the AUC of the peak of an IMP is less than 10% of the maximum,
-    % filter, remove the proportion.
-    esti_ratio(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,area_filter<max(area_filter)*obj.m_resFilterThres) = 0;
-end
-esti_ratio = esti_ratio./(sum(esti_ratio,2)+eps);
+    
+    % Filter: keep only IMPs with area >= max_area * threshold
+    max_area = max(area_filter);
+    keep_mask = area_filter >= max_area * obj.m_resFilterThres;
+    esti_ratio(curr_start:curr_end, ~keep_mask) = 0;
 
-% calculate XIC of each IMPs using total XIC and ratio curve
+    % Uniform scaling: preserve total peak area
+    sum_keep_area = sum(area_filter(keep_mask));
+    if sum_keep_area > 0
+        peak_total_area = sum(area_filter);  % Total area before filtering
+        scale_factor = peak_total_area / sum_keep_area;
+        esti_ratio(curr_start:curr_end, keep_mask) = ...
+            esti_ratio(curr_start:curr_end, keep_mask) * scale_factor;
+    end
+end
+
+% For each IMP, evaluate all candidate XIC peaks by computing:
+%   - max_proportions: peak contribution ratio
+%   - fwhm: peak width
+%   - ratio_each_XIC_peak: area contribution in each peak
+
 intensityMatrix = esti_ratio.*smoothed_intensity;
 auxic = zeros(num_iso,1);
 rt_bound = repmat(struct('start',0,'end',0), num_iso, length(XIC_peaks));
@@ -135,6 +155,7 @@ idxNonZero = find(auxic(:,1)~=0);
 auxic = auxic(idxNonZero,:);
 rt_bound = rt_bound(idxNonZero,:);
 idx_selected = idx_selected(idxNonZero,:);
+% TODO: use auxic to calculate the ratio_each_XIC_peak instead.
 ratio_each_XIC_peak = ratio_each_XIC_peak(idxNonZero,:);
 ratio_each_XIC_peak = ratio_each_XIC_peak./sum(ratio_each_XIC_peak,1);
 if ~isempty(idxNonZero)

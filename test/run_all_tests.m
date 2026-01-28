@@ -39,7 +39,8 @@ runner = TestRunner.withTextOutput();
 result = runner.run(suite);
 
 % Display summary
-table(result)
+summary_table = table(result);
+disp(summary_table);
 
 % Summarize results
 numFailed = sum([result.Failed]);
