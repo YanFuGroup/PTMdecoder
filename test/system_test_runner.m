@@ -5,6 +5,7 @@ function system_test_runner()
     currentDir = fileparts(mfilename('fullpath'));
     projectDir = fileparts(currentDir); % Go back one level to the code root directory
     addpath(projectDir);
+    cd(currentDir);
     
     % Configure test data
     testDataDir = fullfile(currentDir, 'data');
@@ -116,7 +117,7 @@ function isMatch = compare_text_files(file1, file2, tol)
         return;
     end
     
-    diffs = abs(n1 - n2);
+    diffs = abs(n1 - n2)./(max(abs(n1), abs(n2)) + eps);
     
     % Check tolerance
     % Handle NaNs: if both are NaN, diff is usually NaN. 
