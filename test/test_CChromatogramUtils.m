@@ -380,5 +380,31 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
              testCase.verifyEqual(rec_rt_r, rt_grid(9:11));
              testCase.verifyEqual(rec_inten_r, [0; 90; 100]);
         end
+
+        function testCalculateArea(testCase)
+            % Test calculate_area functionality (integration * 60)
+            
+            rt_grid = (0:5)'; % 0, 1, 2, 3, 4, 5
+            % Intensities: [0, 10, 20, 10, 0, 0]
+            intensity = [0; 10; 20; 10; 0; 0];
+            
+            % Case 1: Standard peak (indices 2 to 4 -> Values 10, 20, 10)
+            % get_closed_peak_data will expand to 1 to 5 (0, 10, 20, 10, 0)
+            % Trapezoidal area of [0, 10, 20, 10, 0] with dx=1 is 40.
+            % calculate_area multiplies by 60 -> 2400.
+            
+            area = CChromatogramUtils.calculate_area(rt_grid, intensity, 2, 4);
+            testCase.verifyEqual(area, 2400, 'Area calculation incorrect');
+            
+            % Case 2: Verify it handles boundary behavior implicitly
+            % Indices 1 to 2 -> [0, 10]. 
+            % get_closed_peak_data expands right to 3 (20) -> forced 0.
+            % Data: [0, 10, 0] (Indices 1, 2, 3). RT: 0, 1, 2.
+            % Area trapz: (0+10)/2 + (10+0)/2 = 5 + 5 = 10.
+            % Result * 60 = 600.
+            
+            area_boundary = CChromatogramUtils.calculate_area(rt_grid, intensity, 1, 2);
+            testCase.verifyEqual(area_boundary, 600, 'Boundary area calculation incorrect');
+        end
     end
 end

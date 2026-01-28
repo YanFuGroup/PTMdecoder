@@ -86,28 +86,22 @@ for idx_iso = 1:num_iso
         continue;
     end
     
+    % Use pre-calculated indices from map_rt_to_indices
+    idx_start = peak_ranges(idx_iso).left_bound;
+    idx_end = peak_ranges(idx_iso).right_bound;
+
+    % Assign rt_bound from input peaks
     rt_bound(idx_iso).start = final_XIC_peak_for_IMP(idx_iso).left_bound;
     rt_bound(idx_iso).end = final_XIC_peak_for_IMP(idx_iso).right_bound;
-    [rt_diff, final_rt_start] = min(abs(rt_grid-rt_bound(idx_iso).start));
-    if rt_diff > rt_error_tol
-        error(['Cannot find the spectra on the specified retention time: ', ...
-            num2str(rt_bound(idx_iso).start)]);
-    end
-    if final_rt_start ~= 1
-        final_rt_start = final_rt_start - 1;
-    end
-    [rt_diff, final_rt_end] = min(abs(rt_grid-rt_bound(idx_iso).end));
-    if rt_diff > rt_error_tol
-        error(['Cannot find the spectra on the specified retention time: ', ...
-            num2str(rt_bound(idx_iso).end)]);
-    end
-    if final_rt_end ~= length(rt_grid)
-        final_rt_end = final_rt_end + 1;
-    end
-    auxic(idx_iso,1) = trapz(rt_grid(final_rt_start:final_rt_end),...
-        [0;intensityMatrix(final_rt_start+1:final_rt_end-1,idx_iso);0])*60;
-    total_temp = trapz(rt_grid(final_rt_start:final_rt_end),...
-        [0;smoothed_intensity(final_rt_start+1:final_rt_end-1);0])*60;
+
+    % Calculate area using the closed peak logic
+    auxic(idx_iso,1) = CChromatogramUtils.calculate_area(...
+        rt_grid, intensityMatrix(:,idx_iso), idx_start, idx_end);
+
+    % Calculate total area for ratio
+    total_temp = CChromatogramUtils.calculate_area(...
+        rt_grid, smoothed_intensity, idx_start, idx_end);
+
     ratio_each_XIC_peak(idx_iso,1) = auxic(idx_iso,1) / total_temp;
 end
 

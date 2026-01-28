@@ -19,5 +19,7 @@ classdef CChromatogramUtils
         peak_ranges = map_rt_to_indices(rt_grid, final_XIC_peak, is_skip_vec, rt_error_tol)
 
         [rec_rt, rec_inten] = get_closed_peak_data(rt_grid, intensity_full, idx_start, idx_end)
+        
+        area = calculate_area(rt_grid, intensity_full, idx_start, idx_end)
     end
 end

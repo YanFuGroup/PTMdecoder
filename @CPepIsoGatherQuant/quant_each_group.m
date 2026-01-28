@@ -74,8 +74,9 @@ intensityMatrix = esti_ratio.*smoothed_intensity;
 for i_Xp = 1:length(XIC_peaks)
     area_filter = zeros(num_iso,1);
     for idx_iso = 1:num_iso
-        area_filter(idx_iso) = trapz(rt_grid(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound),...
-            intensityMatrix(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,idx_iso));
+        area_filter(idx_iso) = CChromatogramUtils.calculate_area(...
+            rt_grid, intensityMatrix(:,idx_iso), ...
+            XIC_peaks(i_Xp).left_bound, XIC_peaks(i_Xp).right_bound);
     end
     % If the AUC of the peak of an IMP is less than 10% of the maximum,
     % filter, remove the proportion.
@@ -93,15 +94,23 @@ for idx_iso = 1:num_iso
     max_proportions = zeros(length(XIC_peaks),1);
     fwhm = zeros(length(XIC_peaks),1);
     for i_Xp = 1:length(XIC_peaks)
-        max_proportions(i_Xp) = max(esti_ratio(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,idx_iso));
+        % Cache struct fields for performance and readability
+        curr_start = XIC_peaks(i_Xp).left_bound;
+        curr_end = XIC_peaks(i_Xp).right_bound;
+
+        max_proportions(i_Xp) = max(esti_ratio(curr_start:curr_end,idx_iso));
         % Calculate the fwhm for XIC selection
-        peak_rts = rt_grid(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound);
-        peak_intens = intensityMatrix(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,idx_iso);
+        peak_rts = rt_grid(curr_start:curr_end);
+        peak_intens = intensityMatrix(curr_start:curr_end,idx_iso);
         fwhm(i_Xp) = CChromatogramUtils.get_fwhm(peak_rts, peak_intens);
         % Calculate the ratio of each IMP in each XIC peak
-        ratio_each_XIC_peak(idx_iso, i_Xp) = ...
-            trapz(rt_grid(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound),...
-            intensityMatrix(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,idx_iso))*60;
+        ratio_each_XIC_peak(idx_iso, i_Xp) = CChromatogramUtils.calculate_area(...
+             rt_grid, intensityMatrix(:,idx_iso), ...
+             curr_start, curr_end);
+        
+        % Store rt bounds in the same loop
+        rt_bound(idx_iso,i_Xp).start = rt_grid(curr_start);
+        rt_bound(idx_iso,i_Xp).end = rt_grid(curr_end);
     end
     % When there are more than one XIC peak counting for an IMP,
     % only record one XIC peak, the choosing critera are:
@@ -113,20 +122,12 @@ for idx_iso = 1:num_iso
         %   to the fwhm
         [~, idx_selected(idx_iso)] = max(fwhm);
     end
-    final_rt_start = XIC_peaks(idx_selected(idx_iso)).left_bound;
-    if final_rt_start ~= 1
-        final_rt_start = final_rt_start - 1;
-    end
-    final_rt_end = XIC_peaks(idx_selected(idx_iso)).right_bound;
-    if final_rt_end ~= length(rt_grid)
-        final_rt_end = final_rt_end + 1;
-    end
-    auxic(idx_iso,1) = trapz(rt_grid(final_rt_start:final_rt_end),...
-        [0;intensityMatrix(final_rt_start+1:final_rt_end-1,idx_iso);0])*60;
-    for idx_p = 1:length(XIC_peaks)
-        rt_bound(idx_iso,idx_p).start = rt_grid(XIC_peaks(idx_p).left_bound);
-        rt_bound(idx_iso,idx_p).end = rt_grid(XIC_peaks(idx_p).right_bound);
-    end
+    
+    idx_start = XIC_peaks(idx_selected(idx_iso)).left_bound;
+    idx_end = XIC_peaks(idx_selected(idx_iso)).right_bound;
+    
+    auxic(idx_iso,1) = CChromatogramUtils.calculate_area(...
+        rt_grid, intensityMatrix(:,idx_iso), idx_start, idx_end);
 end
 
 % Get the non-zero area under XIC, index and rt_bound
