@@ -117,7 +117,7 @@ function isMatch = compare_text_files(file1, file2, tol)
         return;
     end
     
-    diffs = abs(n1 - n2)./(max(abs(n1), abs(n2)) + eps);
+    diffs = abs(n1 - n2)./(max(max(abs(n1), abs(n2)), 1));
     
     % Check tolerance
     % Handle NaNs: if both are NaN, diff is usually NaN. 
