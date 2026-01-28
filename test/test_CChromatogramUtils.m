@@ -216,7 +216,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % Grid: 0 to 10
             rt_grid = (0:0.1:10)';
             
-            % PSMs at RT=5. Ratio=0.5 for Iso1, 0.8 for Iso2
+            % PSMs at RT=5. Ratio=0.5 for IMP1, 0.8 for IMP2
             sort_rts = [4.9; 5.0; 5.1];
             sort_ratioMatrix = [0.2, 0.8; 
                                 0.2, 0.8; 
@@ -226,7 +226,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % Indices: 4.0 is index 41, 6.0 is index 61
             peak_range = struct('left_bound', 41, 'right_bound', 61);
             
-            % SCENARIO 1: is_shared = true (Same peak logic for all isotopes)
+            % SCENARIO 1: is_broadcast = true (Same peak logic for all IMPs)
             % Should produce ratios approx 0.5 and 0.8 in the peak region
             esti_ratio = CChromatogramUtils.calculate_kernel_ratio(...
                 rt_grid, sort_rts, sort_ratioMatrix, peak_range, true);
@@ -244,20 +244,91 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % Check that outside the peak, it is zero
             testCase.verifyEqual(esti_ratio(10, :), [0 0]);
             
-            % SCENARIO 2: is_shared = false (Different peaks per isotope)
-            % Iso 1 uses the peak at 5.0. Iso 2 has NO peak (or different peak).
+            % SCENARIO 2: is_broadcast = false (Different peaks per IMP)
+            % IMP 1 uses the peak at 5.0. IMP 2 has NO peak (or different peak).
             
             peak_ranges_multi = repmat(struct('left_bound',0,'right_bound',0), 1, 2);
-            peak_ranges_multi(1) = peak_range; % Iso 1 has peak
-            % Iso 2 is empty/default
+            peak_ranges_multi(1) = peak_range; % IMP 1 has peak
+            % IMP 2 is empty/default
             
             esti_ratio_multi = CChromatogramUtils.calculate_kernel_ratio(...
                 rt_grid, sort_rts, sort_ratioMatrix, peak_ranges_multi, false);
             
-            % Iso 1 should be populated
+            % IMP 1 should be populated
             testCase.verifyEqual(esti_ratio_multi(51, 1), 1, 'AbsTol', 0.01);
-            % Iso 2 should be zero (no peak defined)
-            testCase.verifyEqual(esti_ratio_multi(51, 2), 0, 'Iso 2 should be empty');
+            % IMP 2 should be zero (no peak defined)
+            testCase.verifyEqual(esti_ratio_multi(51, 2), 0, 'IMP 2 should be empty');
+        end
+
+        function testParseImpRtRanges(testCase)
+            % Test parse_imp_rt_ranges functionality
+            
+            % Setup data
+            % imp 1: has peaks, one main peak
+            imp1(1).check_label = 0; imp1(1).rt_start = 10.1; imp1(1).rt_end = 10.5;
+            imp1(2).check_label = 2; imp1(2).rt_start = 12.0; imp1(2).rt_end = 12.5; % max
+            imp1(3).check_label = 1; imp1(3).rt_start = 14.0; imp1(3).rt_end = 14.5;
+            
+            % imp 2: empty (should be skipped)
+            imp2 = [];
+            
+            % imp 3: all zero labels (should be skipped)
+            imp3(1).check_label = 0; imp3(1).rt_start = 20.0; imp3(1).rt_end = 20.5;
+            
+            % imp 4: skip via input vec
+            imp4(1).check_label = 5; imp4(1).rt_start = 30.0; imp4(1).rt_end = 30.5;
+            
+            imp_rt_range = {imp1, imp2, imp3, imp4};
+            is_skip_vec = [false, false, false, true];
+            
+            [final_XIC_peak, max_label, new_skip_vec] = CChromatogramUtils.parse_imp_rt_ranges(imp_rt_range, is_skip_vec);
+            
+            % Assertions
+            testCase.verifyEqual(final_XIC_peak(1).left_bound, 12.0);
+            testCase.verifyEqual(final_XIC_peak(1).right_bound, 12.5);
+            testCase.verifyEqual(max_label(1), 2);
+            testCase.verifyFalse(new_skip_vec(1));
+            
+            testCase.verifyTrue(new_skip_vec(2), 'Empty imp should be skipped');
+            
+            testCase.verifyTrue(new_skip_vec(3), 'Zero label imp should be skipped');
+            testCase.verifyEqual(max_label(3), 0);
+            
+            testCase.verifyTrue(new_skip_vec(4), 'Originally skipped imp should stay skipped');
+        end
+        
+        function testMapRtToIndices(testCase)
+            % Test map_rt_to_indices functionality
+            
+            rt_grid = 10:0.1:20; % 10.0, 10.1, ..., 20.0
+            % index 1 -> 10.0, index 21 -> 12.0
+            
+            num_imp = 2;
+            final_XIC_peak = repmat(struct('left_bound',0,'right_bound',0), num_imp, 1);
+            final_XIC_peak(1).left_bound = 12.0; % Exact match, index 21
+            final_XIC_peak(1).right_bound = 13.0; % Exact match, index 31
+            
+            final_XIC_peak(2).left_bound = 999; % Out of bounds
+            final_XIC_peak(2).right_bound = 999; 
+            
+            skip_vec_map = [false, true];
+            rt_tol = 0.001;
+            
+            peak_ranges = CChromatogramUtils.map_rt_to_indices(rt_grid, final_XIC_peak, skip_vec_map, rt_tol);
+            
+            testCase.verifyEqual(peak_ranges(1).left_bound, 21);
+            testCase.verifyEqual(peak_ranges(1).right_bound, 31);
+            
+            % Test Error Case
+            final_XIC_peak_err = final_XIC_peak;
+            skip_vec_err = [false, false]; % Unskip the bad one
+            
+            try
+                CChromatogramUtils.map_rt_to_indices(rt_grid, final_XIC_peak_err, skip_vec_err, rt_tol);
+                testCase.verifyFail('Should have thrown error for out of bound RT');
+            catch ME
+                testCase.verifyTrue(contains(ME.message, 'Cannot find the spectra'), 'Error message mismatch');
+            end
         end
     end
 end

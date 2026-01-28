@@ -20,10 +20,10 @@ function esti_ratio = calculate_kernel_ratio(rt_grid, sort_rts, sort_ratioMatrix
         n_loops = length(peak_ranges);
     else
         % Requant mode: One-to-one mapping
-        % Strict Validation: peak_ranges count MUST match isotope count
+        % Strict Validation: peak_ranges count MUST match IMP count
         if length(peak_ranges) ~= num_imp
              error('CChromatogramUtils:InvalidInput', ...
-                   'In Requant mode (is_broadcast=false), peak_ranges length (%d) must match number of isotopes (%d).', ...
+                   'In Requant mode (is_broadcast=false), peak_ranges length (%d) must match number of IMPs (%d).', ...
                    length(peak_ranges), num_imp);
         end
         n_loops = num_imp;
@@ -72,9 +72,9 @@ function esti_ratio = calculate_kernel_ratio(rt_grid, sort_rts, sort_ratioMatrix
         
         % 3. Apply Result (Policy Decision)
         if is_broadcast
-            target_indices = 1:num_imp; % Broadcast result to ALL isotopes
+            target_indices = 1:num_imp; % Broadcast result to ALL IMPs
         else
-            target_indices = i;         % Apply result ONLY to the current i-th isotope
+            target_indices = i;         % Apply result ONLY to the current i-th IMP
         end
         
         weight_sum = sum(weights, 2) + eps;
