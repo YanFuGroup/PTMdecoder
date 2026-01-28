@@ -17,5 +17,7 @@ classdef CChromatogramUtils
         [final_XIC_peak, max_label, is_skip_vec] = parse_imp_rt_ranges(imp_rt_range, is_skip_vec)
         
         peak_ranges = map_rt_to_indices(rt_grid, final_XIC_peak, is_skip_vec, rt_error_tol)
+
+        [rec_rt, rec_inten] = get_closed_peak_data(rt_grid, intensity_full, idx_start, idx_end)
     end
 end

@@ -330,5 +330,55 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
                 testCase.verifyTrue(contains(ME.message, 'Cannot find the spectra'), 'Error message mismatch');
             end
         end
+
+        function testGetClosedPeakData(testCase)
+            % Test get_closed_peak_data functionality
+            
+            rt_grid = (0:10)';
+            % intensity index 1(0) -> 0; index 2(10) -> 100; ...
+            intensity_full = (0:10)' * 10; 
+            
+            % Case 1: Normal internal range
+            % Original: Indices 3 to 5 (Values: 20, 30, 40)
+            % Padding: Expands to 2 to 6.
+            % Logic: 
+            %   Pad=2 matches idx 2 (Val 10). Since 2 < 3, force to 0.
+            %   Pad=6 matches idx 6 (Val 50). Since 6 > 5, force to 0.
+            % But wait, intensity_full(2) is 10. 
+            % The output should reflect the padding logic:
+            
+            orig_start = 3;
+            orig_end = 5;
+            
+            [rec_rt, rec_inten] = CChromatogramUtils.get_closed_peak_data(...
+                rt_grid, intensity_full, orig_start, orig_end);
+            
+            testCase.verifyEqual(rec_rt, rt_grid(2:6));
+            testCase.verifyEqual(rec_inten, [0; 20; 30; 40; 0]);
+            
+            % Case 2: Left Boundary (idx_start=1)
+            % Original: 1 to 2 (Values: 0, 10)
+            % Padding: 1 to 3 (Values: 0, 10, 20)
+            % Left pad (1) is NOT < start (1). SO KEEP VALUE (0).
+            % Right pad (3) is > end (2). SO FORCE ZERO.
+            
+            % Use nonzero start to verify
+            intensity_nonzero = intensity_full;
+            intensity_nonzero(1) = 999; 
+            
+            [rec_rt_l, rec_inten_l] = CChromatogramUtils.get_closed_peak_data(...
+                 rt_grid, intensity_nonzero, 1, 2);
+            
+            testCase.verifyEqual(rec_rt_l, rt_grid(1:3));
+            % Expect: [999, 10, 0] because we couldn't pad left
+            testCase.verifyEqual(rec_inten_l, [999; 10; 0]);
+            
+             % Case 3: Right Boundary (idx_end=11)
+             [rec_rt_r, rec_inten_r] = CChromatogramUtils.get_closed_peak_data(...
+                 rt_grid, intensity_full, 10, 11);
+             
+             testCase.verifyEqual(rec_rt_r, rt_grid(9:11));
+             testCase.verifyEqual(rec_inten_r, [0; 90; 100]);
+        end
     end
 end

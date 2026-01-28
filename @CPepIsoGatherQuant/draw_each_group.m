@@ -73,25 +73,7 @@ peak_ranges = CChromatogramUtils.map_rt_to_indices(rt_grid, final_XIC_peak_for_I
 % Calculate the ratio on each XIC points using kernel method, and normalize
 esti_ratio = CChromatogramUtils.calculate_kernel_ratio(rt_grid, sort_rts, sort_ratioMatrix, peak_ranges, false);
 
-
-% Hypothesis: The retention time bounds revised manually cannot be wrong.
-%   No need to recognize and delete the low abundance IMP in revised file.
-% Filter low abundance IMP according to the relative AUXIC
-% intensityMatrix = esti_ratio.*smoothed_intensity;
-% for i_Xp = 1:length(XIC_peaks)
-%     area_filter = zeros(num_iso,1);
-%     for idx_iso = 1:num_iso
-%         area_filter(idx_iso) = trapz(rt_grid(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound),...
-%             intensityMatrix(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,idx_iso));
-%     end
-%     % If the AUC of the peak of an IMP is less than 10% of the maximum,
-%     % filter, remove the proportion.
-%     esti_ratio(XIC_peaks(i_Xp).left_bound:XIC_peaks(i_Xp).right_bound,area_filter<max(area_filter)*obj.m_resFilterThres) = 0;
-% end
-% esti_ratio = esti_ratio./(sum(esti_ratio,2)+eps);
-
-% Requantification using revised RT
-% plot(rt_grid, smoothed_intensity, 'k', 'DisplayName','Total XIC');
+% Get deconvoluted XIC using revised RT
 total_xic = {rt_grid, smoothed_intensity};
 intensityMatrix = esti_ratio.*smoothed_intensity;
 rt_bound = repmat(struct('start',0,'end',0), num_iso, 1);
@@ -101,37 +83,13 @@ for idx_iso = 1:num_iso
         continue;
     end
 
-    % Get the final rt bound
-    rt_bound(idx_iso).start = final_XIC_peak_for_IMP(idx_iso).left_bound;
-    rt_bound(idx_iso).end = final_XIC_peak_for_IMP(idx_iso).right_bound;
-    [rt_diff, final_rt_start] = min(abs(rt_grid-rt_bound(idx_iso).start));
-    if rt_diff > rt_error_tol
-        error(['Cannot find the spectra on the specified retention time: ', ...
-            num2str(rt_bound(idx_iso).start)]);
-    end
-    if final_rt_start ~= 1
-        final_rt_start = final_rt_start - 1;
-    end
-    [rt_diff, final_rt_end] = min(abs(rt_grid-rt_bound(idx_iso).end));
-    if rt_diff > rt_error_tol
-        error(['Cannot find the spectra on the specified retention time: ', ...
-            num2str(rt_bound(idx_iso).end)]);
-    end
-    if final_rt_end ~= length(rt_grid)
-        final_rt_end = final_rt_end + 1;
-    end
-    % auxic(idx_iso,1) = trapz(rt_grid(final_rt_start:final_rt_end),...
-    %     [0;intensityMatrix(final_rt_start+1:final_rt_end-1,idx_iso);0])*60;
-    % total_temp = trapz(rt_grid(final_rt_start:final_rt_end),...
-    %     [0;smoothed_intensity(final_rt_start+1:final_rt_end-1);0])*60;
-    % if auxic(idx_iso,1) < total_temp*0.01
-    %     continue;
-    % end
-    ric{idx_iso,1} = rt_grid(final_rt_start:final_rt_end);
-    ric{idx_iso,2} = [0;intensityMatrix(final_rt_start+1:final_rt_end-1,idx_iso);0];
-    % ric{idx_iso,3} = [0;smoothed_intensity(final_rt_start+1:final_rt_end-1);0];
-    % plot(rt_grid(final_rt_start:final_rt_end),[0;intensityMatrix(final_rt_start+1:final_rt_end-1,idx_iso);0],...
-    %     'DisplayName', ['RIC of ',current_iso_name{idx_iso}]);
+    % Retrieve closed peak data for plotting/integration validation
+    [rec_rt, rec_inten] = CChromatogramUtils.get_closed_peak_data(...
+        rt_grid, intensityMatrix(:,idx_iso), ...
+        peak_ranges(idx_iso).left_bound, peak_ranges(idx_iso).right_bound);
+
+    ric{idx_iso,1} = rec_rt;
+    ric{idx_iso,2} = rec_inten;
 end
 
 % Check if the output directory exists
