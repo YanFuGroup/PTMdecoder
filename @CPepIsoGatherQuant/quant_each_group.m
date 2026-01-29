@@ -148,16 +148,23 @@ rt_bound = repmat(single_rt_bounds, num_imp, 1);
 
 for idx_imp = 1:num_imp
     % Get features for this IMP across all peaks
-    props = imp_max_props(idx_imp, :);
+    % Ratio (Purity)
+    props = imp_max_props(idx_imp, :); 
+    % Area Contribution
+    areas = ratio_each_XIC_peak(idx_imp, :);
 
-    % 1. Find all peaks tied for the maximum value (within epsilon tolerance)
-    %    Since props cannot exceed max(props), we check props >= max - eps
-    candidates = find(props >= max(props) - eps);
+    % Calculate Weighted Score = Area * Ratio
+    % This handles two cases:
+    % 1. Co-eluting isomers (70:30): Small ratio difference, huge area difference -> Select Main Peak.
+    % 2. Distinct elution (1% in Big Peak vs 95% in Small Peak):
+    %    Big Peak Score: High Area * Very Low Ratio -> Low Score
+    %    Small Peak Score: Low Area * High Ratio -> High Score (due to ratio squared effect effectively) -> Select Small Peak.
+    scores = areas .* props;
     
-    % 2. Select the candidate with the largest FWHM
-    [~, best_subidx] = max(peak_fwhms(idx_imp, candidates));
+    % Select the peak with the maximum score
+    [~, best_idx] = max(scores);
     
-    idx_selected(idx_imp) = candidates(best_subidx);
+    idx_selected(idx_imp) = best_idx;
 end
 
 % ========================================================================
