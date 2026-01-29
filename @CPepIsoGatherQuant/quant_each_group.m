@@ -38,7 +38,7 @@ auxic = [];
 rt_bound = [];
 idx_selected = [];
 ratio_each_XIC_peak = [];
-num_iso = size(current_ratioMatrix,2);
+num_imp = size(current_ratioMatrix,2);
 
 % Preprocess inputs (Sort, Smooth, Denoise)
 [sort_rts, sort_inten, sort_ratioMatrix, is_valid] = ...
@@ -78,10 +78,10 @@ for i_Xp = 1:length(XIC_peaks)
     curr_end = XIC_peaks(i_Xp).right_bound;
 
     % Calculate area for each IMP in this peak
-    area_filter = zeros(num_iso,1);
-    for idx_iso = 1:num_iso
-        area_filter(idx_iso) = CChromatogramUtils.calculate_area(...
-            rt_grid, intensityMatrix(:,idx_iso), ...
+    area_filter = zeros(num_imp,1);
+    for idx_imp = 1:num_imp
+        area_filter(idx_imp) = CChromatogramUtils.calculate_area(...
+            rt_grid, intensityMatrix(:,idx_imp), ...
             curr_start, curr_end);
     end
     
@@ -90,64 +90,114 @@ for i_Xp = 1:length(XIC_peaks)
     keep_mask = area_filter >= max_area * obj.m_resFilterThres;
     esti_ratio(curr_start:curr_end, ~keep_mask) = 0;
 
-    % Uniform scaling: preserve total peak area
-    sum_keep_area = sum(area_filter(keep_mask));
-    if sum_keep_area > 0
-        peak_total_area = sum(area_filter);  % Total area before filtering
-        scale_factor = peak_total_area / sum_keep_area;
-        esti_ratio(curr_start:curr_end, keep_mask) = ...
-            esti_ratio(curr_start:curr_end, keep_mask) * scale_factor;
-    end
+    % Normalize rows
+    row_sum = sum(esti_ratio(curr_start:curr_end, :), 2);
+    row_sum(row_sum == 0) = 1;
+    esti_ratio(curr_start:curr_end, :) = esti_ratio(curr_start:curr_end, :) ./ repmat(row_sum, 1, num_imp);
 end
 
+% ========================================================================
+% Stage 2: Feature Calculation (Vectorized over Peaks)
+% ========================================================================
+
 % For each IMP, evaluate all candidate XIC peaks by computing:
-%   - max_proportions: peak contribution ratio
-%   - fwhm: peak width
+%   - imp_max_props, max peak contribution ratio
+%   - peak_fwhms: half maximum peak width
 %   - ratio_each_XIC_peak: area contribution in each peak
 
 intensityMatrix = esti_ratio.*smoothed_intensity;
-auxic = zeros(num_iso,1);
-rt_bound = repmat(struct('start',0,'end',0), num_iso, length(XIC_peaks));
-idx_selected = zeros(num_iso,1);
-ratio_each_XIC_peak = zeros(num_iso,length(XIC_peaks));
-for idx_iso = 1:num_iso
-    max_proportions = zeros(length(XIC_peaks),1);
-    fwhm = zeros(length(XIC_peaks),1);
-    for i_Xp = 1:length(XIC_peaks)
-        % Cache struct fields for performance and readability
-        curr_start = XIC_peaks(i_Xp).left_bound;
-        curr_end = XIC_peaks(i_Xp).right_bound;
+auxic = zeros(num_imp,1); 
+% rt_bound will be expanded from single_rt_bounds later
+idx_selected = zeros(num_imp,1);
+ratio_each_XIC_peak = zeros(num_imp,length(XIC_peaks));
 
-        max_proportions(i_Xp) = max(esti_ratio(curr_start:curr_end,idx_iso));
-        % Calculate the fwhm for XIC selection
-        peak_rts = rt_grid(curr_start:curr_end);
-        peak_intens = intensityMatrix(curr_start:curr_end,idx_iso);
-        fwhm(i_Xp) = CChromatogramUtils.get_fwhm(peak_rts, peak_intens);
-        % Calculate the ratio of each IMP in each XIC peak
-        ratio_each_XIC_peak(idx_iso, i_Xp) = CChromatogramUtils.calculate_area(...
-             rt_grid, intensityMatrix(:,idx_iso), ...
-             curr_start, curr_end);
+num_peaks = length(XIC_peaks);
+peak_fwhms = zeros(num_imp, num_peaks);
+single_rt_bounds = repmat(struct('start',0,'end',0), 1, num_peaks);
+imp_max_props = zeros(num_imp, num_peaks);
+
+for i_Xp = 1:num_peaks
+    curr_start = XIC_peaks(i_Xp).left_bound;
+    curr_end = XIC_peaks(i_Xp).right_bound;
+    
+    % 1. XIC-dependent properties (Independent of IMP)
+    peak_rts = rt_grid(curr_start:curr_end);
+    
+    single_rt_bounds(i_Xp).start = rt_grid(curr_start);
+    single_rt_bounds(i_Xp).end = rt_grid(curr_end);
+    
+    % 2. IMP-dependent properties (Vectorized logic)
+    ratio_slice = esti_ratio(curr_start:curr_end, :);
+    imp_max_props(:, i_Xp) = max(ratio_slice, [], 1)';
+    
+    % Calculate area for record
+    for idx_imp = 1:num_imp
+        % Calculate FWHM using IMP-specific intensity
+        peak_fwhms(idx_imp, i_Xp) = CChromatogramUtils.get_fwhm(peak_rts, intensityMatrix(curr_start:curr_end, idx_imp));
         
-        % Store rt bounds in the same loop
-        rt_bound(idx_iso,i_Xp).start = rt_grid(curr_start);
-        rt_bound(idx_iso,i_Xp).end = rt_grid(curr_end);
+        ratio_each_XIC_peak(idx_imp, i_Xp) = CChromatogramUtils.calculate_area(...
+             rt_grid, intensityMatrix(:,idx_imp), curr_start, curr_end);
     end
-    % When there are more than one XIC peak counting for an IMP,
-    % only record one XIC peak, the choosing critera are:
-    % 1. the peak with max proportion, ratio shows the XIC belong more to this IMP;
-    % 2. the peak with largest fwhm (full width of half maximum).
-    [val_max, idx_selected(idx_iso)] = max(max_proportions);
-    if length(find(abs(val_max-max_proportions)<eps)) > 1
-        % If the proportion can not select the only one, choose according
-        %   to the fwhm
-        [~, idx_selected(idx_iso)] = max(fwhm);
+end
+
+rt_bound = repmat(single_rt_bounds, num_imp, 1);
+
+% ========================================================================
+% Stage 3: Peak Selection (Per IMP)
+% ========================================================================
+
+for idx_imp = 1:num_imp
+    % Get features for this IMP across all peaks
+    props = imp_max_props(idx_imp, :);
+
+    % 1. Find all peaks tied for the maximum value (within epsilon tolerance)
+    %    Since props cannot exceed max(props), we check props >= max - eps
+    candidates = find(props >= max(props) - eps);
+    
+    % 2. Select the candidate with the largest FWHM
+    [~, best_subidx] = max(peak_fwhms(idx_imp, candidates));
+    
+    idx_selected(idx_imp) = candidates(best_subidx);
+end
+
+% ========================================================================
+% Stage 4: Global Refinement (Re-distribution based on Selection)
+% ========================================================================
+% Construct a mask to keep only the valid regions for each IMP.
+keep_mask = false(size(esti_ratio));
+for idx_imp = 1:num_imp
+    % Retrieve the selected peak bounds
+    sel_peak_idx = idx_selected(idx_imp);
+    
+    if sel_peak_idx > 0 && sel_peak_idx <= length(XIC_peaks)
+        p_start = XIC_peaks(sel_peak_idx).left_bound;
+        p_end   = XIC_peaks(sel_peak_idx).right_bound;
+        
+        % Mark valid region
+        keep_mask(p_start:p_end, idx_imp) = true;
     end
+end
+
+% Apply mask: zero out regions not selected by the IMP
+esti_ratio(~keep_mask) = 0;
+
+% Re-calculate intensity matrix with the refined ratios
+intensityMatrix = esti_ratio .* smoothed_intensity;
+
+% ========================================================================
+% Stage 5: Final Area Calculation
+% ========================================================================
+
+auxic = zeros(num_imp,1);
+for idx_imp = 1:num_imp
+    % Retrieve the selected peak bounds
+    sel_peak_idx = idx_selected(idx_imp);
+    idx_start = XIC_peaks(sel_peak_idx).left_bound;
+    idx_end = XIC_peaks(sel_peak_idx).right_bound;
     
-    idx_start = XIC_peaks(idx_selected(idx_iso)).left_bound;
-    idx_end = XIC_peaks(idx_selected(idx_iso)).right_bound;
-    
-    auxic(idx_iso,1) = CChromatogramUtils.calculate_area(...
-        rt_grid, intensityMatrix(:,idx_iso), idx_start, idx_end);
+    % Calculate final area using the refined intensity matrix
+    auxic(idx_imp,1) = CChromatogramUtils.calculate_area(...
+        rt_grid, intensityMatrix(:,idx_imp), idx_start, idx_end);
 end
 
 % Get the non-zero area under XIC, index and rt_bound

@@ -17,11 +17,6 @@ function [sort_rts, sort_inten, sort_ratioMatrix, is_valid] = preprocess_ms1_inp
     sort_ratioMatrix = current_ratioMatrix(sort_idx,:); % Rearrange the matrix in chronological order
     
     % Sort and denoise using a relative abundance threshold method
-    % Using loess smoothing with span 0.05
-    if length(sort_inten) > 4 % loess requires enough points
-        sort_inten = smooth(sort_inten, 0.05, 'loess');
-    end
-    
     maxInten = max(sort_inten);
     if isempty(maxInten)
         maxInten = 0;
