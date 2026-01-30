@@ -137,5 +137,43 @@ classdef test_CQuantIMPGroupUtils < matlab.unittest.TestCase
             % Expected: imp1 uses peak1 -> 1.6*60=96, imp2 uses peak2 -> 1.2*60=72
             testCase.verifyEqual(auxic, [96; 72], 'AbsTol', 1e-10);
         end
+
+        function testFilterNonzeroXic(testCase)
+            auxic = [0; 5; 0; 2];
+            rt_bound = repmat(struct('start', 0, 'end', 0), 4, 1);
+            for i = 1:4
+                rt_bound(i).start = i;
+                rt_bound(i).end = i + 0.5;
+            end
+            extra_numeric = (11:14)';
+            extra_empty = [];
+
+            [idxNonZero, auxic_f, rt_bound_f, extra_numeric_f, extra_empty_f] = ...
+                CQuantIMPGroupUtils.filter_nonzero_xic(auxic, rt_bound, extra_numeric, extra_empty);
+
+            testCase.verifyEqual(idxNonZero, [2; 4]);
+            testCase.verifyEqual(auxic_f, [5; 2]);
+            testCase.verifyEqual([rt_bound_f.start]', [2; 4]);
+            testCase.verifyEqual([rt_bound_f.end]', [2.5; 4.5]);
+            testCase.verifyEqual(extra_numeric_f, [12; 14]);
+            testCase.verifyEmpty(extra_empty_f);
+        end
+
+        function testFilterNonzeroXicRtOnly(testCase)
+            auxic = [0; 3; 4];
+            rt_bound = repmat(struct('start', 0, 'end', 0), 3, 1);
+            for i = 1:3
+                rt_bound(i).start = i;
+                rt_bound(i).end = i + 0.25;
+            end
+
+            [idxNonZero, auxic_f, rt_bound_f] = ...
+                CQuantIMPGroupUtils.filter_nonzero_xic(auxic, rt_bound);
+
+            testCase.verifyEqual(idxNonZero, [2; 3]);
+            testCase.verifyEqual(auxic_f, [3; 4]);
+            testCase.verifyEqual([rt_bound_f.start]', [2; 3]);
+            testCase.verifyEqual([rt_bound_f.end]', [2.25; 3.25]);
+        end
     end
 end

@@ -49,7 +49,7 @@ is_skip_vec = cellfun(@isempty,current_iso_rt_range);
 
 % Sort MS1 signal (pair of retention time and intensity) by time
 % Sort and denoise using a relative abundance threshold method
-[sort_rts, sort_inten, sort_ratioMatrix, is_valid] = ...
+[sort_rts, sort_ratioMatrix, is_valid] = ...
     CChromatogramUtils.preprocess_ms1_inputs(current_rts, current_inten, current_ratioMatrix, obj.m_minMSMSnum);
 
 if ~is_valid

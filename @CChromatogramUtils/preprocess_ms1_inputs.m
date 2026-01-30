@@ -1,4 +1,4 @@
-function [sort_rts, sort_inten, sort_ratioMatrix, is_valid] = preprocess_ms1_inputs(current_rts, current_inten, current_ratioMatrix, minMSMSnum)
+function [sort_rts, sort_ratioMatrix, is_valid] = preprocess_ms1_inputs(current_rts, current_inten, current_ratioMatrix, minMSMSnum)
     % Preprocess MS1 inputs: Sort by retention time, Smooth intensity, and Denoise
     % Inputs:
     %   current_rts: Array of retention times
@@ -23,7 +23,7 @@ function [sort_rts, sort_inten, sort_ratioMatrix, is_valid] = preprocess_ms1_inp
     end
     
     tmp = sort_inten < 0.05 * maxInten; % Find results where intensity is less than 0.05 of the maximum abundance and discard them
-    sort_inten(tmp) = []; 
+    % sort_inten(tmp) = []; 
     sort_rts(tmp) = [];
     sort_ratioMatrix(tmp,:) = [];
 
@@ -32,7 +32,6 @@ function [sort_rts, sort_inten, sort_ratioMatrix, is_valid] = preprocess_ms1_inp
     if size(sort_ratioMatrix, 1) < minMSMSnum
         % If the ratio matrix has less than min rows, skip this group
         is_valid = false;
-        sort_inten = [];
         sort_ratioMatrix = [];
     end
     % TODO: The filtering is not only here, but also the XIC integration area is determined later.

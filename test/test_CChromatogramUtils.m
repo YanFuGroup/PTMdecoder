@@ -17,19 +17,13 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % Denoising will remove < 0.05 * max. Max is ~800 (smoothed might be lower).
             % Nothing should be removed here since all > 40.
             
-            [sort_rts, sort_inten, sort_ratioMatrix, is_valid] = ...
+            [sort_rts, sort_ratioMatrix, is_valid] = ...
                 CChromatogramUtils.preprocess_ms1_inputs(rts, inten, ratioMatrix, minMSMSnum);
             
             % Assertions
             testCase.verifyTrue(is_valid);
-            testCase.verifyEqual(length(sort_rts), length(sort_inten));
+            testCase.verifyEqual(length(sort_rts), size(sort_ratioMatrix, 1));
             testCase.verifyTrue(issorted(sort_rts), 'Retention times should be sorted');
-            
-            % Check sorting correctness for specific known max
-            % Original max was at 10.3. In sorted list (10.1, 10.2, 10.3, 10.4, 10.5), it should be index 3.
-            [~, max_idx] = max(sort_inten);
-            % The peak should be preserved at 10.3 (which becomes index 3 after sort)
-            testCase.verifyEqual(sort_rts(max_idx), 10.3, 'AbsTol', 1e-6, 'Max intensity location shifted after sort/smooth');
             
             % Verify the sorted order of RTs matches expectation
             expected_rts = sort(rts);
@@ -44,7 +38,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             minMSMSnum = 1;
             
             % 10 is 0.01 * 1000, should be removed (< 0.05 threshold)
-            [sort_rts, sort_inten, ~, is_valid] = ...
+            [sort_rts, ~, is_valid] = ...
                 CChromatogramUtils.preprocess_ms1_inputs(rts, inten, ratioMatrix, minMSMSnum);
                 
             testCase.verifyTrue(is_valid);
@@ -58,7 +52,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             ratioMatrix = ones(3, 1);
             minMSMSnum = 5; % Requirement higher than available points
             
-            [~, ~, ~, is_valid] = ...
+            [~, ~, is_valid] = ...
                 CChromatogramUtils.preprocess_ms1_inputs(rts, inten, ratioMatrix, minMSMSnum);
             
             testCase.verifyFalse(is_valid, 'Should be invalid due to insufficient rows');

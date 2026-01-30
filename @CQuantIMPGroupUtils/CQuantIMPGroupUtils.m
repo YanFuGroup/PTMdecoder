@@ -16,5 +16,7 @@ classdef CQuantIMPGroupUtils
         esti_ratio = refine_ratios_by_selection(esti_ratio, XIC_peaks, idx_selected)
 
         auxic = compute_final_area(rt_grid, smoothed_intensity, esti_ratio, XIC_peaks, idx_selected)
+
+        [idxNonZero, auxic, rt_bound, varargout] = filter_nonzero_xic(auxic, rt_bound, varargin)
     end
 end

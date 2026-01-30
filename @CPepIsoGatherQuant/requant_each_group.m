@@ -46,7 +46,7 @@ rt_error_tol = 1; % RT tolerance in minutes
 is_skip_vec = cellfun(@isempty,current_iso_rt_range);
 
 % Preprocess inputs (Sort, Smooth, Denoise)
-[sort_rts, sort_inten, sort_ratioMatrix, is_valid] = ...
+[sort_rts, sort_ratioMatrix, is_valid] = ...
     CChromatogramUtils.preprocess_ms1_inputs(current_rts, current_inten, current_ratioMatrix, obj.m_minMSMSnum);
 
 if ~is_valid
@@ -106,11 +106,8 @@ for idx_iso = 1:num_iso
 end
 
 % Get the non-zero area under XIC, index and rt_bound
-idxNonZero = find(auxic(:,1)~=0);
-auxic = auxic(idxNonZero,:);
-rt_bound = rt_bound(idxNonZero,:);
-max_label = max_label(idxNonZero,:);
-ratio_each_XIC_peak = ratio_each_XIC_peak(idxNonZero,:);
+[idxNonZero, auxic, rt_bound, max_label, ratio_each_XIC_peak] = ...
+    CQuantIMPGroupUtils.filter_nonzero_xic(auxic, rt_bound, max_label, ratio_each_XIC_peak);
 if ~isempty(idxNonZero)
     bhave_non_zeros = true;
 end

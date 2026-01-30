@@ -38,19 +38,12 @@ auxic = [];
 rt_bound = [];
 idx_selected = [];
 ratio_each_XIC_peak = [];
-num_imp = size(current_ratioMatrix,2);
 
 % Preprocess inputs (Sort, Smooth, Denoise)
-[sort_rts, sort_inten, sort_ratioMatrix, is_valid] = ...
+[sort_rts, sort_ratioMatrix, is_valid] = ...
     CChromatogramUtils.preprocess_ms1_inputs(current_rts, current_inten, current_ratioMatrix, obj.m_minMSMSnum);
 
 if ~is_valid
-    bhave_non_zeros = false;
-    idxNonZero = [];
-    auxic = [];
-    rt_bound = [];
-    idx_selected = [];
-    ratio_each_XIC_peak = [];
     return;
 end
 
@@ -68,46 +61,31 @@ end
 % Calculate the ratio on each XIC points using kernel method
 esti_ratio = CChromatogramUtils.calculate_kernel_ratio(rt_grid, sort_rts, sort_ratioMatrix, XIC_peaks, true);
 
-% Stage 1: peak-wise filtering and normalization
+% Peak-wise filtering and normalization
 esti_ratio = CQuantIMPGroupUtils.filter_and_normalize_peak_ratios(...
     rt_grid, smoothed_intensity, esti_ratio, XIC_peaks, obj.m_resFilterThres);
 
-% ========================================================================
-% Stage 2: Feature Calculation (Vectorized over Peaks)
-% ========================================================================
-
 % For each IMP, evaluate all candidate XIC peaks by computing:
 %   - imp_max_props, max peak contribution ratio
-%   - peak_fwhms: half maximum peak width
+%   - peak_fwhms: half maximum peak width (not used currently)
 %   - ratio_each_XIC_peak: area contribution in each peak
-auxic = zeros(num_imp,1); 
-idx_selected = zeros(num_imp,1);
 [imp_max_props, peak_fwhms, ratio_each_XIC_peak, rt_bound] = ...
     CQuantIMPGroupUtils.compute_peak_features(rt_grid, smoothed_intensity, esti_ratio, XIC_peaks);
 
-% ========================================================================
-% Stage 3: Peak Selection (Per IMP)
-% ========================================================================
+% Peak Selection (Per IMP)
 idx_selected = CQuantIMPGroupUtils.select_best_peak_per_imp(imp_max_props, ratio_each_XIC_peak);
 
-% ========================================================================
-% Stage 4: Global Refinement (Re-distribution based on Selection)
-% ========================================================================
+% Global Refinement (Re-distribution based on Selection)
 esti_ratio = CQuantIMPGroupUtils.refine_ratios_by_selection(esti_ratio, XIC_peaks, idx_selected);
 
-% ========================================================================
-% Stage 5: Final Area Calculation
-% ========================================================================
+% Final Area Calculation
 auxic = CQuantIMPGroupUtils.compute_final_area(...
     rt_grid, smoothed_intensity, esti_ratio, XIC_peaks, idx_selected);
 
 % Get the non-zero area under XIC, index and rt_bound
-idxNonZero = find(auxic(:,1)~=0);
-auxic = auxic(idxNonZero,:);
-rt_bound = rt_bound(idxNonZero,:);
-idx_selected = idx_selected(idxNonZero,:);
+[idxNonZero, auxic, rt_bound, idx_selected, ratio_each_XIC_peak] = ...
+    CQuantIMPGroupUtils.filter_nonzero_xic(auxic, rt_bound, idx_selected, ratio_each_XIC_peak);
 % TODO: use auxic to calculate the ratio_each_XIC_peak instead.
-ratio_each_XIC_peak = ratio_each_XIC_peak(idxNonZero,:);
 ratio_each_XIC_peak = ratio_each_XIC_peak./sum(ratio_each_XIC_peak,1);
 if ~isempty(idxNonZero)
     bhave_non_zeros = true;
