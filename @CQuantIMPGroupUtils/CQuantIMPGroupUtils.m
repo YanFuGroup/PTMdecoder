@@ -12,5 +12,7 @@ classdef CQuantIMPGroupUtils
             compute_peak_features(rt_grid, smoothed_intensity, esti_ratio, XIC_peaks)
 
         idx_selected = select_best_peak_per_imp(imp_max_props, ratio_each_XIC_peak)
+
+        esti_ratio = refine_ratios_by_selection(esti_ratio, XIC_peaks, idx_selected)
     end
 end

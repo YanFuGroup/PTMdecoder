@@ -91,5 +91,28 @@ classdef test_CQuantIMPGroupUtils < matlab.unittest.TestCase
             
             testCase.verifyEqual(idx_selected, [1; 2]);
         end
+
+        function testRefineRatiosBySelection(testCase)
+            esti_ratio = [0, 0;
+                          0.8, 0.2;
+                          0.8, 0.2;
+                          0.4, 0.6;
+                          0.4, 0.6;
+                          0, 0];
+            XIC_peaks = repmat(struct('left_bound', 0, 'right_bound', 0), 1, 2);
+            XIC_peaks(1).left_bound = 2;
+            XIC_peaks(1).right_bound = 3;
+            XIC_peaks(2).left_bound = 4;
+            XIC_peaks(2).right_bound = 5;
+            idx_selected = [1; 2];
+            
+            out_ratio = CQuantIMPGroupUtils.refine_ratios_by_selection(...
+                esti_ratio, XIC_peaks, idx_selected);
+            
+            % IMP1 keeps peak1 only (rows 2-3)
+            testCase.verifyEqual(out_ratio(:, 1), [0; 0.8; 0.8; 0; 0; 0], 'AbsTol', 1e-10);
+            % IMP2 keeps peak2 only (rows 4-5)
+            testCase.verifyEqual(out_ratio(:, 2), [0; 0; 0; 0.6; 0.6; 0], 'AbsTol', 1e-10);
+        end
     end
 end
