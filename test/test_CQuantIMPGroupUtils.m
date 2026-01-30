@@ -114,5 +114,28 @@ classdef test_CQuantIMPGroupUtils < matlab.unittest.TestCase
             % IMP2 keeps peak2 only (rows 4-5)
             testCase.verifyEqual(out_ratio(:, 2), [0; 0; 0; 0.6; 0.6; 0], 'AbsTol', 1e-10);
         end
+
+        function testComputeFinalArea(testCase)
+            rt_grid = (1:6)';
+            smoothed_intensity = ones(6, 1);
+            esti_ratio = [0, 0;
+                          0.8, 0.2;
+                          0.8, 0.2;
+                          0.4, 0.6;
+                          0.4, 0.6;
+                          0, 0];
+            XIC_peaks = repmat(struct('left_bound', 0, 'right_bound', 0), 1, 2);
+            XIC_peaks(1).left_bound = 2;
+            XIC_peaks(1).right_bound = 3;
+            XIC_peaks(2).left_bound = 4;
+            XIC_peaks(2).right_bound = 5;
+            idx_selected = [1; 2];
+            
+            auxic = CQuantIMPGroupUtils.compute_final_area(...
+                rt_grid, smoothed_intensity, esti_ratio, XIC_peaks, idx_selected);
+            
+            % Expected: imp1 uses peak1 -> 1.6*60=96, imp2 uses peak2 -> 1.2*60=72
+            testCase.verifyEqual(auxic, [96; 72], 'AbsTol', 1e-10);
+        end
     end
 end

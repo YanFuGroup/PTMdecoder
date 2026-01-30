@@ -95,24 +95,11 @@ idx_selected = CQuantIMPGroupUtils.select_best_peak_per_imp(imp_max_props, ratio
 % ========================================================================
 esti_ratio = CQuantIMPGroupUtils.refine_ratios_by_selection(esti_ratio, XIC_peaks, idx_selected);
 
-% Re-calculate intensity matrix with the refined ratios
-intensityMatrix = esti_ratio .* smoothed_intensity;
-
 % ========================================================================
 % Stage 5: Final Area Calculation
 % ========================================================================
-
-auxic = zeros(num_imp,1);
-for idx_imp = 1:num_imp
-    % Retrieve the selected peak bounds
-    sel_peak_idx = idx_selected(idx_imp);
-    idx_start = XIC_peaks(sel_peak_idx).left_bound;
-    idx_end = XIC_peaks(sel_peak_idx).right_bound;
-    
-    % Calculate final area using the refined intensity matrix
-    auxic(idx_imp,1) = CChromatogramUtils.calculate_area(...
-        rt_grid, intensityMatrix(:,idx_imp), idx_start, idx_end);
-end
+auxic = CQuantIMPGroupUtils.compute_final_area(...
+    rt_grid, smoothed_intensity, esti_ratio, XIC_peaks, idx_selected);
 
 % Get the non-zero area under XIC, index and rt_bound
 idxNonZero = find(auxic(:,1)~=0);
