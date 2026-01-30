@@ -50,12 +50,12 @@ classdef test_CQuantIMPGroupUtils < matlab.unittest.TestCase
             XIC_peaks(2).left_bound = 7;
             XIC_peaks(2).right_bound = 8;
             
-            [imp_max_props, peak_fwhms, ratio_each_XIC_peak, rt_bound] = ...
+            [imp_max_props, peak_fwhms, area_each_XIC_peak, rt_bound] = ...
                 CQuantIMPGroupUtils.compute_peak_features(rt_grid, smoothed_intensity, esti_ratio, XIC_peaks);
             
             testCase.verifyEqual(size(imp_max_props), [2, 2]);
             testCase.verifyEqual(size(peak_fwhms), [2, 2]);
-            testCase.verifyEqual(size(ratio_each_XIC_peak), [2, 2]);
+            testCase.verifyEqual(size(area_each_XIC_peak), [2, 2]);
             testCase.verifyEqual(size(rt_bound), [2, 2]);
             
             testCase.verifyEqual(imp_max_props(:, 1), [0.9; 0.1], 'AbsTol', 1e-10);
@@ -65,8 +65,8 @@ classdef test_CQuantIMPGroupUtils < matlab.unittest.TestCase
             
             % Expected areas: peak1 imp1 -> 1.8*60=108, imp2 -> 0.2*60=12
             %                 peak2 imp1 -> 1.4*60=84,  imp2 -> 0.6*60=36
-            testCase.verifyEqual(ratio_each_XIC_peak(:, 1), [108; 12], 'AbsTol', 1e-10);
-            testCase.verifyEqual(ratio_each_XIC_peak(:, 2), [84; 36], 'AbsTol', 1e-10);
+            testCase.verifyEqual(area_each_XIC_peak(:, 1), [108; 12], 'AbsTol', 1e-10);
+            testCase.verifyEqual(area_each_XIC_peak(:, 2), [84; 36], 'AbsTol', 1e-10);
             
             testCase.verifyEqual(rt_bound(1, 1).start, 2);
             testCase.verifyEqual(rt_bound(1, 1).end, 3);
@@ -81,13 +81,13 @@ classdef test_CQuantIMPGroupUtils < matlab.unittest.TestCase
         function testSelectBestPeakPerImp(testCase)
             imp_max_props = [0.9, 0.2;
                              0.1, 0.8];
-            ratio_each_XIC_peak = [100, 10;
-                                   5, 60];
+            area_each_XIC_peak = [100, 10;
+                                  5, 60];
             % Scores:
             % imp1 -> [90, 2] -> pick 1
             % imp2 -> [0.5, 48] -> pick 2
             idx_selected = CQuantIMPGroupUtils.select_best_peak_per_imp(...
-                imp_max_props, ratio_each_XIC_peak);
+                imp_max_props, area_each_XIC_peak);
             
             testCase.verifyEqual(idx_selected, [1; 2]);
         end
@@ -136,6 +136,17 @@ classdef test_CQuantIMPGroupUtils < matlab.unittest.TestCase
             
             % Expected: imp1 uses peak1 -> 1.6*60=96, imp2 uses peak2 -> 1.2*60=72
             testCase.verifyEqual(auxic, [96; 72], 'AbsTol', 1e-10);
+        end
+
+        function testComputeFinalAreaFromPeakAreas(testCase)
+            area_each_XIC_peak = [10, 20, 30;
+                                  5,  15, 25];
+            idx_selected = [3; 2];
+
+            auxic = CQuantIMPGroupUtils.compute_final_area_from_peak_areas(...
+                area_each_XIC_peak, idx_selected);
+
+            testCase.verifyEqual(auxic, [30; 15], 'AbsTol', 1e-10);
         end
 
         function testFilterNonzeroXic(testCase)

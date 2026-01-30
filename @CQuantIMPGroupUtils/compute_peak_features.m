@@ -1,4 +1,4 @@
-function [imp_max_props, peak_fwhms, ratio_each_XIC_peak, rt_bound] = compute_peak_features(rt_grid, smoothed_intensity, esti_ratio, XIC_peaks)
+function [imp_max_props, peak_fwhms, area_each_XIC_peak, rt_bound] = compute_peak_features(rt_grid, smoothed_intensity, esti_ratio, XIC_peaks)
 % compute_peak_features
 % Compute IMP-wise peak features across all candidate XIC peaks.
 %
@@ -11,14 +11,14 @@ function [imp_max_props, peak_fwhms, ratio_each_XIC_peak, rt_bound] = compute_pe
 % Outputs:
 %   imp_max_props       Max ratio contribution per IMP per peak
 %   peak_fwhms          FWHM per IMP per peak
-%   ratio_each_XIC_peak Area contribution per IMP per peak
+%   area_each_XIC_peak Area contribution per IMP per peak
 %   rt_bound            RT bounds per IMP per peak (struct array)
 
 num_imp = size(esti_ratio, 2);
 num_peaks = length(XIC_peaks);
 
 intensityMatrix = esti_ratio .* smoothed_intensity;
-ratio_each_XIC_peak = zeros(num_imp, num_peaks);
+area_each_XIC_peak = zeros(num_imp, num_peaks);
 peak_fwhms = zeros(num_imp, num_peaks);
 imp_max_props = zeros(num_imp, num_peaks);
 
@@ -43,7 +43,7 @@ for i_Xp = 1:num_peaks
         peak_fwhms(idx_imp, i_Xp) = CChromatogramUtils.get_fwhm( ...
             peak_rts, intensityMatrix(curr_start:curr_end, idx_imp));
         
-        ratio_each_XIC_peak(idx_imp, i_Xp) = CChromatogramUtils.calculate_area(...
+        area_each_XIC_peak(idx_imp, i_Xp) = CChromatogramUtils.calculate_area(...
             rt_grid, intensityMatrix(:, idx_imp), curr_start, curr_end);
     end
 end

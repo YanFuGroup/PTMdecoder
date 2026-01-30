@@ -8,14 +8,16 @@ classdef CQuantIMPGroupUtils
         
         esti_ratio = filter_and_normalize_peak_ratios(rt_grid, smoothed_intensity, esti_ratio, XIC_peaks, resFilterThres)
 
-        [imp_max_props, peak_fwhms, ratio_each_XIC_peak, rt_bound] = ...
+        [imp_max_props, peak_fwhms, area_each_XIC_peak, rt_bound] = ...
             compute_peak_features(rt_grid, smoothed_intensity, esti_ratio, XIC_peaks)
 
-        idx_selected = select_best_peak_per_imp(imp_max_props, ratio_each_XIC_peak)
+        idx_selected = select_best_peak_per_imp(imp_max_props, area_each_XIC_peak)
 
         esti_ratio = refine_ratios_by_selection(esti_ratio, XIC_peaks, idx_selected)
 
         auxic = compute_final_area(rt_grid, smoothed_intensity, esti_ratio, XIC_peaks, idx_selected)
+
+        auxic = compute_final_area_from_peak_areas(area_each_XIC_peak, idx_selected)
 
         [idxNonZero, auxic, rt_bound, varargout] = filter_nonzero_xic(auxic, rt_bound, varargin)
     end
