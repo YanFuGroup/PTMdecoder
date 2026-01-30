@@ -80,43 +80,10 @@ esti_ratio = CQuantIMPGroupUtils.filter_and_normalize_peak_ratios(...
 %   - imp_max_props, max peak contribution ratio
 %   - peak_fwhms: half maximum peak width
 %   - ratio_each_XIC_peak: area contribution in each peak
-
-intensityMatrix = esti_ratio.*smoothed_intensity;
 auxic = zeros(num_imp,1); 
-% rt_bound will be expanded from single_rt_bounds later
 idx_selected = zeros(num_imp,1);
-ratio_each_XIC_peak = zeros(num_imp,length(XIC_peaks));
-
-num_peaks = length(XIC_peaks);
-peak_fwhms = zeros(num_imp, num_peaks);
-single_rt_bounds = repmat(struct('start',0,'end',0), 1, num_peaks);
-imp_max_props = zeros(num_imp, num_peaks);
-
-for i_Xp = 1:num_peaks
-    curr_start = XIC_peaks(i_Xp).left_bound;
-    curr_end = XIC_peaks(i_Xp).right_bound;
-    
-    % 1. XIC-dependent properties (Independent of IMP)
-    peak_rts = rt_grid(curr_start:curr_end);
-    
-    single_rt_bounds(i_Xp).start = rt_grid(curr_start);
-    single_rt_bounds(i_Xp).end = rt_grid(curr_end);
-    
-    % 2. IMP-dependent properties (Vectorized logic)
-    ratio_slice = esti_ratio(curr_start:curr_end, :);
-    imp_max_props(:, i_Xp) = max(ratio_slice, [], 1)';
-    
-    % Calculate area for record
-    for idx_imp = 1:num_imp
-        % Calculate FWHM using IMP-specific intensity
-        peak_fwhms(idx_imp, i_Xp) = CChromatogramUtils.get_fwhm(peak_rts, intensityMatrix(curr_start:curr_end, idx_imp));
-        
-        ratio_each_XIC_peak(idx_imp, i_Xp) = CChromatogramUtils.calculate_area(...
-             rt_grid, intensityMatrix(:,idx_imp), curr_start, curr_end);
-    end
-end
-
-rt_bound = repmat(single_rt_bounds, num_imp, 1);
+[imp_max_props, peak_fwhms, ratio_each_XIC_peak, rt_bound] = ...
+    CQuantIMPGroupUtils.compute_peak_features(rt_grid, smoothed_intensity, esti_ratio, XIC_peaks);
 
 % ========================================================================
 % Stage 3: Peak Selection (Per IMP)

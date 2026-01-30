@@ -5,7 +5,6 @@ function system_test_runner()
     currentDir = fileparts(mfilename('fullpath'));
     projectDir = fileparts(currentDir); % Go back one level to the code root directory
     addpath(projectDir);
-    cd(currentDir);
     
     % Configure test data
     testDataDir = fullfile(currentDir, 'data');
