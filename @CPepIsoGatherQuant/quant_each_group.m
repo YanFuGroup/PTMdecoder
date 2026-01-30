@@ -40,16 +40,14 @@ idx_selected = [];
 ratio_each_XIC_peak = [];
 
 % Preprocess inputs (Sort, Smooth, Denoise)
-[sort_rts, sort_ratioMatrix, is_valid] = ...
-    CChromatogramUtils.preprocess_ms1_inputs(current_rts, current_inten, current_ratioMatrix, obj.m_minMSMSnum);
+[sort_rts, sort_ratioMatrix, rt_grid, smoothed_intensity, intensity, is_valid] = ...
+    CQuantIMPGroupUtils.prepare_ms1_xic(...
+        obj.m_cMs12DatasetIO, raw_name, current_rts, current_inten, current_ratioMatrix, ...
+        obj.m_minMSMSnum, low_mz_bound, high_mz_bound, selected_charge);
 
 if ~is_valid
     return;
 end
-
-% Get Smoothed XIC
-[rt_grid, smoothed_intensity, intensity] = ...
-    CChromatogramUtils.get_smoothed_xic(obj.m_cMs12DatasetIO, raw_name, low_mz_bound, high_mz_bound, selected_charge);
 
 % Extract the XIC peaks around the identified MSMS precursor
 XIC_peaks = CChromatogramUtils.detect_xic_peaks(rt_grid, smoothed_intensity, intensity, sort_rts, obj.m_alpha);

@@ -40,29 +40,22 @@ num_imp = size(current_ratioMatrix,2);
 % auxic = zeros(num_imp, 1);
 ric = cell(num_imp, 2); % IMP -> rt_grid, intensity, total intensity
 rt_error_tol = 1; % RT match tolerance, choose 1 arbitrarily
-% A vector showing is needed to skip this IMP.
-%   Cannot delete because other filter can also change this vector
-is_skip_vec = cellfun(@isempty,current_iso_rt_range);
 
 % Sort MS1 signal (pair of retention time and intensity) by time
 % Sort and denoise using a relative abundance threshold method
-[sort_rts, sort_ratioMatrix, is_valid] = ...
-    CChromatogramUtils.preprocess_ms1_inputs(current_rts, current_inten, current_ratioMatrix, obj.m_minMSMSnum);
+[sort_rts, sort_ratioMatrix, rt_grid, smoothed_intensity, intensity, is_valid] = ...
+    CQuantIMPGroupUtils.prepare_ms1_xic(...
+        obj.m_cMs12DatasetIO, raw_name, current_rts, current_inten, current_ratioMatrix, ...
+        obj.m_minMSMSnum, low_mz_bound, high_mz_bound, selected_charge);
 
 if ~is_valid
     return;
 end
 
-% Get Smoothed XIC
-[rt_grid, smoothed_intensity, intensity] = ...
-    CChromatogramUtils.get_smoothed_xic(obj.m_cMs12DatasetIO, raw_name, low_mz_bound, high_mz_bound, selected_charge);
-
-% Extract the rt bound of XIC peak
-[final_XIC_peak_for_IMP, max_label, is_skip_vec] = ...
-    CChromatogramUtils.parse_imp_rt_ranges(current_iso_rt_range, is_skip_vec);
-
-% Convert RT bounds to index bounds for CChromatogramUtils
-peak_ranges = CChromatogramUtils.map_rt_to_indices(rt_grid, final_XIC_peak_for_IMP, is_skip_vec, rt_error_tol);
+% Extract the rt bound of XIC peak and convert to index bounds
+[final_XIC_peak_for_IMP, max_label, is_skip_vec, peak_ranges] = ...
+    CQuantIMPGroupUtils.prepare_peak_ranges_from_iso_rt_range(...
+        rt_grid, current_iso_rt_range, rt_error_tol);
 
 % Calculate the ratio on each XIC points using kernel method, and normalize
 esti_ratio = CChromatogramUtils.calculate_kernel_ratio(rt_grid, sort_rts, sort_ratioMatrix, peak_ranges, false);
