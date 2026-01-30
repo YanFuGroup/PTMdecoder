@@ -36,7 +36,6 @@ function [bhave_non_zeros, idxNonZero, auxic, rt_bound, max_label, ratio_each_XI
 %       the max check label of the XIC peaks for each IMP
 
 bhave_non_zeros = false;
-num_imp = size(current_ratioMatrix,2);
 rt_error_tol = 1; % RT tolerance in minutes
 
 % Preprocess inputs (Sort, Smooth, Denoise) and get Smoothed XIC

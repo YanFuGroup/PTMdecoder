@@ -1,6 +1,6 @@
-function auxic = compute_final_area_from_peak_areas(area_each_XIC_peak, idx_selected)
-% compute_final_area_from_peak_areas
-% Compute final area per IMP from precomputed peak areas.
+function auxic = get_final_area_from_peak_areas(area_each_XIC_peak, idx_selected)
+% get_final_area_from_peak_areas
+% Get final area per IMP from precomputed peak areas.
 %
 % Inputs:
 %   area_each_XIC_peak Area contribution per IMP per peak (num_imp x num_peaks)

@@ -1,6 +1,7 @@
 function esti_ratio = refine_ratios_by_selection(esti_ratio, XIC_peaks, idx_selected)
 % refine_ratios_by_selection
 % Keep only the selected peak region for each IMP and zero out others.
+% Deprecated: this function is no longer used in the main workflow since the final area is gotten from precomputed peak areas.
 %
 % Inputs:
 %   esti_ratio   Estimated ratio matrix (len(rt_grid) x num_imp)

@@ -36,9 +36,6 @@ if nargin < 9
     color_map = [];
 end
 
-num_imp = size(current_ratioMatrix,2);
-% auxic = zeros(num_imp, 1);
-ric = cell(num_imp, 2); % IMP -> rt_grid, intensity, total intensity
 rt_error_tol = 1; % RT match tolerance, choose 1 arbitrarily
 
 % Sort MS1 signal (pair of retention time and intensity) by time

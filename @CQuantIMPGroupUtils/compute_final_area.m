@@ -1,6 +1,7 @@
 function auxic = compute_final_area(rt_grid, smoothed_intensity, esti_ratio, XIC_peaks, idx_selected)
 % compute_final_area
 % Compute final area per IMP within the selected peak region.
+% Deprecated: use compute_final_area_from_peak_areas instead.
 %
 % Inputs:
 %   rt_grid            RT grid vector

@@ -138,12 +138,12 @@ classdef test_CQuantIMPGroupUtils < matlab.unittest.TestCase
             testCase.verifyEqual(auxic, [96; 72], 'AbsTol', 1e-10);
         end
 
-        function testComputeFinalAreaFromPeakAreas(testCase)
+        function testGetFinalAreaFromPeakAreas(testCase)
             area_each_XIC_peak = [10, 20, 30;
                                   5,  15, 25];
             idx_selected = [3; 2];
 
-            auxic = CQuantIMPGroupUtils.compute_final_area_from_peak_areas(...
+            auxic = CQuantIMPGroupUtils.get_final_area_from_peak_areas(...
                 area_each_XIC_peak, idx_selected);
 
             testCase.verifyEqual(auxic, [30; 15], 'AbsTol', 1e-10);

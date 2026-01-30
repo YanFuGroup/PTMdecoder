@@ -67,17 +67,18 @@ esti_ratio = CQuantIMPGroupUtils.filter_and_normalize_peak_ratios(...
 %   - imp_max_props, max peak contribution ratio
 %   - peak_fwhms: half maximum peak width (not used currently)
 %   - area_each_XIC_peak: area contribution in each peak
-[imp_max_props, peak_fwhms, area_each_XIC_peak, rt_bound] = ...
+% [imp_max_props, peak_fwhms, area_each_XIC_peak, rt_bound] = ...
+[imp_max_props, ~, area_each_XIC_peak, rt_bound] = ...
     CQuantIMPGroupUtils.compute_peak_features(rt_grid, smoothed_intensity, esti_ratio, XIC_peaks);
 
 % Peak Selection (Per IMP)
 idx_selected = CQuantIMPGroupUtils.select_best_peak_per_imp(imp_max_props, area_each_XIC_peak);
 
 % Global Refinement (Re-distribution based on Selection)
-esti_ratio = CQuantIMPGroupUtils.refine_ratios_by_selection(esti_ratio, XIC_peaks, idx_selected);
+% esti_ratio = CQuantIMPGroupUtils.refine_ratios_by_selection(esti_ratio, XIC_peaks, idx_selected);
 
 % Final Area Calculation (reuse cached peak areas)
-auxic = CQuantIMPGroupUtils.compute_final_area_from_peak_areas(...
+auxic = CQuantIMPGroupUtils.get_final_area_from_peak_areas(...
     area_each_XIC_peak, idx_selected);
 
 % Get the non-zero area under XIC, index and rt_bound
