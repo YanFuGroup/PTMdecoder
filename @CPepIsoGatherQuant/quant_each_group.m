@@ -68,33 +68,9 @@ end
 % Calculate the ratio on each XIC points using kernel method
 esti_ratio = CChromatogramUtils.calculate_kernel_ratio(rt_grid, sort_rts, sort_ratioMatrix, XIC_peaks, true);
 
-% For each XIC peak, calculate the area of each IMP. If an IMP's area is
-% less than a threshold (max_area * resFilterThres), remove it from that peak.
-% Then, scale the remaining IMPs uniformly within the peak to preserve the
-% total peak area (= sum of all pre-filter IMP areas in that peak).
-intensityMatrix = esti_ratio.*smoothed_intensity;
-for i_Xp = 1:length(XIC_peaks)
-    curr_start = XIC_peaks(i_Xp).left_bound;
-    curr_end = XIC_peaks(i_Xp).right_bound;
-
-    % Calculate area for each IMP in this peak
-    area_filter = zeros(num_imp,1);
-    for idx_imp = 1:num_imp
-        area_filter(idx_imp) = CChromatogramUtils.calculate_area(...
-            rt_grid, intensityMatrix(:,idx_imp), ...
-            curr_start, curr_end);
-    end
-    
-    % Filter: keep only IMPs with area >= max_area * threshold
-    max_area = max(area_filter);
-    keep_mask = area_filter >= max_area * obj.m_resFilterThres;
-    esti_ratio(curr_start:curr_end, ~keep_mask) = 0;
-
-    % Normalize rows
-    row_sum = sum(esti_ratio(curr_start:curr_end, :), 2);
-    row_sum(row_sum == 0) = 1;
-    esti_ratio(curr_start:curr_end, :) = esti_ratio(curr_start:curr_end, :) ./ repmat(row_sum, 1, num_imp);
-end
+% Stage 1: peak-wise filtering and normalization
+esti_ratio = CQuantIMPGroupUtils.filter_and_normalize_peak_ratios(...
+    rt_grid, smoothed_intensity, esti_ratio, XIC_peaks, obj.m_resFilterThres);
 
 % ========================================================================
 % Stage 2: Feature Calculation (Vectorized over Peaks)
