@@ -69,22 +69,8 @@ esti_ratio = CChromatogramUtils.calculate_kernel_ratio(rt_grid, sort_rts, sort_r
 
 % Get deconvoluted XIC using revised RT
 total_xic = {rt_grid, smoothed_intensity};
-intensityMatrix = esti_ratio.*smoothed_intensity;
-rt_bound = repmat(struct('start',0,'end',0), num_imp, 1);
-for idx_imp = 1:num_imp
-    % Check if need to consider this IMP
-    if is_skip_vec(idx_imp)
-        continue;
-    end
-
-    % Retrieve closed peak data for plotting/integration validation
-    [rec_rt, rec_inten] = CChromatogramUtils.get_closed_peak_data(...
-        rt_grid, intensityMatrix(:,idx_imp), ...
-        peak_ranges(idx_imp).left_bound, peak_ranges(idx_imp).right_bound);
-
-    ric{idx_imp,1} = rec_rt;
-    ric{idx_imp,2} = rec_inten;
-end
+ric = CQuantIMPGroupUtils.build_ric_from_peaks(...
+    rt_grid, smoothed_intensity, esti_ratio, peak_ranges, is_skip_vec);
 
 % Check if the output directory exists
 if ~exist(dir_save,'dir')

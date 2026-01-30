@@ -2,7 +2,7 @@ function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,warning_
 % Main entry point for discrimination and quantification of an IMP in a single spectrum
 % Output: 
 %   bSuccess - whether successful
-%   cstrIMP - modification combination, character string form
+%   cstrIMP - the identified IMP strings, each row corresponds to one IMP
 %   abundance - content of various IMPs
 %   ionTypePosCharge - fragment ion information involved in decomposition [by type, position, charge], each column corresponds to a column on the right half of the X matrix
 %   ionIntens - intensity of each ion in ionTypePosCharge

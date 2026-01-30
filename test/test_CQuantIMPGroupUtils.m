@@ -186,5 +186,108 @@ classdef test_CQuantIMPGroupUtils < matlab.unittest.TestCase
             testCase.verifyEqual([rt_bound_f.start]', [2; 3]);
             testCase.verifyEqual([rt_bound_f.end]', [2.25; 3.25]);
         end
+
+        function testComputeImpPeakAreaAndRatio(testCase)
+            rt_grid = (1:7)';
+            smoothed_intensity = ones(7, 1);
+
+            esti_ratio = [0, 0;
+                          0.75, 0.25;
+                          0.75, 0.25;
+                          0.75, 0.25;
+                          0, 0;
+                          0.2, 0.8;
+                          0, 0];
+
+            peak_ranges = repmat(struct('left_bound', 0, 'right_bound', 0), 1, 2);
+            peak_ranges(1).left_bound = 2;
+            peak_ranges(1).right_bound = 4;
+            peak_ranges(2).left_bound = 2;
+            peak_ranges(2).right_bound = 4;
+
+            final_XIC_peak_for_IMP = repmat(struct('left_bound', 0, 'right_bound', 0), 1, 2);
+            final_XIC_peak_for_IMP(1).left_bound = 2;
+            final_XIC_peak_for_IMP(1).right_bound = 4;
+            final_XIC_peak_for_IMP(2).left_bound = 2;
+            final_XIC_peak_for_IMP(2).right_bound = 4;
+
+            is_skip_vec = [false; false];
+
+            [auxic, rt_bound, ratio_each_XIC_peak] = ...
+                CQuantIMPGroupUtils.compute_imp_peak_area_and_ratio(...
+                    rt_grid, smoothed_intensity, esti_ratio, ...
+                    peak_ranges, final_XIC_peak_for_IMP, is_skip_vec);
+
+            testCase.verifyEqual(auxic, [135; 45], 'AbsTol', 1e-10);
+            testCase.verifyEqual(ratio_each_XIC_peak, [0.75; 0.25], 'AbsTol', 1e-10);
+            testCase.verifyEqual([rt_bound.start]', [2; 2]);
+            testCase.verifyEqual([rt_bound.end]', [4; 4]);
+        end
+
+        function testComputeImpPeakAreaAndRatioWithSkip(testCase)
+            rt_grid = (1:7)';
+            smoothed_intensity = ones(7, 1);
+
+            esti_ratio = [0, 0;
+                          0.75, 0.25;
+                          0.75, 0.25;
+                          0.75, 0.25;
+                          0, 0;
+                          0.2, 0.8;
+                          0, 0];
+
+            peak_ranges = repmat(struct('left_bound', 0, 'right_bound', 0), 1, 2);
+            peak_ranges(1).left_bound = 2;
+            peak_ranges(1).right_bound = 4;
+            peak_ranges(2).left_bound = 2;
+            peak_ranges(2).right_bound = 4;
+
+            final_XIC_peak_for_IMP = repmat(struct('left_bound', 0, 'right_bound', 0), 1, 2);
+            final_XIC_peak_for_IMP(1).left_bound = 2;
+            final_XIC_peak_for_IMP(1).right_bound = 4;
+            final_XIC_peak_for_IMP(2).left_bound = 2;
+            final_XIC_peak_for_IMP(2).right_bound = 4;
+
+            is_skip_vec = [false; true];
+
+            [auxic, rt_bound, ratio_each_XIC_peak] = ...
+                CQuantIMPGroupUtils.compute_imp_peak_area_and_ratio(...
+                    rt_grid, smoothed_intensity, esti_ratio, ...
+                    peak_ranges, final_XIC_peak_for_IMP, is_skip_vec);
+
+            testCase.verifyEqual(auxic, [135; 0], 'AbsTol', 1e-10);
+            testCase.verifyEqual(ratio_each_XIC_peak, [0.75; 0], 'AbsTol', 1e-10);
+            testCase.verifyEqual([rt_bound.start]', [2; 0]);
+            testCase.verifyEqual([rt_bound.end]', [4; 0]);
+        end
+
+        function testBuildRicFromPeaks(testCase)
+            rt_grid = (1:7)';
+            smoothed_intensity = ones(7, 1);
+
+            esti_ratio = [0, 0;
+                          1, 0;
+                          1, 0;
+                          1, 0;
+                          0, 0;
+                          0.2, 0.8;
+                          0, 0];
+
+            peak_ranges = repmat(struct('left_bound', 0, 'right_bound', 0), 1, 2);
+            peak_ranges(1).left_bound = 2;
+            peak_ranges(1).right_bound = 4;
+            peak_ranges(2).left_bound = 2;
+            peak_ranges(2).right_bound = 4;
+
+            is_skip_vec = [false; true];
+
+            ric = CQuantIMPGroupUtils.build_ric_from_peaks(...
+                rt_grid, smoothed_intensity, esti_ratio, peak_ranges, is_skip_vec);
+
+            testCase.verifyEqual(ric{1, 1}, rt_grid(1:5));
+            testCase.verifyEqual(ric{1, 2}, [0; 1; 1; 1; 0], 'AbsTol', 1e-10);
+            testCase.verifyEmpty(ric{2, 1});
+            testCase.verifyEmpty(ric{2, 2});
+        end
     end
 end
