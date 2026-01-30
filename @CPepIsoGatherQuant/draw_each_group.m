@@ -43,7 +43,7 @@ rt_error_tol = 1; % RT match tolerance, choose 1 arbitrarily
 
 % Sort MS1 signal (pair of retention time and intensity) by time
 % Sort and denoise using a relative abundance threshold method
-[sort_rts, sort_ratioMatrix, rt_grid, smoothed_intensity, intensity, is_valid] = ...
+[sort_rts, sort_ratioMatrix, rt_grid, smoothed_intensity, ~, is_valid] = ...
     CQuantIMPGroupUtils.prepare_ms1_xic(...
         obj.m_cMs12DatasetIO, raw_name, current_rts, current_inten, current_ratioMatrix, ...
         obj.m_minMSMSnum, low_mz_bound, high_mz_bound, selected_charge);
@@ -53,7 +53,7 @@ if ~is_valid
 end
 
 % Extract the rt bound of XIC peak and convert to index bounds
-[final_XIC_peak_for_IMP, max_label, is_skip_vec, peak_ranges] = ...
+[~, ~, is_skip_vec, peak_ranges] = ...
     CQuantIMPGroupUtils.prepare_peak_ranges_from_iso_rt_range(...
         rt_grid, current_iso_rt_range, rt_error_tol);
 
@@ -71,12 +71,14 @@ if ~exist(dir_save,'dir')
 end
 
 % Plot the total XIC and RIC
-plot_xics(ric, current_iso_name, total_xic, dir_save, raw_name, low_mz_bound, high_mz_bound, selected_charge, color_map, legend_map);
+plot_xics(ric, current_iso_name, total_xic, dir_save, raw_name, ...
+    low_mz_bound, high_mz_bound, selected_charge, color_map, legend_map);
 end
 
 
 
-function plot_xics(ric, current_iso_name, total_xic, dir_save, raw_name, low_mz_bound, high_mz_bound, selected_charge, color_map, legend_map)
+function plot_xics(ric, current_iso_name, total_xic, dir_save, raw_name, ...
+    low_mz_bound, high_mz_bound, selected_charge, color_map, legend_map)
 % Plot the XIC of each IMP and the total XIC, all rt category
 % input:
 %   ric
@@ -193,9 +195,15 @@ function plot_each_xic_group(ric, total_xic, categorized_intervals, current_iso_
 %       legend map
 
 % Init plot
-f = figure('visible','off');
-set(gcf,'position',[50, 50, 600, 200], 'color','white')
-% set(gcf,'position',[50, 50, 300, 200], 'color','white')
+% fig_w = 300;
+fig_w = 2000;
+fig_h = 800;
+dpi = 300;
+f = figure('Visible','off', 'Units','pixels', 'Position',[50, 50, fig_w, fig_h], 'Color','white');
+set(f, 'PaperUnits','inches');
+set(f, 'PaperPosition', [0, 0, fig_w/dpi, fig_h/dpi]);
+set(f, 'PaperSize', [fig_w/dpi, fig_h/dpi]);
+set(f, 'PaperPositionMode','manual', 'InvertHardcopy','off', 'Renderer','painters');
 all_font_size = 7;
 all_line_width = 1;
 set(gca,'LooseInset',get(gca,'TightInset'), 'FontSize', all_font_size);
@@ -270,9 +278,14 @@ end
 xlabel('Retention Time (min)', 'FontSize', all_font_size)
 ylabel('Absolute intensity', 'FontSize', all_font_size)
 
+ax = gca;
+set(ax, 'Units','normalized');
+set(ax, 'Position', [0.08 0.2 0.72 0.7]);
 h_legend = legend('show', 'Location', 'northwest');
-set(h_legend, 'FontSize', all_font_size);
-print(f, file_name, '-dsvg', '-r300');
+set(h_legend, 'FontSize', all_font_size, 'Box','off');
+set(h_legend, 'Units','normalized');
+set(h_legend, 'Position', [0.82 0.6 0.16 0.3]);
+print(f, file_name, '-dsvg', ['-r', num2str(dpi)]);
 end
 
 

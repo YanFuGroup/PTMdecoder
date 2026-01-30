@@ -7,7 +7,6 @@ import matlab.unittest.plugins.DiagnosticsRecordingPlugin;
 
 clc;
 testDir = fileparts(mfilename('fullpath'));
-addpath(testDir);
 
 % Add root code directory to path so helper classes are found
 projectDir = fileparts(testDir); 
