@@ -61,7 +61,7 @@ classdef CPepIsoGatherQuant
         runGather(obj);
 
         % Add one record
-        obj = appendOneSpecQuant(obj,raw_name,curRts,curIntens,curMz,cur_ch,cstrPepIso,lfMasses,abundance);
+        obj = appendOneSpecQuant(obj,raw_name,curRts,curIntens,curMz,cur_ch,cstrIMP,lfMasses,abundance);
         
 
         % Clear useless rows

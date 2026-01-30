@@ -1,8 +1,8 @@
-function [bSuccess,cstrPepIso,abundance,ionTypePosCharge,ionIntens,frageff,warning_msg,is_X_full_column_rank]=runEach(obj)
+function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,warning_msg,is_X_full_column_rank]=runEach(obj)
 % Main entry point for discrimination and quantification of an IMP in a single spectrum
 % Output: 
 %   bSuccess - whether successful
-%   cstrPepIso - modification combination, character string form
+%   cstrIMP - modification combination, character string form
 %   abundance - content of various IMPs
 %   ionTypePosCharge - fragment ion information involved in decomposition [by type, position, charge], each column corresponds to a column on the right half of the X matrix
 %   ionIntens - intensity of each ion in ionTypePosCharge
@@ -30,7 +30,7 @@ obj.m_dPrecursorMass=(dPrecursorMZ-CConstant.pmass)*obj.m_iCharge;
 fixedPosMod=obj.getFixedPosMod();
 [ bSuccess,inxSites,massArrangement,warning_msg ] = obj.getMassArrangement(fixedPosMod);
 if ~bSuccess
-    cstrPepIso=[];
+    cstrIMP=[];
     abundance=[];
     return;
 else
@@ -48,7 +48,7 @@ else
     %   and several candidates.
     if isempty(matchedExpPeaks)
         if size(massArrangement,1) ~= 1
-            cstrPepIso = [];
+            cstrIMP = [];
             abundance = [];
             bSuccess = false;
             warning_msg = ['There is no non-redundant peak for discriminating the' ...
@@ -56,7 +56,7 @@ else
             return;
         else % Only one possible peptidoform
             abundance = 1;
-            [cstrPepIso]=obj.massArraTostr(massArrangement,fixedPosMod,...
+            [cstrIMP]=obj.massArraTostr(massArrangement,fixedPosMod,...
                 obj.m_variableModNameMass,inxSites);
             return;
         end
@@ -66,7 +66,7 @@ else
         matchedExpPeaks, massArrangement, vNonRedunTheoryIonMz);
     if size(massArrangement,1)==1
         abundance = 1;
-        [cstrPepIso]=obj.massArraTostr(massArrangement,fixedPosMod,...
+        [cstrIMP]=obj.massArraTostr(massArrangement,fixedPosMod,...
             obj.m_variableModNameMass,inxSites);
         return;
     end
@@ -120,7 +120,7 @@ else
 end
 
 % Interpret modification combinations as various IMP strings
-[cstrPepIso]=obj.massArraTostr(massArrangement,fixedPosMod,...
+[cstrIMP]=obj.massArraTostr(massArrangement,fixedPosMod,...
     obj.m_variableModNameMass,inxSites);
 
 end

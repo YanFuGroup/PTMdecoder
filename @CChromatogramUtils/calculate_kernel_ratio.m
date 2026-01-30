@@ -78,9 +78,9 @@ function esti_ratio = calculate_kernel_ratio(rt_grid, sort_rts, sort_ratioMatrix
         end
         
         weight_sum = sum(weights, 2) + eps;
-        for idx_iso = target_indices
-            esti_ratio(range_indices, idx_iso) = esti_ratio(range_indices, idx_iso) + ...
-                (weights * sort_ratioMatrix(idxs_rt_mask, idx_iso)) ./ weight_sum;
+        for idx_imp = target_indices
+            esti_ratio(range_indices, idx_imp) = esti_ratio(range_indices, idx_imp) + ...
+                (weights * sort_ratioMatrix(idxs_rt_mask, idx_imp)) ./ weight_sum;
         end
     end
     

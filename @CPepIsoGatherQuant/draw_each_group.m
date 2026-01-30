@@ -36,12 +36,9 @@ if nargin < 9
     color_map = [];
 end
 
-% System error in saving retention time
-eps_rt_print = 1e-6;
-
-num_iso = size(current_ratioMatrix,2);
-% auxic = zeros(num_iso, 1);
-ric = cell(num_iso, 2); % IMP -> rt_grid, intensity, total intensity
+num_imp = size(current_ratioMatrix,2);
+% auxic = zeros(num_imp, 1);
+ric = cell(num_imp, 2); % IMP -> rt_grid, intensity, total intensity
 rt_error_tol = 1; % RT match tolerance, choose 1 arbitrarily
 % A vector showing is needed to skip this IMP.
 %   Cannot delete because other filter can also change this vector
@@ -56,10 +53,7 @@ if ~is_valid
     return;
 end
 
-% find the XIC filtered by m/z of base peak [low_mz_bound, high_mz_bound]
-%   and -1,+0,+1,+2,+3
-% MS1_index (scan, retention time, peak number, baseline, injection time)
-% MS1_peaks (m/z, intensity)
+% Get Smoothed XIC
 [rt_grid, smoothed_intensity, intensity] = ...
     CChromatogramUtils.get_smoothed_xic(obj.m_cMs12DatasetIO, raw_name, low_mz_bound, high_mz_bound, selected_charge);
 
@@ -76,20 +70,20 @@ esti_ratio = CChromatogramUtils.calculate_kernel_ratio(rt_grid, sort_rts, sort_r
 % Get deconvoluted XIC using revised RT
 total_xic = {rt_grid, smoothed_intensity};
 intensityMatrix = esti_ratio.*smoothed_intensity;
-rt_bound = repmat(struct('start',0,'end',0), num_iso, 1);
-for idx_iso = 1:num_iso
+rt_bound = repmat(struct('start',0,'end',0), num_imp, 1);
+for idx_imp = 1:num_imp
     % Check if need to consider this IMP
-    if is_skip_vec(idx_iso)
+    if is_skip_vec(idx_imp)
         continue;
     end
 
     % Retrieve closed peak data for plotting/integration validation
     [rec_rt, rec_inten] = CChromatogramUtils.get_closed_peak_data(...
-        rt_grid, intensityMatrix(:,idx_iso), ...
-        peak_ranges(idx_iso).left_bound, peak_ranges(idx_iso).right_bound);
+        rt_grid, intensityMatrix(:,idx_imp), ...
+        peak_ranges(idx_imp).left_bound, peak_ranges(idx_imp).right_bound);
 
-    ric{idx_iso,1} = rec_rt;
-    ric{idx_iso,2} = rec_inten;
+    ric{idx_imp,1} = rec_rt;
+    ric{idx_imp,2} = rec_inten;
 end
 
 % Check if the output directory exists
@@ -250,22 +244,22 @@ plot_count = 0;
 string_to_color = @(str) hsv2rgb([mod(hash_string_positional(str), 360)/360, 0.7, 0.9]);
 
 % Collect information for each IMP plot
-for idx_iso = 1:size(ric, 1)
-    if trapz(ric{idx_iso, 1}, ric{idx_iso, 2}) < 1e-6
+for idx_imp = 1:size(ric, 1)
+    if trapz(ric{idx_imp, 1}, ric{idx_imp, 2}) < 1e-6
         continue;
     end
     
     plot_count = plot_count + 1;
-    plot_info(plot_count).x_data = ric{idx_iso, 1};
-    plot_info(plot_count).y_data = ric{idx_iso, 2};
+    plot_info(plot_count).x_data = ric{idx_imp, 1};
+    plot_info(plot_count).y_data = ric{idx_imp, 2};
     
-    is_in_legend_map = ~isempty(legend_map) && legend_map.isKey(current_iso_name{idx_iso});
-    is_in_color_map = ~isempty(color_map) && color_map.isKey(current_iso_name{idx_iso});
+    is_in_legend_map = ~isempty(legend_map) && legend_map.isKey(current_iso_name{idx_imp});
+    is_in_color_map = ~isempty(color_map) && color_map.isKey(current_iso_name{idx_imp});
 
     if is_in_legend_map
-        plot_info(plot_count).legend_string = ['XIC of ',legend_map(current_iso_name{idx_iso})];
+        plot_info(plot_count).legend_string = ['XIC of ',legend_map(current_iso_name{idx_imp})];
     else
-        legend_string = ['XIC of ',current_iso_name{idx_iso}];
+        legend_string = ['XIC of ',current_iso_name{idx_imp}];
         legend_string = strrep(legend_string, '_', '\_');
         legend_string = strrep(legend_string, '{', '\{');
         legend_string = strrep(legend_string, '}', '\}');
@@ -273,10 +267,10 @@ for idx_iso = 1:size(ric, 1)
     end
 
     if is_in_color_map
-        plot_info(plot_count).color = color_map(current_iso_name{idx_iso});
+        plot_info(plot_count).color = color_map(current_iso_name{idx_imp});
     else
         % Generate hash-based color from string
-        plot_info(plot_count).color = string_to_color(current_iso_name{idx_iso});
+        plot_info(plot_count).color = string_to_color(current_iso_name{idx_imp});
     end
 end
 

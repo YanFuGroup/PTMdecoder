@@ -1,11 +1,11 @@
-function obj = appendOneSpecQuant(obj,raw_name,curRts,curIntens,curMz,cur_ch,cstrPepIso,lfMasses,abundance)
+function obj = appendOneSpecQuant(obj,raw_name,curRts,curIntens,curMz,cur_ch,cstrIMP,lfMasses,abundance)
 % Append one quantification result
 % Input: raw_name is the name of the run file (mgf)
 %       curRts is the retention time of this spectrum
 %       curIntens is the intensity of this spectrum
 %       curMz is the mass-to-charge ratio of this spectrum
 %       cur_ch is the charge of the spectrum
-%       cstrPepIso is the string form of the modified peptide, a column vector, each is a different modified peptide
+%       cstrIMP is the string form of the modified peptide, a column vector, each is a different modified peptide
 %       lfMass is the mass of the modified peptide
 %       abundance is the result of single spectrum quantification, a column vector, each represents the relative abundance of the above modified peptide
 
@@ -44,15 +44,15 @@ obj.m_curRts{idx_raw}(obj.m_length{idx_raw}) = curRts;
 obj.m_curIntens{idx_raw}(obj.m_length{idx_raw}) = curIntens;
 obj.m_curMz{idx_raw}(obj.m_length{idx_raw}) = curMz;
 obj.m_curCharge{idx_raw}(obj.m_length{idx_raw}) = cur_ch;
-for iIso = 1:length(cstrPepIso)
-    if isKey(obj.m_mapIMPNames{idx_raw},cstrPepIso{iIso})
+for iIso = 1:length(cstrIMP)
+    if isKey(obj.m_mapIMPNames{idx_raw},cstrIMP{iIso})
         obj.m_ratioMatrix{idx_raw}(obj.m_length{idx_raw},...
-            obj.m_mapIMPNames{idx_raw}(cstrPepIso{iIso})) = abundance(iIso);
+            obj.m_mapIMPNames{idx_raw}(cstrIMP{iIso})) = abundance(iIso);
     else
         % If not found, record it and append a column to ratioMatrix
-        obj.m_mapIMPNames{idx_raw}(cstrPepIso{iIso}) = obj.m_mapIMPNames{idx_raw}.Count+1;
+        obj.m_mapIMPNames{idx_raw}(cstrIMP{iIso}) = obj.m_mapIMPNames{idx_raw}.Count+1;
         obj.m_IMPMass{idx_raw} = [obj.m_IMPMass{idx_raw}, lfMasses(iIso)];
-        obj.m_cstrIMPNames{idx_raw}{obj.m_mapIMPNames{idx_raw}.Count,1} = cstrPepIso{iIso};
+        obj.m_cstrIMPNames{idx_raw}{obj.m_mapIMPNames{idx_raw}.Count,1} = cstrIMP{iIso};
         obj.m_ratioMatrix{idx_raw} = [obj.m_ratioMatrix{idx_raw},zeros(obj.m_capacity{idx_raw},1)];
         obj.m_ratioMatrix{idx_raw}(obj.m_length{idx_raw},obj.m_mapIMPNames{idx_raw}.Count) = abundance(iIso);
     end

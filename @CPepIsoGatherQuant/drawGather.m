@@ -46,11 +46,11 @@ for idx_keys = 1:obj.m_mapRawNames.Count
         for idx_ch = 1:length(selected_charge)
             % Get retention time range for each IMP
             current_iso_rt_range = cell(length(current_iso_name),1);
-            for idx_iso = 1:length(current_iso_name)
-                generated_key = [current_iso_name{idx_iso},'_+', ...
+            for idx_imp = 1:length(current_iso_name)
+                generated_key = [current_iso_name{idx_imp},'_+', ...
                     num2str(selected_charge(idx_ch)), '_', keys_raw{idx_keys}];
                 if pep_rtrange_map.isKey(generated_key)
-                    current_iso_rt_range{idx_iso} = pep_rtrange_map(generated_key);
+                    current_iso_rt_range{idx_imp} = pep_rtrange_map(generated_key);
                 end
             end
             if all(cellfun(@isempty,current_iso_rt_range))
