@@ -77,5 +77,19 @@ classdef test_CQuantIMPGroupUtils < matlab.unittest.TestCase
             testCase.verifyEqual(rt_bound(2, 2).start, 7);
             testCase.verifyEqual(rt_bound(2, 2).end, 8);
         end
+
+        function testSelectBestPeakPerImp(testCase)
+            imp_max_props = [0.9, 0.2;
+                             0.1, 0.8];
+            ratio_each_XIC_peak = [100, 10;
+                                   5, 60];
+            % Scores:
+            % imp1 -> [90, 2] -> pick 1
+            % imp2 -> [0.5, 48] -> pick 2
+            idx_selected = CQuantIMPGroupUtils.select_best_peak_per_imp(...
+                imp_max_props, ratio_each_XIC_peak);
+            
+            testCase.verifyEqual(idx_selected, [1; 2]);
+        end
     end
 end
