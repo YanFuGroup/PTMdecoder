@@ -1,15 +1,16 @@
 function drawGather(obj, pep_rtrange_map, dir_save, color_map, legend_map)
 % Draw the XIC for gathered peptides using manually-checked rt range
 % Input:
-%   pep_rtrange_map
-%       map of [modified peptide _ charge _ raw file name] -> 
-%           [rt_start, rt_end, check_label]
-%   dir_save
+%   obj (CPepIsoGatherQuant)
+%       Quantification aggregator instance
+%   pep_rtrange_map (containers.Map)
+%       map of [modified peptide _ charge _ raw file name] -> [rt_start, rt_end, check_label]
+%   dir_save (1 x 1 char/string)
 %       directory to save the figures
-%   color_map
-%       color map
-%   legend_map
-%       legend map
+%   color_map (containers.Map or [])
+%       color map (key: imp name, value: RGB 1x3)
+%   legend_map (containers.Map or [])
+%       legend map (key: imp name, value: display string)
 
 % Check the input arguments
 if nargin < 5
@@ -32,28 +33,28 @@ for idx_keys = 1:obj.m_mapRawNames.Count
 
     % Quantify the IMPs in each group
     for idx_g = 1:length(group_idxs)
-        current_iso_name = obj.m_cstrIMPNames{idx_r}(group_idxs{idx_g});
+        current_imp_name = obj.m_cstrIMPNames{idx_r}(group_idxs{idx_g});
         current_ratioMatrix = obj.m_ratioMatrix{idx_r}(:,group_idxs{idx_g});
         idxs_rt_inten = find(sum(current_ratioMatrix,2));
         current_ratioMatrix = current_ratioMatrix(idxs_rt_inten,:);
         current_rts = obj.m_curRts{idx_r}(idxs_rt_inten);
         current_inten = obj.m_curIntens{idx_r}(idxs_rt_inten);
-        current_iso_mass = obj.m_IMPMass{idx_r}(group_idxs{idx_g});
+        current_imp_mass = obj.m_IMPMass{idx_r}(group_idxs{idx_g});
         current_charge = obj.m_curCharge{idx_r}(idxs_rt_inten);
         [low_mz_bound, high_mz_bound, selected_charge, charge_group_idxs] = ...
-            obj.get_mz_bound(current_iso_mass,current_charge);
+            obj.get_mz_bound(current_imp_mass,current_charge);
 
         for idx_ch = 1:length(selected_charge)
             % Get retention time range for each IMP
-            current_iso_rt_range = cell(length(current_iso_name),1);
-            for idx_imp = 1:length(current_iso_name)
-                generated_key = [current_iso_name{idx_imp},'_+', ...
+            current_imp_rt_range = cell(length(current_imp_name),1);
+            for idx_imp = 1:length(current_imp_name)
+                generated_key = [current_imp_name{idx_imp},'_+', ...
                     num2str(selected_charge(idx_ch)), '_', keys_raw{idx_keys}];
                 if pep_rtrange_map.isKey(generated_key)
-                    current_iso_rt_range{idx_imp} = pep_rtrange_map(generated_key);
+                    current_imp_rt_range{idx_imp} = pep_rtrange_map(generated_key);
                 end
             end
-            if all(cellfun(@isempty,current_iso_rt_range))
+            if all(cellfun(@isempty,current_imp_rt_range))
                 % All of the IMPs are removed in manual checking
                 continue;
             end
@@ -64,8 +65,8 @@ for idx_keys = 1:obj.m_mapRawNames.Count
                 current_rts(charge_group_idxs{idx_ch},:),...
                 current_inten(charge_group_idxs{idx_ch},:),...
                 low_mz_bound(idx_ch),high_mz_bound(idx_ch), ...
-                selected_charge(idx_ch),current_iso_rt_range,...
-                current_iso_name, dir_save, color_map, legend_map);
+                selected_charge(idx_ch),current_imp_rt_range,...
+                current_imp_name, dir_save, color_map, legend_map);
         end
     end
 end
@@ -74,12 +75,12 @@ end
 % Cluster the IMPs according to their masses
 function idxs_res = clustering_IMPs(IMP_masses,ms1_tolerance)
 % Input:
-%   IMP_masses
+%   IMP_masses (1 x K double) Da
 %       Masses of IMPs
-%   ms1_tolerance
-%       Tolerance of ms1
+%   ms1_tolerance (struct)
+%       Tolerance of MS1 (fields: isppm, value)
 % Output:
-%   idxs_res
+%   idxs_res (1 x G cell)
 %       Indices of each group, in cell form
 [m_val,m_inx] = sort(IMP_masses);
 

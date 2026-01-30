@@ -1,9 +1,10 @@
 function rerunGather_quant(obj,pep_rtrange_map)
 % Re-quantification for gathered peptides using manually-checked rt range
 % Input:
-%   pep_rtrange_map
-%       map of [modified peptide _ charge _ raw file name] -> 
-%           [rt_start, rt_end, check_label]
+%   obj (CPepIsoGatherQuant)
+%       Quantification aggregator instance
+%   pep_rtrange_map (containers.Map)
+%       map of [modified peptide _ charge _ raw file name] -> [rt_start, rt_end, check_label]
 
 fout = fopen(obj.m_outputPath,'a');
 if fout == -1
@@ -92,12 +93,12 @@ end
 % Cluster the IMPs according to their masses
 function idxs_res = clustering_IMPs(IMP_masses,ms1_tolerance)
 % Input:
-%   IMP_masses
+%   IMP_masses (1 x K double) Da
 %       Masses of IMPs
-%   ms1_tolerance
-%       Tolerance of ms1
+%   ms1_tolerance (struct)
+%       Tolerance of MS1 (fields: isppm, value)
 % Output:
-%   idxs_res
+%   idxs_res (1 x G cell)
 %       Indices of each group, in cell form
 [m_val,m_inx] = sort(IMP_masses);
 
@@ -141,6 +142,11 @@ end
 
 % Write protein start position line
 function write_protein_start_position_line(fid, prot_names_pos)
+% Input:
+%   fid (1 x 1 double/int)
+%       File identifier
+%   prot_names_pos (P x 2 cell)
+%       Protein name and start position pairs
 for idx_np = 1:size(prot_names_pos,1)
     fprintf(fid, '%s,%d;', prot_names_pos{idx_np,1},...
         prot_names_pos{idx_np,2});

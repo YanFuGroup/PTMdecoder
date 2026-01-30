@@ -1,5 +1,11 @@
 function obj=delUselessRaws(obj)
 % Delete useless raws
+% Input:
+%   obj (CPepIsoGatherQuant)
+%       Quantification aggregator instance
+% Output:
+%   obj (CPepIsoGatherQuant)
+%       Updated instance with trimmed buffers
 for idx = 1:length(obj.m_curRts)
     obj.m_curRts{idx}(obj.m_length{idx}+1:end,:)=[];
     obj.m_curIntens{idx}(obj.m_length{idx}+1:end,:)=[];

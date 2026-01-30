@@ -1,11 +1,15 @@
-function is_reserved = hasMinRows(obj, ratio_matrix, min_rows)
-% Check whether the XIC peaks with at least THREE PSMs.
+function is_reserved = hasMinRows(~, ratio_matrix, min_rows)
+% Check whether the XIC peaks have at least a minimum number of PSMs.
 % Inputs:
-%   ratio_matrix: the quantification matrix derived from the MSMS deconvolution
+%   ratio_matrix (N x K double)
+%       quantification matrix derived from the MSMS deconvolution
+%   min_rows (1 x 1 double/int)
+%       minimum number of rows required
 % Outputs:
-%   is_reserved: a logical value indicating whether each XIC peak is reserved
+%   is_reserved (1 x 1 logical)
+%       whether the matrix has at least min_rows rows
 
-if nargin < 2
+if nargin < 3
     min_rows = 1; % Default minimum number of rows
 end
 

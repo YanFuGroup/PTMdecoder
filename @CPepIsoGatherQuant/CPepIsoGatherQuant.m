@@ -29,8 +29,22 @@ classdef CPepIsoGatherQuant
     
     methods
         function obj = CPepIsoGatherQuant(prot_names_pos,cMs12DatasetIO,...
-                resFilterThres,ms1_tolerance, alpha, outputPath, minMSMSnum)
-            % common
+            resFilterThres,ms1_tolerance, alpha, outputPath, minMSMSnum)
+            % Input:
+            %   prot_names_pos (P x 2 cell)
+            %       protein name and start position pairs
+            %   cMs12DatasetIO (object)
+            %       MS1/MS2 dataset IO instance
+            %   resFilterThres (1 x 1 double)
+            %       threshold for filtering results using relative intensity
+            %   ms1_tolerance (struct)
+            %       MS1 tolerance (fields: isppm, value)
+            %   alpha (1 x 1 double)
+            %       peak boundary factor, thres is max*alpha
+            %   outputPath (1 x 1 char/string)
+            %       output path of the result file
+            %   minMSMSnum (1 x 1 double/int)
+            %       minimum number of MSMS spectra for a peptide to be considered
             obj.m_buff_length = 50;
             obj.m_prot_names_pos = prot_names_pos;
             obj.m_cMs12DatasetIO = cMs12DatasetIO;

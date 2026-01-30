@@ -4,12 +4,16 @@ function esti_ratio = refine_ratios_by_selection(esti_ratio, XIC_peaks, idx_sele
 % Deprecated: this function is no longer used in the main workflow since the final area is gotten from precomputed peak areas.
 %
 % Inputs:
-%   esti_ratio   Estimated ratio matrix (len(rt_grid) x num_imp)
-%   XIC_peaks    Struct array with left_bound/right_bound indices
-%   idx_selected Selected peak index per IMP
+%   esti_ratio (N x K double)
+%       Estimated ratio matrix
+%   XIC_peaks (1 x P struct)
+%       Struct array with left_bound/right_bound indices
+%   idx_selected (K x 1 double)
+%       Selected peak index per IMP
 %
 % Output:
-%   esti_ratio   Refined ratio matrix
+%   esti_ratio (N x K double)
+%       Refined ratio matrix
 
 num_imp = size(esti_ratio, 2);
 keep_mask = false(size(esti_ratio));

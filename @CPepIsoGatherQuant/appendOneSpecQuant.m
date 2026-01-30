@@ -1,13 +1,22 @@
 function obj = appendOneSpecQuant(obj,raw_name,curRts,curIntens,curMz,cur_ch,cstrIMP,lfMasses,abundance)
 % Append one quantification result
-% Input: raw_name is the name of the run file (mgf)
-%       curRts is the retention time of this spectrum
-%       curIntens is the intensity of this spectrum
-%       curMz is the mass-to-charge ratio of this spectrum
-%       cur_ch is the charge of the spectrum
-%       cstrIMP is the string form of the modified peptide, a column vector, each is a different modified peptide
-%       lfMass is the mass of the modified peptide
-%       abundance is the result of single spectrum quantification, a column vector, each represents the relative abundance of the above modified peptide
+% Input:
+%   raw_name (1 x 1 char/string)
+%       name of the run file (mgf)
+%   curRts (1 x 1 double) minutes
+%       retention time of this spectrum
+%   curIntens (1 x 1 double) intensity
+%       intensity of this spectrum
+%   curMz (1 x 1 double) m/z
+%       mass-to-charge ratio of this spectrum
+%   cur_ch (1 x 1 double/int)
+%       charge of the spectrum
+%   cstrIMP (K x 1 cellstr/string)
+%       string form of modified peptides (each is a different IMP)
+%   lfMasses (1 x K double) or (K x 1 double) Da
+%       masses of the modified peptides
+%   abundance (K x 1 double)
+%       relative abundance of each IMP for this spectrum
 
 % record the raw file if haven't been record
 if ~obj.m_mapRawNames.isKey(raw_name)
