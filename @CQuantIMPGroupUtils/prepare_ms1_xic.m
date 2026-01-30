@@ -3,36 +3,36 @@ function [sort_rts, sort_ratioMatrix, rt_grid, smoothed_intensity, intensity, is
         minMSMSnum, low_mz_bound, high_mz_bound, selected_charge)
 % Prepare MS1 inputs and load smoothed XIC.
 % input:
-%   cMs12DatasetIO
+%   cMs12DatasetIO (object)
 %       MS12 dataset IO object
-%   raw_name
+%   raw_name (1 x 1 char/string)
 %       the name of the raw (mgf) file
-%   current_rts
+%   current_rts (N x 1 double) minutes
 %       retention time in current group
-%   current_inten
+%   current_inten (N x 1 double) intensity
 %       intensity in current group
-%   current_ratioMatrix
-%       ratio matrix of quantification in current group
-%   minMSMSnum
+%   current_ratioMatrix (N x K double)
+%       ratio matrix of quantification in current group; rows aligned to current_rts
+%   minMSMSnum (1 x 1 double/int)
 %       minimum MSMS number threshold
-%   low_mz_bound
+%   low_mz_bound (1 x 1 double) m/z
 %       low precursor m/z bound
-%   high_mz_bound
+%   high_mz_bound (1 x 1 double) m/z
 %       high precursor m/z bound
-%   selected_charge
+%   selected_charge (1 x 1 double/int)
 %       current precursor charge
 % output:
-%   sort_rts
+%   sort_rts (N x 1 double) minutes
 %       sorted retention times
-%   sort_ratioMatrix
+%   sort_ratioMatrix (N x K double)
 %       sorted ratio matrix
-%   rt_grid
+%   rt_grid (M x 1 double) minutes
 %       retention time grid
-%   smoothed_intensity
+%   smoothed_intensity (M x 1 double) intensity
 %       smoothed intensity of XIC
-%   intensity
+%   intensity (M x 1 double) intensity
 %       raw intensity of XIC
-%   is_valid
+%   is_valid (1 x 1 logical)
 %       is the input valid after preprocessing
 
 [sort_rts, sort_ratioMatrix, is_valid] = ...

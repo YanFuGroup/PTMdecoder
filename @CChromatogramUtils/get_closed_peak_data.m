@@ -3,14 +3,20 @@ function [rec_rt, rec_inten] = get_closed_peak_data(rt_grid, intensity_full, idx
 % Extracts XIC data with 1-point padding and zero-filled boundaries.
 %
 % Input:
-%   rt_grid:        Full retention time grid
-%   intensity_full: Full intensity vector (column vector)
-%   idx_start:      Original start index
-%   idx_end:        Original end index
+%   rt_grid (N x 1 double) minutes
+%       Full retention time grid
+%   intensity_full (N x 1 double) intensity
+%       Full intensity vector (column vector)
+%   idx_start (1 x 1 double/int)
+%       Original start index
+%   idx_end (1 x 1 double/int)
+%       Original end index
 %
 % Output:
-%   rec_rt:         Reconstructed RT vector (padded)
-%   rec_inten:      Reconstructed Intensity vector (padded with 0 at ends)
+%   rec_rt (M x 1 double) minutes
+%       Reconstructed RT vector (padded)
+%   rec_inten (M x 1 double) intensity
+%       Reconstructed Intensity vector (padded with 0 at ends)
 
     % 1. Expand RT range if possible
     pad_start = max(1, idx_start - 1);

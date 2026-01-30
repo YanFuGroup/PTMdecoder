@@ -4,36 +4,35 @@ function [bhave_non_zeros, idxNonZero, auxic, rt_bound, max_label, ratio_each_XI
     current_iso_rt_range)
 % Re-quantify each group
 % input:
-%   raw_name
+%   raw_name (1 x 1 char/string)
 %       the name of the raw (mgf) file
-%   current_iso_name
-%       names of IMPs in current group
-%   current_ratioMatrix
-%       ratio matrix of quantification in current group
-%   current_rts
+%   current_ratioMatrix (N x K double)
+%       ratio matrix of quantification in current group; rows aligned to current_rts
+%   current_rts (N x 1 double) minutes
 %       retention time in current group
-%   current_inten
+%   current_inten (N x 1 double) intensity
 %       intensity in current group
-%   low_mz_bound
+%   low_mz_bound (1 x 1 double) m/z
 %       low precursor m/z bound
-%   high_mz_bound
+%   high_mz_bound (1 x 1 double) m/z
 %       high precursor m/z bound
-%   selected_charge
+%   selected_charge (1 x 1 double/int)
 %       current precursor charge
-%   current_iso_rt_range
-%       retention times of current IMPs
+%   current_iso_rt_range (K x 1 cell)
+%       RT ranges for each IMP (each cell: [] or [start, end] in minutes)
 % output:
-%   bhave_non_zeros
+%   bhave_non_zeros (1 x 1 logical)
 %       is there non zero area under XIC
-%   idxNonZero
-%       the indices of non zero area under XIC
-%   area
-%       total quantification of each IMP in current group,
-%       area under curve of XIC
-%   rt_bound
-%       the retention time bound, .start and .end
-%   max_label
-%       the max check label of the XIC peaks for each IMP
+%   idxNonZero (M x 1 double)
+%       indices of non-zero area IMPs (subset of 1..K)
+%   auxic (M x 1 double) area
+%       total quantification of each selected IMP, area under curve of XIC
+%   rt_bound (M x 1 struct)
+%       retention time bound, fields: .start/.end (minutes)
+%   max_label (M x 1 double)
+%       max check label of the XIC peak for each IMP
+%   ratio_each_XIC_peak (M x 1 double)
+%       ratio of each IMP area to total XIC area in its peak
 
 bhave_non_zeros = false;
 rt_error_tol = 1; % RT tolerance in minutes
@@ -55,7 +54,7 @@ end
 
 % Extract the rt bound of XIC peak and convert to index bounds
 [final_XIC_peak_for_IMP, max_label, is_skip_vec, peak_ranges] = ...
-    CQuantIMPGroupUtils.prepare_peak_ranges_from_iso_rt_range(...
+    CQuantIMPGroupUtils.prepare_peak_ranges_from_imp_rt_range(...
         rt_grid, current_iso_rt_range, rt_error_tol);
 
 % Calculate the ratio on each XIC points using kernel method

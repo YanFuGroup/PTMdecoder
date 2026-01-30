@@ -1,13 +1,13 @@
 function fwhm = get_fwhm(peak_rts, peak_intens)
     % Get the full width at half maxima (FWHM)
     % Input:
-    %   peak_rts
-    %       retention times of peaks
-    %   peak_intens
-    %       intensities of peaks
+    %   peak_rts (N x 1 double) minutes
+    %       Retention times of peaks
+    %   peak_intens (N x 1 double) intensity
+    %       Intensities of peaks
     % Output:
-    %   fwhm
-    %       full width at half maxima
+    %   fwhm (1 x 1 double) minutes
+    %       Full width at half maxima
     
     % Default, used for zero-intensity peak or null peak
     fwhm = 0;

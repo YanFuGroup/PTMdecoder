@@ -1,10 +1,21 @@
 function [sort_rts, sort_ratioMatrix, is_valid] = preprocess_ms1_inputs(current_rts, current_inten, current_ratioMatrix, minMSMSnum)
     % Preprocess MS1 inputs: Sort by retention time, Smooth intensity, and Denoise
     % Inputs:
-    %   current_rts: Array of retention times
-    %   current_inten: Array of intensities
-    %   current_ratioMatrix: quantification matrix
-    %   minMSMSnum: Minimum number of MSMS recurrence required
+    %   current_rts (N x 1 double) minutes
+    %       Array of retention times
+    %   current_inten (N x 1 double) intensity
+    %       Array of intensities
+    %   current_ratioMatrix (N x K double)
+    %       Quantification matrix
+    %   minMSMSnum (1 x 1 double/int)
+    %       Minimum number of MSMS recurrence required
+    % Output:
+    %   sort_rts (M x 1 double) minutes
+    %       Sorted retention times after filtering
+    %   sort_ratioMatrix (M x K double)
+    %       Sorted ratio matrix after filtering
+    %   is_valid (1 x 1 logical)
+    %       Whether inputs pass minimum MSMS count
     
     is_valid = true;
     

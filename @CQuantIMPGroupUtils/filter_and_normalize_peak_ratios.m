@@ -4,14 +4,20 @@ function esti_ratio = filter_and_normalize_peak_ratios(rt_grid, smoothed_intensi
 % and normalize ratios within the peak.
 %
 % Inputs:
-%   rt_grid            RT grid vector
-%   smoothed_intensity Smoothed XIC intensity (column vector with len(rt_grid) rows)
-%   esti_ratio         Estimated ratio matrix (len(rt_grid) x num_imp)
-%   XIC_peaks          Struct array with left_bound/right_bound indices
-%   resFilterThres     Threshold (relative to max area in a peak)
+%   rt_grid (N x 1 double) minutes
+%       RT grid vector
+%   smoothed_intensity (N x 1 double) intensity
+%       Smoothed XIC intensity (aligned to rt_grid)
+%   esti_ratio (N x K double)
+%       Estimated ratio matrix for K IMPs
+%   XIC_peaks (1 x P struct)
+%       Struct array with fields: left_bound/right_bound (indices into rt_grid)
+%   resFilterThres (1 x 1 double)
+%       Threshold (relative to max area in a peak)
 %
 % Output:
-%   esti_ratio         Updated ratio matrix after filtering/normalization
+%   esti_ratio (N x K double)
+%       Updated ratio matrix after filtering/normalization
 
 num_imp = size(esti_ratio, 2);
 intensityMatrix = esti_ratio .* smoothed_intensity;

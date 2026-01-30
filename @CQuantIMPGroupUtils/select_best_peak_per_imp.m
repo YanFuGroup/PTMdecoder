@@ -3,11 +3,14 @@ function idx_selected = select_best_peak_per_imp(imp_max_props, area_each_XIC_pe
 % Select the best XIC peak for each IMP based on a weighted score.
 %
 % Inputs:
-%   imp_max_props       Max ratio contribution per IMP per peak
-%   area_each_XIC_peak Area contribution per IMP per peak
+%   imp_max_props (K x P double)
+%       Max ratio contribution per IMP per peak
+%   area_each_XIC_peak (K x P double) area
+%       Area contribution per IMP per peak
 %
 % Output:
-%   idx_selected        Best peak index per IMP
+%   idx_selected (K x 1 double)
+%       Best peak index per IMP
 
 num_imp = size(imp_max_props, 1);
 idx_selected = zeros(num_imp, 1);

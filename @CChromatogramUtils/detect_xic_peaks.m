@@ -1,11 +1,19 @@
 function XIC_peaks = detect_xic_peaks(rt_grid, smoothed_intensity, raw_intensity, sort_rts, alpha)
     % Detect XIC peaks using smoothed intensity and identified MSMS events
     % Inputs:
-    %   rt_grid: Retention time grid
-    %   smoothed_intensity: Smoothed XIC
-    %   raw_intensity: Raw XIC (for filtering small peaks)
-    %   sort_rts: Sorted retention times of PSMs
-    %   alpha: Threshold parameter for peak boundary detection
+    %   rt_grid (N x 1 double) minutes
+    %       Retention time grid
+    %   smoothed_intensity (N x 1 double) intensity
+    %       Smoothed XIC
+    %   raw_intensity (N x 1 double) intensity
+    %       Raw XIC (for filtering small peaks)
+    %   sort_rts (M x 1 double) minutes
+    %       Sorted retention times of PSMs
+    %   alpha (1 x 1 double)
+    %       Threshold parameter for peak boundary detection
+    % Output:
+    %   XIC_peaks (1 x P struct)
+    %       Struct array with fields: left_bound/right_bound (indices into rt_grid)
     
     % Extract the XIC peaks around the identified MSMS precursor
     % Extract from left to right

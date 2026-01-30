@@ -2,35 +2,35 @@ function [bhave_non_zeros, idxNonZero, auxic, rt_bound, idx_selected, ratio_each
     = quant_each_group(obj,raw_name,current_ratioMatrix,current_rts,...
     current_inten, low_mz_bound, high_mz_bound, selected_charge)
 % Quantify each group
-% input:    
-%   raw_name
+% input:
+%   raw_name (1 x 1 char/string)
 %       the name of the raw (mgf) file
-%   current_iso_name
-%       names of IMPs in current group
-%   current_ratioMatrix
-%       ratio matrix of quantification in current group
-%   current_rts
+%   current_ratioMatrix (N x K double)
+%       ratio matrix of quantification in current group; rows aligned to current_rts
+%       and columns are IMPs; each row sums to ~1 within a peak after normalization
+%   current_rts (N x 1 double) minutes
 %       retention time in current group
-%   current_inten
+%   current_inten (N x 1 double) intensity
 %       intensity in current group
-%   low_mz_bound
+%   low_mz_bound (1 x 1 double) m/z
 %       low precursor m/z bound
-%   high_mz_bound
+%   high_mz_bound (1 x 1 double) m/z
 %       high precursor m/z bound
-%   selected_charge
+%   selected_charge (1 x 1 double/int)
 %       current precursor charge
-% output:   
-%   bhave_non_zeros
+% output:
+%   bhave_non_zeros (1 x 1 logical)
 %       is there non zero area under XIC
-%   idxNonZero
-%       the indices of non zero area under XIC
-%   area
-%       total quantification of each IMP in current group,
-%       area under curve of XIC
-%   rt_bound
-%       the retention time bound, .start and .end
-%   idx_selected
-%       the indices of finally selected XIC peak
+%   idxNonZero (M x 1 double)
+%       indices of non-zero area IMPs (subset of 1..K)
+%   auxic (M x 1 double) area
+%       total quantification of each selected IMP, area under curve of XIC
+%   rt_bound (M x 1 struct)
+%       retention time bound for each selected IMP, fields: .start/.end (minutes)
+%   idx_selected (M x 1 double)
+%       selected XIC peak index per selected IMP
+%   ratio_each_XIC_peak (M x P double)
+%       area ratio of each IMP within each candidate peak
 
 bhave_non_zeros = false;
 idxNonZero = [];

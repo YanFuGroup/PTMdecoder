@@ -1,11 +1,23 @@
 function [rt_grid, smoothed_intensity, intensity] = get_smoothed_xic(ms12DatasetIO, raw_name, low_mz_bound, high_mz_bound, selected_charge)
     % Get Smoothed XIC from MS1 data
     % Inputs:
-    %   ms12DatasetIO: Instance of CMS12DatasetIO
-    %   raw_name: The raw file name
-    %   low_mz_bound: Lower m/z bound
-    %   high_mz_bound: Upper m/z bound
-    %   selected_charge: Charge state
+    %   ms12DatasetIO (object)
+    %       Instance of CMS12DatasetIO
+    %   raw_name (1 x 1 char/string)
+    %       The raw file name
+    %   low_mz_bound (1 x 1 double) m/z
+    %       Lower m/z bound
+    %   high_mz_bound (1 x 1 double) m/z
+    %       Upper m/z bound
+    %   selected_charge (1 x 1 double/int)
+    %       Charge state
+    % Output:
+    %   rt_grid (N x 1 double) minutes
+    %       Retention time grid
+    %   smoothed_intensity (N x 1 double) intensity
+    %       Smoothed XIC intensity
+    %   intensity (N x 1 double) intensity
+    %       Raw XIC intensity (monoisotopic)
     
     % MS1_index (scan, retention time, peak number, baseline, injection time)
     % MS1_peaks (m/z, intensity)

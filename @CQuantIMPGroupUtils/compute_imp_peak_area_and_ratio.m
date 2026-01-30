@@ -2,24 +2,24 @@ function [auxic, rt_bound, ratio_each_XIC_peak] = compute_imp_peak_area_and_rati
     rt_grid, smoothed_intensity, esti_ratio, peak_ranges, final_XIC_peak_for_IMP, is_skip_vec)
 % Compute area and ratio for each IMP based on peak ranges.
 % input:
-%   rt_grid
+%   rt_grid (N x 1 double) minutes
 %       retention time grid
-%   smoothed_intensity
+%   smoothed_intensity (N x 1 double) intensity
 %       total smoothed XIC intensity
-%   esti_ratio
+%   esti_ratio (N x K double)
 %       estimated ratio of each IMP across RT grid
-%   peak_ranges
-%       index bounds for each IMP peak
-%   final_XIC_peak_for_IMP
-%       RT bounds for each IMP peak
-%   is_skip_vec
+%   peak_ranges (K x 1 struct)
+%       index bounds for each IMP peak; fields: left_bound/right_bound (indices into rt_grid)
+%   final_XIC_peak_for_IMP (K x 1 struct)
+%       RT bounds for each IMP peak; fields: left_bound/right_bound (minutes)
+%   is_skip_vec (K x 1 logical)
 %       vector indicating IMPs to skip
 % output:
-%   auxic
+%   auxic (K x 1 double) area
 %       area under each IMP XIC
-%   rt_bound
-%       RT bounds for each IMP
-%   ratio_each_XIC_peak
+%   rt_bound (K x 1 struct)
+%       RT bounds for each IMP; fields: .start/.end (minutes)
+%   ratio_each_XIC_peak (K x 1 double)
 %       ratio of each IMP area to total XIC area in its peak
 
 intensityMatrix = esti_ratio.*smoothed_intensity;

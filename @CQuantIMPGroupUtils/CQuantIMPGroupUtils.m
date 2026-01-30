@@ -29,7 +29,7 @@ classdef CQuantIMPGroupUtils
                 minMSMSnum, low_mz_bound, high_mz_bound, selected_charge)
 
         [final_XIC_peak_for_IMP, max_label, is_skip_vec, peak_ranges] = ...
-            prepare_peak_ranges_from_iso_rt_range(rt_grid, current_iso_rt_range, rt_error_tol)
+            prepare_peak_ranges_from_imp_rt_range(rt_grid, current_iso_rt_range, rt_error_tol)
 
         [idxNonZero, auxic, rt_bound, varargout] = filter_nonzero_xic(auxic, rt_bound, varargin)
     end

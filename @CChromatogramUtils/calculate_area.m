@@ -4,15 +4,19 @@ function area = calculate_area(rt_grid, intensity_full, idx_start, idx_end)
 % Internally uses get_closed_peak_data to ensure the peak is "closed" (starts and ends at 0).
 %
 % Input:
-%   rt_grid:        Vector of retention times
-%   intensity_full: Vector of intensities corresponding to rt_grid
-%   idx_start:      Start index of the peak (internal)
-%   idx_end:        End index of the peak (internal)
+%   rt_grid (N x 1 double) minutes
+%       Vector of retention times
+%   intensity_full (N x 1 double) intensity
+%       Vector of intensities corresponding to rt_grid
+%   idx_start (1 x 1 double/int)
+%       Start index of the peak (internal)
+%   idx_end (1 x 1 double/int)
+%       End index of the peak (internal)
 %
 % Output:
-%   area:           Calculated area (using trapz * 60 for minutes to seconds conversion if applicable) 
-%                   Note: The * 60 factor assumes RT is in minutes.
-% 
+%   area (1 x 1 double) intensity * seconds
+%       Calculated area (trapz * 60; assumes RT in minutes)
+%
 % Attention:
 %   rt_grid in in minutes, area output in intensity * seconds.
 %   This function assumes that the input indices correspond to a peak

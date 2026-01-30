@@ -3,16 +3,24 @@ function [imp_max_props, peak_fwhms, area_each_XIC_peak, rt_bound] = compute_pea
 % Compute IMP-wise peak features across all candidate XIC peaks.
 %
 % Inputs:
-%   rt_grid            RT grid vector
-%   smoothed_intensity Smoothed XIC intensity (column vector with len(rt_grid) rows)
-%   esti_ratio         Estimated ratio matrix (len(rt_grid) x num_imp)
-%   XIC_peaks          Struct array with left_bound/right_bound indices
+%   rt_grid (N x 1 double) minutes
+%       RT grid vector
+%   smoothed_intensity (N x 1 double) intensity
+%       Smoothed XIC intensity (aligned to rt_grid)
+%   esti_ratio (N x K double)
+%       Estimated ratio matrix for K IMPs at each RT; rows sum to ~1 within peaks
+%   XIC_peaks (1 x P struct)
+%       Struct array with fields: left_bound/right_bound (indices into rt_grid)
 %
 % Outputs:
-%   imp_max_props       Max ratio contribution per IMP per peak
-%   peak_fwhms          FWHM per IMP per peak
-%   area_each_XIC_peak Area contribution per IMP per peak
-%   rt_bound            RT bounds per IMP per peak (struct array)
+%   imp_max_props (K x P double)
+%       Max ratio contribution per IMP per peak
+%   peak_fwhms (K x P double) minutes
+%       FWHM per IMP per peak
+%   area_each_XIC_peak (K x P double) area
+%       Area contribution per IMP per peak
+%   rt_bound (K x P struct)
+%       RT bounds per IMP per peak, fields: .start/.end (minutes)
 
 num_imp = size(esti_ratio, 2);
 num_peaks = length(XIC_peaks);

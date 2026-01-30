@@ -4,14 +4,20 @@ function auxic = compute_final_area(rt_grid, smoothed_intensity, esti_ratio, XIC
 % Deprecated: use compute_final_area_from_peak_areas instead.
 %
 % Inputs:
-%   rt_grid            RT grid vector
-%   smoothed_intensity Smoothed XIC intensity (column vector)
-%   esti_ratio         Estimated ratio matrix (len(rt_grid) x num_imp)
-%   XIC_peaks          Struct array with left_bound/right_bound indices
-%   idx_selected       Selected peak index per IMP
+%   rt_grid (N x 1 double) minutes
+%       RT grid vector
+%   smoothed_intensity (N x 1 double) intensity
+%       Smoothed XIC intensity (aligned to rt_grid)
+%   esti_ratio (N x K double)
+%       Estimated ratio matrix for K IMPs
+%   XIC_peaks (1 x P struct)
+%       Struct array with fields: left_bound/right_bound (indices into rt_grid)
+%   idx_selected (K x 1 double)
+%       Selected peak index per IMP
 %
 % Output:
-%   auxic              Final area per IMP
+%   auxic (K x 1 double) area
+%       Final area per IMP
 
 num_imp = size(esti_ratio, 2);
 intensityMatrix = esti_ratio .* smoothed_intensity;

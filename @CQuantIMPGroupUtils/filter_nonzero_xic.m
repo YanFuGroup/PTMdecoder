@@ -2,15 +2,22 @@ function [idxNonZero, auxic, rt_bound, varargout] = filter_nonzero_xic(auxic, rt
 % Filter outputs by non-zero XIC area.
 %
 % Inputs:
-%   auxic: area under curve for each IMP
-%   rt_bound: retention time bounds (struct array or numeric)
-%   varargin: additional arrays to filter using idxNonZero
+%   auxic (K x 1 double) area
+%       Area under curve for each IMP
+%   rt_bound (K x P struct)
+%       RT bounds per IMP per peak, fields: .start/.end (minutes)
+%   varargin (cell)
+%       Additional arrays to filter using idxNonZero (each K x ...)
 %
 % Outputs:
-%   idxNonZero: indices of non-zero area rows
-%   auxic: filtered auxic
-%   rt_bound: filtered rt_bound
-%   varargout: filtered extra inputs
+%   idxNonZero (M x 1 double)
+%       Indices of non-zero area rows
+%   auxic (M x 1 double)
+%       Filtered auxic
+%   rt_bound (M x P struct)
+%       RT bounds per IMP per peak, fields: .start/.end (minutes)
+%   varargout
+%       Filtered extra inputs with the same row selection
 
 idxNonZero = find(auxic(:,1) ~= 0);
 auxic = auxic(idxNonZero,:);

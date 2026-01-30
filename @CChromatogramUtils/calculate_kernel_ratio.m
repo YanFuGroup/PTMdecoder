@@ -1,12 +1,20 @@
 function esti_ratio = calculate_kernel_ratio(rt_grid, sort_rts, sort_ratioMatrix, peak_ranges, is_broadcast)
     % Calculate estimated ratio using Gaussian kernel
     % Inputs:
-    %   rt_grid: RT grid (vector)
-    %   sort_rts: Sorted PSM RTs
-    %   sort_ratioMatrix: quantification matrix
-    %   peak_ranges: struct array with .left_bound and .right_bound (indices)
-    %   is_broadcast: boolean, true if every peak_range applies to all IMPs (Quant), 
-    %              false if each peak corresponds to each IMP (Requant)
+    %   rt_grid (N x 1 double) minutes
+    %       RT grid (vector)
+    %   sort_rts (M x 1 double) minutes
+    %       Sorted PSM RTs
+    %   sort_ratioMatrix (M x K double)
+    %       Quantification matrix for K IMPs
+    %   peak_ranges (1 x P struct) or (K x 1 struct)
+    %       Struct array with fields: left_bound/right_bound (indices into rt_grid)
+    %   is_broadcast (1 x 1 logical)
+    %       true if every peak_range applies to all IMPs (Quant),
+    %       false if each peak corresponds to each IMP (Requant)
+    % Output:
+    %   esti_ratio (N x K double)
+    %       Estimated ratio matrix across rt_grid
     
     num_imp = size(sort_ratioMatrix, 2);
     esti_ratio = zeros(length(rt_grid), num_imp);

@@ -1,32 +1,32 @@
 function draw_each_group(obj,raw_name,current_ratioMatrix,current_rts,...
     current_inten, low_mz_bound, high_mz_bound, selected_charge,...
-    current_iso_rt_range, current_iso_name, dir_save, color_map, legend_map)
+    current_imp_rt_range, current_imp_name, dir_save, color_map, legend_map)
 % Re-quantify each group
 % input:
-%   raw_name
+%   raw_name (1 x 1 char/string)
 %       the name of the raw (mgf) file
-%   current_ratioMatrix
+%   current_ratioMatrix (N x K double)
 %       ratio matrix of quantification in current group
-%   current_rts
+%   current_rts (N x 1 double) minutes
 %       retention time in current group
-%   current_inten
+%   current_inten (N x 1 double) intensity
 %       intensity in current group
-%   low_mz_bound
+%   low_mz_bound (1 x 1 double) m/z
 %       low precursor m/z bound
-%   high_mz_bound
+%   high_mz_bound (1 x 1 double) m/z
 %       high precursor m/z bound
-%   selected_charge
+%   selected_charge (1 x 1 double/int)
 %       current precursor charge
-%   current_iso_rt_range
-%       retention times of current IMPs
-%   current_iso_name
+%   current_imp_rt_range (K x 1 cell)
+%       RT ranges for each IMP (each cell: [] or [start, end] in minutes)
+%   current_imp_name (K x 1 cellstr/string)
 %       names of current IMPs
-%   dir_save
+%   dir_save (1 x 1 char/string)
 %       the directory to save the plot
-%   color_map
-%       color map
-%   legend_map
-%       legend map
+%   color_map (containers.Map or [])
+%       color map (key: imp name, value: RGB 1x3)
+%   legend_map (containers.Map or [])
+%       legend map (key: imp name, value: display string)
 
 
 if nargin < 10
@@ -51,8 +51,8 @@ end
 
 % Extract the rt bound of XIC peak and convert to index bounds
 [~, ~, is_skip_vec, peak_ranges] = ...
-    CQuantIMPGroupUtils.prepare_peak_ranges_from_iso_rt_range(...
-        rt_grid, current_iso_rt_range, rt_error_tol);
+    CQuantIMPGroupUtils.prepare_peak_ranges_from_imp_rt_range(...
+        rt_grid, current_imp_rt_range, rt_error_tol);
 
 % Calculate the ratio on each XIC points using kernel method, and normalize
 esti_ratio = CChromatogramUtils.calculate_kernel_ratio(rt_grid, sort_rts, sort_ratioMatrix, peak_ranges, false);
@@ -68,42 +68,42 @@ if ~exist(dir_save,'dir')
 end
 
 % Plot the total XIC and RIC
-plot_xics(ric, current_iso_name, total_xic, dir_save, raw_name, ...
+plot_xics(ric, current_imp_name, total_xic, dir_save, raw_name, ...
     low_mz_bound, high_mz_bound, selected_charge, color_map, legend_map);
 end
 
 
 
-function plot_xics(ric, current_iso_name, total_xic, dir_save, raw_name, ...
+function plot_xics(ric, current_imp_name, total_xic, dir_save, raw_name, ...
     low_mz_bound, high_mz_bound, selected_charge, color_map, legend_map)
 % Plot the XIC of each IMP and the total XIC, all rt category
 % input:
-%   ric
-%       retention times and intensities of each IMP
-%   current_iso_name
+%   ric (K x 2 cell)
+%       retention times and intensities of each IMP; ric{i,1}=rt (minutes), ric{i,2}=intensity
+%   current_imp_name (K x 1 cellstr/string)
 %       names of current IMPs
-%   total_xic
-%       retention times, intensities of the total XIC
-%   dir_save
+%   total_xic (1 x 2 cell)
+%       total XIC; total_xic{1}=rt (minutes), total_xic{2}=intensity
+%   dir_save (1 x 1 char/string)
 %       the directory to save the plot
-%   raw_name
+%   raw_name (1 x 1 char/string)
 %       the name of the raw (mgf) file
-%   low_mz_bound
+%   low_mz_bound (1 x 1 double) m/z
 %       low precursor m/z bound
-%   high_mz_bound
+%   high_mz_bound (1 x 1 double) m/z
 %       high precursor m/z bound
-%   selected_charge
+%   selected_charge (1 x 1 double/int)
 %       current precursor charge
-%   color_map
+%   color_map (containers.Map or [])
 %       color map
-%   legend_map
+%   legend_map (containers.Map or [])
 %       legend map
 
 % Sort the retention time intervals and categorize them
 if any(cellfun(@(x) isempty(x), ric(:, 1)))
     del_rows = cellfun(@(x) isempty(x), ric(:, 1));
     ric(del_rows,:) = [];
-    current_iso_name(del_rows,:) = [];
+    current_imp_name(del_rows,:) = [];
 end
 start_rt_array = cell2mat(cellfun(@(x) x(1), ric(:, 1), 'UniformOutput', false));
 end_rt_array = cell2mat(cellfun(@(x) x(end), ric(:, 1), 'UniformOutput', false));
@@ -114,8 +114,8 @@ rt_intervals = [start_rt_array - tolerance_rt, end_rt_array + tolerance_rt];
 for idx_cat = 1:max(categorized_indices)
     % Extract the retention times and intensities of each IMP in the current category
     group_current_ric = ric(sort_idx(categorized_indices == idx_cat), :);
-    group_current_iso_name = current_iso_name(sort_idx(categorized_indices == idx_cat));
-    plot_each_xic_group(group_current_ric, total_xic, categorized_intervals{idx_cat}, group_current_iso_name, ...
+    group_current_imp_name = current_imp_name(sort_idx(categorized_indices == idx_cat));
+    plot_each_xic_group(group_current_ric, total_xic, categorized_intervals{idx_cat}, group_current_imp_name, ...
         fullfile(dir_save,[raw_name, '_', num2str(low_mz_bound), '-', num2str(high_mz_bound), ...
         '_+', num2str(selected_charge), '_', num2str(idx_cat), '.svg']), color_map, legend_map);
 end
@@ -126,12 +126,12 @@ end
 function [categorized_intervals, categorized_indices] = categorize_intervals(intervals)
 % Helper function to categorize retention time intervals
 % input:
-%   intervals
+%   intervals (M x 2 double) minutes
 %       retention time intervals
 % output:
-%   categorized_intervals
-%       categorized retention time intervals
-%   categorized_indices
+%   categorized_intervals (1 x C cell)
+%       categorized retention time intervals; each cell is [start_rt, end_rt] in minutes
+%   categorized_indices (M x 1 double)
 %       indices of the categories
 
 categorized_intervals = {}; % Initialize an empty cell array to store categories
@@ -168,27 +168,32 @@ end
 
 function intersection = is_intersecting(interval1, interval2)
 % Helper function to check if two time intervals intersect
+% input:
+%   interval1 (1 x 2 double) minutes
+%   interval2 (1 x 2 double) minutes
+% output:
+%   intersection (1 x 1 logical)
 intersection = (interval1(1) <= interval2(2)) && (interval1(2) >= interval2(1));
 end
 
 
 
-function plot_each_xic_group(ric, total_xic, categorized_intervals, current_iso_name, file_name, color_map, legend_map)
+function plot_each_xic_group(ric, total_xic, categorized_intervals, current_imp_name, file_name, color_map, legend_map)
 % Plot the XIC of each IMP and the total XIC, only one rt category
 % input:
-%   ric
-%       retention times and intensities of each IMP
-%   total_xic
+%   ric (K x 2 cell)
+%       retention times and intensities of each IMP; ric{i,1}=rt (minutes), ric{i,2}=intensity
+%   total_xic (1 x 2 cell)
 %       retention times, intensities of the total XIC
-%   categorized_intervals
+%   categorized_intervals (1 x 2 double) minutes
 %       categorized retention time intervals [start_rt, end_rt]
-%   current_iso_name
+%   current_imp_name (K x 1 cellstr/string)
 %       names of current IMPs
-%   file_name
+%   file_name (1 x 1 char/string)
 %       the file name to save the plot
-%   color_map
+%   color_map (containers.Map or [])
 %       color map
-%   legend_map
+%   legend_map (containers.Map or [])
 %       legend map
 
 % Init plot
@@ -237,13 +242,13 @@ for idx_imp = 1:size(ric, 1)
     plot_info(plot_count).x_data = ric{idx_imp, 1};
     plot_info(plot_count).y_data = ric{idx_imp, 2};
     
-    is_in_legend_map = ~isempty(legend_map) && legend_map.isKey(current_iso_name{idx_imp});
-    is_in_color_map = ~isempty(color_map) && color_map.isKey(current_iso_name{idx_imp});
+    is_in_legend_map = ~isempty(legend_map) && legend_map.isKey(current_imp_name{idx_imp});
+    is_in_color_map = ~isempty(color_map) && color_map.isKey(current_imp_name{idx_imp});
 
     if is_in_legend_map
-        plot_info(plot_count).legend_string = ['XIC of ',legend_map(current_iso_name{idx_imp})];
+        plot_info(plot_count).legend_string = ['XIC of ',legend_map(current_imp_name{idx_imp})];
     else
-        legend_string = ['XIC of ',current_iso_name{idx_imp}];
+        legend_string = ['XIC of ',current_imp_name{idx_imp}];
         legend_string = strrep(legend_string, '_', '\_');
         legend_string = strrep(legend_string, '{', '\{');
         legend_string = strrep(legend_string, '}', '\}');
@@ -251,10 +256,10 @@ for idx_imp = 1:size(ric, 1)
     end
 
     if is_in_color_map
-        plot_info(plot_count).color = color_map(current_iso_name{idx_imp});
+        plot_info(plot_count).color = color_map(current_imp_name{idx_imp});
     else
         % Generate hash-based color from string
-        plot_info(plot_count).color = string_to_color(current_iso_name{idx_imp});
+        plot_info(plot_count).color = string_to_color(current_imp_name{idx_imp});
     end
 end
 
@@ -266,9 +271,9 @@ end
 
 % Plot the XIC of each IMP in sorted order
 for idx_plot = 1:plot_count
-    isoxic_plot = plot(plot_info(idx_plot).x_data, plot_info(idx_plot).y_data, ...
+    imp_xic_plot = plot(plot_info(idx_plot).x_data, plot_info(idx_plot).y_data, ...
         'DisplayName', plot_info(idx_plot).legend_string, 'Color', plot_info(idx_plot).color);
-    set(isoxic_plot, 'LineWidth', all_line_width);
+    set(imp_xic_plot, 'LineWidth', all_line_width);
 end
 
 % Other setings of the plot
