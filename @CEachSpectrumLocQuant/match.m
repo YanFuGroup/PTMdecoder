@@ -1,9 +1,13 @@
 % Iterate through various modifications to find the union of experimental spectrum peak sets that can match the mass-to-charge ratio
 % Input: 
-%   expPeaks - the experimental spectrum, each row is a spectral peak, left is m/z, right is intensity
-%   vNonRedunTheoryIonMz - a matrix of various ion information, the first column is m/z
+%   expPeaks (N x 2 double)
+%       experimental spectrum peaks [m/z, intensity]
+%   vNonRedunTheoryIonMz (L x 1 double or L x M double)
+%       ion info matrix, first column is m/z
 % Output: 
-%   vMatchedExpPeaks is the matched intensity of each peak in vNonRedunTheoryIonMz
+%   vMatchedExpPeaks (K x 2 double)
+%       matched [ion_index, intensity]
+%       ion_index is the row index in vNonRedunTheoryIonMz
 
 % Direct matching, return [matched vNonRedunTheoryIonMz number intensity] pair
 function [vMatchedExpPeaks]=match(obj,expPeaks,vNonRedunTheoryIonMz)

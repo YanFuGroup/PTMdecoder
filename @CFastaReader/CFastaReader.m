@@ -8,6 +8,11 @@ classdef CFastaReader
     
     methods
         function obj = CFastaReader(strFilePath, regular_exp)
+            % Input:
+            %   strFilePath (1 x 1 char/string)
+            %       FASTA file path
+            %   regular_exp (1 x 1 char/string)
+            %       regular expression to parse the protein name
             obj.m_strFilePath = strFilePath;
             obj.m_regular_exp = regular_exp;
         end

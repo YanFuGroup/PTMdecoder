@@ -4,8 +4,8 @@ function result = FilterWithChemPrior(result)
 %   - There will only be at most two modification types on a peptide. 
 %   - Only some modifications are allowed at C-terminus of a peptide.
 % input & output:
-%   result
-%       the result read from the search engine result file
+%   result (1 x N struct)
+%       result read from the search engine result file
 
 
 %% Settings of prior knowledge

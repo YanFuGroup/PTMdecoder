@@ -59,6 +59,9 @@ classdef CTaskParam
 
     methods
         function obj = CTaskParam(param_file_path)
+            % Input:
+            %   param_file_path (1 x 1 char/string)
+            %       task parameter file path
 
             % Parameter dictionary
             task_param_map = obj.parse_file(param_file_path); 

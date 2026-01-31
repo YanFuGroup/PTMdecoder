@@ -27,6 +27,21 @@ classdef CSiteLevelSummary
                 output_intere_path, output_unintere_path, ...
                 protein_name_abbr, mod_name_abbr, ignore_strings, column_idxs)
             %CSITELEVELSUMMARY Construct an instance of this class
+            % Input:
+            %   input_path_or_task_param_obj (char/string or CTaskParam)
+            %       peptide-level result path or task parameter object
+            %   output_intere_path (1 x 1 char/string)
+            %       output path for interested sites
+            %   output_unintere_path (1 x 1 char/string)
+            %       output path for uninterested sites
+            %   protein_name_abbr (containers.Map)
+            %       protein name -> abbreviation
+            %   mod_name_abbr (containers.Map)
+            %       modification name -> abbreviation
+            %   ignore_strings (1 x M cell)
+            %       strings to remove from peptide sequence
+            %   column_idxs (struct, optional)
+            %       column index settings
             if nargin == 1
                 % Initialize using task parameter obj
                 obj.m_input_path = input_path_or_task_param_obj.m_pep_level_file_path;

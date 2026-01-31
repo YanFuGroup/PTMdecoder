@@ -1,5 +1,8 @@
 function res_intersec = get_merge_res_of_one_pair(obj)
 % Merge the site-level result for each pair
+% Input:
+%   obj (CMergeEachPair)
+%       merge instance
 % Output:
 %   res_intersec
 %       the merged result of the two samples
@@ -190,6 +193,8 @@ function res = read_site_file(res_path, column_idxs)
 % Input:
 %   res_path
 %       the path of the site-level result file
+%   column_idxs (struct)
+%       column index settings
 % Output:
 %   res
 %       the site-level result

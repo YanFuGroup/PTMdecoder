@@ -1,5 +1,8 @@
 function write_result(obj)
 % Write the merged result to file
+% Input:
+%   obj (CMergeEachPair)
+%       merge instance with m_result populated
 
 % Open the file
 fout = fopen(obj.m_output_path,'w');

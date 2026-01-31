@@ -1,10 +1,10 @@
 function task_param_map = parse_file(~, param_file)
 % Parse the task parameter file and return the dictionary of user settings.
 % Input:
-%   param_file
+%   param_file (1 x 1 char/string)
 %       the file path of the task parameter file.
 % Output:
-%   task_param_map
+%   task_param_map (containers.Map)
 %       the dictionary of user settings.
 
 fid = fopen(param_file,'r');
@@ -35,10 +35,10 @@ end
 function strLine = remove_comments(strLine)
 % Remove comments in the line.
 % Input:
-%   strLine
+%   strLine (1 x 1 char/string)
 %       the line to be processed.
 % Output:
-%   strLine
+%   strLine (1 x 1 char/string)
 %       the line without comments.
 
 if contains(strLine,'#')
@@ -52,14 +52,14 @@ end
 function task_param_map = record_user_settings(strLine, task_param_map, fileLine)
 % Record user settings to the dictionary in current line.
 % Input:
-%   strLine
+%   strLine (1 x 1 char/string)
 %       the line to be processed.
-%   task_param_map
+%   task_param_map (containers.Map)
 %       the dictionary of user settings.
-%   fileLine
+%   fileLine (1 x 1 double/int)
 %       the line number in the file.
 % Output:
-%   task_param_map
+%   task_param_map (containers.Map)
 %       the dictionary of user settings.
 
 strSeg = split(strLine,'=');

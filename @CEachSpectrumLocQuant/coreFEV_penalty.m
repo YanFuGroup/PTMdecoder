@@ -1,12 +1,12 @@
 function [abundance,frageffe]=coreFEV_penalty(~,X,massArrangement,penalty_factor)
 % Core program for solving the optimization problem, does not depend on individual spectra, variable model of fragmentation efficiency, uses matching score as penalty
 % Input:
-%   X - the A matrix in $A\beta$
-%   massArrangement - the matrix of all combinations of modification masses, each row represents an IMP, each column is the mass shift at each site
-%   penalty_factor - the penalty for each IMP
+%   X (N x P double) - the A matrix in $A\beta$
+%   massArrangement (M x S double) - the matrix of all combinations of modification masses, each row represents an IMP, each column is the mass shift at each site
+%   penalty_factor (M x 1 double) - the penalty for each IMP
 % Output: 
-%   abundance - the abundance of each IMP, relative abundance
-%   frageffe - fragmentation efficiency of each observed ion
+%   abundance (M x 1 double) - the abundance of each IMP, relative abundance
+%   frageffe (P-M x 1 double) - fragmentation efficiency of each observed ion
 m=size(massArrangement,1);
 H=X'*X; % Quadratic term matrix of the optimization function
 f=zeros(size(X,2),1);

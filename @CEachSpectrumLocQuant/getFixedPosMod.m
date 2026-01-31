@@ -1,7 +1,7 @@
 function [fixedPosMod]=getFixedPosMod(obj)
 % According to the user-specified fixed modification, find their positions on the peptide sequence and record the information
 % Output: 
-%   fixedPosMod
+%   fixedPosMod (K x 3 cell)
 %       if none then empty, 
 %       if present each row is a fixed modification, each row is [position, name, mass], such as: [2, 'Acetyl[K]', 42.0106]
 if isempty(obj.m_fixedModNameMass)

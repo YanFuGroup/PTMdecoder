@@ -1,5 +1,11 @@
 function mapProt = read(obj)
 % Read sequence from file to mapProt
+% Input:
+%   obj (CFastaReader)
+%       FASTA reader instance
+% Output:
+%   mapProt (containers.Map)
+%       key: protein name, value: sequence string
 
 % Initialize map
 mapProt = containers.Map('KeyType', 'char', 'ValueType', 'char');

@@ -1,4 +1,11 @@
 function [result2] = ReadDatResult(pathin)
+% Read Mascot .dat result file
+% Input:
+%   pathin (1 x 1 char/string)
+%       path to .dat file
+% Output:
+%   result2 (1 x N struct)
+%       parsed Mascot results
 fidin = fopen(pathin);
 
 if -1==fidin

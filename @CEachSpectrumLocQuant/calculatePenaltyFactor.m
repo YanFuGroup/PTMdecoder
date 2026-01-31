@@ -1,19 +1,30 @@
-function penalty_factor = calculatePenaltyFactor(~, NonRedunTheoryIonMz, matchedExpPeaks, lambda)
+function penalty_factor = calculatePenaltyFactor(~, NonRedunTheoryIonMz, matchedExpPeaks, lambda, case_penalty_intens, grid_penalty_intens)
 % Calculate the penalty factor for the core model according to the given
 %   theoretical ions and the matched experimental peaks.
 % Input:
-%   vNonRedunTheoryIonMz:
+%   vNonRedunTheoryIonMz (L x M double):
 %       Site-discrimining ions, each row is a fragment ion:
 %       [m/z, type (1 is b ion, 2 is y ion), ion number (position), charge, 
 %       number of modifications, class index, whether an IMP can generate this ion]
-%   matchedExpPeaks:
+%   matchedExpPeaks (K x 3 double):
 %       List of matched experimental peaks. 
 %       The first column is the matched vNonRedunTheoryIonMz number, the second column is the normalized intensity, and the third column is the original intensity.
-%   lambda:
+%   lambda (1 x 1 double):
 %       Weight for the penalty factor.
+%   case_penalty_intens (1 x 1 char/string):
+%       Mode for scoring/penalty (e.g., 'intens_sum', 'log_intens_sum', 'sqrt_intens_sum', 'exp_intens_sum', 'log_intens_ksdp', 'sqrt_intens_ksdp', 'exp_intens_ksdp', 'sqrt_intens_ksdp_sqrt', 'intens_hyperscore').
+%   grid_penalty_intens (1 x 1 char/string):
+%       Mode for intensity aggregation inside KSDP (e.g., 'intens_sum', 'log_intens_sum', 'sqrt_intens_sum', 'exp_intens_sum').
 % Output:
-%   penalty_factor:
+%   penalty_factor (P x 1 double):
 %       Penalty factor for the core model.
+
+if nargin < 5 || isempty(case_penalty_intens)
+    case_penalty_intens = 'intens_sum';
+end
+if nargin < 6 || isempty(grid_penalty_intens)
+    grid_penalty_intens = 'intens_sum';
+end
 
 % Currently, only the simplest matching scoring function is used, which is SDP. In this example, the intensities of all fragment ions corresponding to the IMP are directly summed up
 %   as the score of the IMP, and then the reciprocal is taken as the penalty factor.
@@ -28,18 +39,18 @@ penalty_factor = zeros(num_nrti, 1);
 % Iterate over each column representing whether the IMP produces the corresponding theoretical ion
 for idx_form = 1:num_nrti
     ionIndices = find(NonRedunTheoryIonMz(:, idx_form+6) == 1);
-    global case_penalty_intens
-    if isequal(case_penalty_intens, 'log_intens_sum') || ...
+    if isequal(case_penalty_intens, 'intens_sum') || ...
+            isequal(case_penalty_intens, 'log_intens_sum') || ...
             isequal(case_penalty_intens, 'sqrt_intens_sum') || ...
             isequal(case_penalty_intens, 'exp_intens_sum')
         % Calculate the score for the current column (IMP)
-        form_score = sdp_score(ionIndices, matchedExpPeaks);
+        form_score = sdp_score(ionIndices, matchedExpPeaks, case_penalty_intens);
     elseif isequal(case_penalty_intens, 'log_intens_ksdp') || ...
             isequal(case_penalty_intens, 'sqrt_intens_ksdp') || ...
             isequal(case_penalty_intens, 'exp_intens_ksdp') || ...
             isequal(case_penalty_intens, 'sqrt_intens_ksdp_sqrt')
         [ion_tag, matched_peaks_intensity] = get_ion_tag_intensity(NonRedunTheoryIonMz, matchedExpPeaks, ionIndices);
-        form_score = ksdp_score(ion_tag, matched_peaks_intensity);
+        form_score = ksdp_score(ion_tag, matched_peaks_intensity, grid_penalty_intens);
         if isequal(case_penalty_intens, 'sqrt_intens_ksdp_sqrt')
             form_score = sqrt(form_score);
         end
@@ -60,16 +71,18 @@ end
 
 
 
-function form_score = sdp_score(ionIndices, matchedExpPeaks)
+function form_score = sdp_score(ionIndices, matchedExpPeaks, case_penalty_intens)
 % Calculate the score for the given ionIndices according to the matched
 %   experimental peaks.
 % Input:
-%   ionIndices:
+%   ionIndices (Q x 1 double/int):
 %       Indices of the ions to be calculated.
-%   matchedExpPeaks:
+%   matchedExpPeaks (K x 3 double):
 %       List of matched experimental peaks.
+%   case_penalty_intens (1 x 1 char/string):
+%       Mode for intensity aggregation.
 % Output:
-%   form_score:
+%   form_score (1 x 1 double):
 %       Score for the given ions.
 
 % Initialize the sum of the current column
@@ -83,7 +96,6 @@ for i_ion = 1:length(ionIndices)    % row number of NonRedunTheoryIonMz
     end
     
     % Sum these peak intensities
-    global case_penalty_intens
     if isequal(case_penalty_intens, 'log_intens_sum')
         peakValue = matchedExpPeaks(idx_matchedExpPeaks, 3);
         form_score = form_score + log(peakValue);
@@ -105,17 +117,17 @@ end
 function [ion_tag, matched_peaks_intensity] = get_ion_tag_intensity(NonRedunTheoryIonMz, matchedExpPeaks, ionIndices)
 % Get the ion tag and matched peaks intensity for the given ionIndices.
 % Input:
-%   NonRedunTheoryIonMz:
+%   NonRedunTheoryIonMz (L x M double):
 %       Theoretical non-redundant ions.
-%   matchedExpPeaks:
+%   matchedExpPeaks (K x 3 double):
 %       List of matched experimental peaks.
-%   ionIndices:
+%   ionIndices (Q x 1 double/int):
 %       Indices of the ions to be calculated.
 % Output:
-%   ion_tag:
+%   ion_tag (T x P double):
 %       Ion tag for the given ions. [by&charge type] * [position]. 
 %       Matched ions are marked as 1, otherwise 0.
-%   matched_peaks_intensity:
+%   matched_peaks_intensity (K x 1 double):
 %       Intensity of the matched peaks for the given ions.
 
 % Get unique values from NonRedunTheoryIonMz
@@ -148,17 +160,19 @@ end
 
 
 
-function form_score = ksdp_score(ion_tag, matched_peaks_intensity)
+function form_score = ksdp_score(ion_tag, matched_peaks_intensity, grid_penalty_intens)
 % Calculate the score for the given ionIndices according to the matched
 %   experimental peaks.
 % Input:
-%   ion_tag:
+%   ion_tag (T x P double):
 %       Ion tag for the given ions. [by&charge type] * [position]. 
 %       Matched ions are marked as 1, otherwise 0.
-%   matched_peaks_intensity:
+%   matched_peaks_intensity (K x 1 double):
 %       Intensity of the matched peaks for the given ions.
+%   grid_penalty_intens (1 x 1 char/string):
+%       Mode for intensity aggregation.
 % Output:
-%   form_score:
+%   form_score (1 x 1 double):
 %       Score for the given ions.
 
 l_win = 5;
@@ -179,7 +193,6 @@ for i=2:len+1
 end
 
 % Intensity sum in scoring function
-global grid_penalty_intens
 if isequal(grid_penalty_intens, 'log_intens_sum')
     s_inten = sum(log(matched_peaks_intensity));
 elseif isequal(grid_penalty_intens, 'sqrt_intens_sum')
@@ -199,15 +212,15 @@ function form_score = hyperscore_score(NonRedunTheoryIonMz, matchedExpPeaks, ion
 % Calculate the score for the given peptidoforms according to the matched
 %   experimental peaks.
 % Input:
-%   NonRedunTheoryIonMz:
+%   NonRedunTheoryIonMz (L x M double):
 %       Theoretical non-redundant ions.
-%   matchedExpPeaks:
+%   matchedExpPeaks (K x 3 double):
 %       List of matched experimental peaks.
-%   ionIndices:
+%   ionIndices (Q x 1 double/int):
 %       Indices of the ions to be calculated.
 %       According to the row numbers of NonRedunTheoryIonMz.
 % Output:
-%   form_score:
+%   form_score (1 x 1 double):
 %       Score for the given peptidoforms.
 % Attention:
 %   The hyperscore is calculated mainly based on the b/y ions!

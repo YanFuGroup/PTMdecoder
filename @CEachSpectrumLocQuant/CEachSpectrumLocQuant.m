@@ -20,6 +20,10 @@ classdef CEachSpectrumLocQuant
         m_ionTypes;           % types of used fragment ions (b/y)
         m_enzyme;             % enzyme
 
+        m_case_penalty_intens; % penalty intensity mode for SDP/KSDP/hyperscore
+        m_grid_penalty_intens; % penalty intensity mode inside KSDP grid
+        m_case_OLS_intens_weight; % OLS intensity weighting mode for X matrix
+
         m_iCharge;          % spectrum charge
         m_dPrecursorMass;   % neutral mass of precursor ion
         m_expPeaks          % all spectrum peaks, each row is a peak: left is m/z, right is intensity
@@ -27,9 +31,50 @@ classdef CEachSpectrumLocQuant
 
     methods
         function obj = CEachSpectrumLocQuant(pepSeq,isProtN,isProtC, ...
-                cMgfDatasetIO,strDatasetName,strSpecName,fixedModNameMass, ...
-                variableModNameMass,model,method,lambda,ms1_tolerance,ms2_tolerance,...
-                alpha,resFilterThres,ionTypes,enzyme)
+            cMgfDatasetIO,strDatasetName,strSpecName,fixedModNameMass, ...
+            variableModNameMass,model,method,lambda,ms1_tolerance,ms2_tolerance,...
+            alpha,resFilterThres,ionTypes,enzyme,case_penalty_intens,grid_penalty_intens,case_OLS_intens_weight)
+            % Input:
+            %   pepSeq (1 x 1 char/string)
+            %       peptide sequence
+            %   isProtN (1 x 1 logical)
+            %       whether peptide is protein N-terminus
+            %   isProtC (1 x 1 logical)
+            %       whether peptide is protein C-terminus
+            %   cMgfDatasetIO (CMgfDatasetIO)
+            %       spectrum IO instance
+            %   strDatasetName (1 x 1 char/string)
+            %       dataset name
+            %   strSpecName (1 x 1 char/string)
+            %       spectrum name
+            %   fixedModNameMass (M x 3 cell)
+            %       fixed modification name/site/mass list
+            %   variableModNameMass (M x 3 cell)
+            %       variable modification name/site/mass list
+            %   model (1 x 1 double/int)
+            %       model index
+            %   method (1 x 1 double/int)
+            %       estimation method
+            %   lambda (1 x 1 double)
+            %       lasso penalty parameter
+            %   ms1_tolerance (struct)
+            %       MS1 tolerance (fields: value, isppm)
+            %   ms2_tolerance (struct)
+            %       MS2 tolerance (fields: value, isppm)
+            %   alpha (1 x 1 double)
+            %       denoising threshold factor
+            %   resFilterThres (1 x 1 double)
+            %       result filter threshold
+            %   ionTypes (1 x T double/int)
+            %       ion types for matching
+            %   enzyme (struct)
+            %       enzyme settings
+            %   case_penalty_intens (1 x 1 char/string, optional)
+            %       penalty intensity mode for SDP/KSDP/hyperscore
+            %   grid_penalty_intens (1 x 1 char/string, optional)
+            %       intensity aggregation mode inside KSDP grid
+            %   case_OLS_intens_weight (1 x 1 char/string, optional)
+            %       OLS intensity weighting mode for X matrix
             obj.m_pepSeq = pepSeq;
             obj.m_isProtN = isProtN;
             obj.m_isProtC = isProtC;
@@ -47,6 +92,22 @@ classdef CEachSpectrumLocQuant
             obj.m_resFilterThres = resFilterThres;
             obj.m_ionTypes = ionTypes;
             obj.m_enzyme = enzyme;
+
+            if nargin < 18 || isempty(case_penalty_intens)
+                obj.m_case_penalty_intens = 'intens_sum';
+            else
+                obj.m_case_penalty_intens = case_penalty_intens;
+            end
+            if nargin < 19 || isempty(grid_penalty_intens)
+                obj.m_grid_penalty_intens = 'intens_sum';
+            else
+                obj.m_grid_penalty_intens = grid_penalty_intens;
+            end
+            if nargin < 20 || isempty(case_OLS_intens_weight)
+                obj.m_case_OLS_intens_weight = 'none';
+            else
+                obj.m_case_OLS_intens_weight = case_OLS_intens_weight;
+            end
         end
         
         % Main entry

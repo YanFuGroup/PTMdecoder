@@ -1,33 +1,31 @@
 function [FDR,Iid,threshold,finalFDR,p,pp] = ComputeFDR(DecoyType,GroupType,scores,numrst,I,fdrthres)
 % compute FDR and return indexes passed the filtering
 % input:
-%           DecoyType
+%           DecoyType (1 x N double/logical)
 %               one for each PSM, indicating whether it is a decoy match
-%           GroupType
-%               one for each PSM, indicating whether it is out of the
-%               target group, 0 is wanted
-%           scores
-%               the score of search engine, sorted
-%           numrst
-%               the number of results
-%           I
-%               the index of the PSMs in descend sort
-%           fdrthres
-%               the FDR threshold set by user
+%           GroupType (1 x N double/logical)
+%               one for each PSM, indicating whether it is out of the target group (0 is wanted)
+%           scores (1 x N double)
+%               search engine scores (sorted, descending)
+%           numrst (1 x 1 double/int)
+%               number of results
+%           I (1 x N double/int)
+%               indices of PSMs in descending sort
+%           fdrthres (1 x 1 double)
+%               FDR threshold
 % output:
-%           FDR
-%               GF (global), SF (separate), TF (transfer).
-%               each q-value for each sorted score (the input score)
-%           Iid
-%               the index of PSM pass the filtering
-%           threshold
-%               the true score threshold for filtering the PSMs
-%           finalFDR
-%               the true p-value threshold for filtering the PSMs
-%           p
-%               the coefficient of fitting in transfer FDR
-%           pp
-%               the coefficient of lambda fitting
+%           FDR (struct)
+%               GF (global), SF (separate), TF (transfer) q-values
+%           Iid (struct)
+%               indices of PSMs passing filtering for each mode
+%           threshold (struct)
+%               score thresholds for filtering PSMs
+%           finalFDR (struct)
+%               final q-values at thresholds
+%           p (1 x 2 double)
+%               coefficients of transfer FDR fit
+%           pp (1 x 2 double)
+%               coefficients of lambda fitting
 
 draw_figures = false;   % whether to draw figures of lambda fitting and transfer FDR
 

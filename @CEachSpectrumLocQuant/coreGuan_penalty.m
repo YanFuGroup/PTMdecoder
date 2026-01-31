@@ -1,11 +1,11 @@
 function [abundance]=coreGuan_penalty(~,X,Y,penalty_factor)
 % Core program for solving the optimization problem, does not depend on individual spectra, constant model of fragmentation efficiency , uses identification score as penalty
 % Input: 
-%   X - the X matrix in $Y=X\alpha+\epsilon$
-%   Y - the Y vector in $Y=X\alpha+\epsilon$
-%   penalty_factor - the penalty factor
+%   X (N x P double) - the X matrix in $Y=X\alpha+\epsilon$
+%   Y (N x 1 double) - the Y vector in $Y=X\alpha+\epsilon$
+%   penalty_factor (P x 1 double) - the penalty factor
 % Output: 
-%   abundance - the \alpha vector in $Y=X\alpha+\epsilon$ in the paper, representing the relative abundance of each IMP
+%   abundance (P x 1 double) - the \alpha vector in $Y=X\alpha+\epsilon$ in the paper, representing the relative abundance of each IMP
 H=X'*X;
 f=-X'*Y+penalty_factor;
 lb=zeros(size(X,2),1);

@@ -1,8 +1,8 @@
 function check_required_keys(~, task_param_map)
 % Check if all the required keys are present in the task_param_map.
 % Input:
-%   task_param_map
-%       A containers.Map object that contains the task parameters.
+%   task_param_map (containers.Map)
+%       task parameter map
 
 % Note: This function assumes that the task_param_map is a containers.Map object.
 
@@ -71,8 +71,8 @@ end
 function check_required_keys_msms_peptide_level(task_param_map)
 % Check if all the required keys are present in the task_param_map for MSMS & Peptide level processing.
 % Input:
-%   task_param_map
-%       A containers.Map object that contains the task parameters.
+%   task_param_map (containers.Map)
+%       task parameter map
     
 key_needed_name_explain = { ...
     % Parameter on msms & peptide level processing
@@ -110,8 +110,8 @@ end
 function check_required_keys_peptide_requant(task_param_map)
 % Check if all the required keys are present in the task_param_map for MSMS & Peptide level processing.
 % Input:
-%   task_param_map
-%       A containers.Map object that contains the task parameters.
+%   task_param_map (containers.Map)
+%       task parameter map
 
 % TODO: find the minimal set of required keys for peptide level requantification
 
@@ -146,8 +146,8 @@ end
 function check_required_keys_peptide_only(task_param_map)
 % Check if all the required keys are present in the task_param_map for peptide only processing.
 % Input:
-%   task_param_map
-%       A containers.Map object that contains the task parameters.
+%   task_param_map (containers.Map)
+%       task parameter map
 
 key_needed_name_explain = { ...
     % Parameter on peptide only processing
@@ -179,8 +179,8 @@ end
 function check_required_keys_site_level(task_param_map)
 % Check if all the required keys are present in the task_param_map for site level processing.
 % Input:
-%   task_param_map
-%       A containers.Map object that contains the task parameters.
+%   task_param_map (containers.Map)
+%       task parameter map
 
 key_needed_name_explain = { ...
     % Parameter on site level processing
@@ -219,8 +219,8 @@ end
 function check_required_keys_merge_to_pair_level(task_param_map)
 % Check if all the required keys are present in the task_param_map for merge to pair level processing.
 % Input:
-%   task_param_map
-%       A containers.Map object that contains the task parameters.
+%   task_param_map (containers.Map)
+%       task parameter map
 
 key_needed_name_explain = { ...
     % Parameter on merge to pair level processing
@@ -248,8 +248,8 @@ end
 function check_required_keys_merge_pairs_level(task_param_map)
 % Check if all the required keys are present in the task_param_map for merge pairs level processing.
 % Input:
-%   task_param_map
-%       A containers.Map object that contains the task parameters.
+%   task_param_map (containers.Map)
+%       task parameter map
 
 key_needed_name_explain = { ...
     % Parameter on merge pairs level processing

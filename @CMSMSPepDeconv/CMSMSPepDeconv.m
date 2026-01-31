@@ -20,6 +20,10 @@ classdef CMSMSPepDeconv
         m_min_MSMS_num;     % Minimum number of deconvoluted MSMS spectra for a peptide to be considered
         m_ionTypes;         % Ion types used for matching
 
+        m_case_penalty_intens; % penalty intensity mode for SDP/KSDP/hyperscore
+        m_grid_penalty_intens; % penalty intensity mode inside KSDP grid
+        m_case_OLS_intens_weight; % OLS intensity weighting mode for X matrix
+
         m_fixedModNameMass;     % Specified fixed modifications: name, specificity, and mass
         m_variableModNameMass;  % Specified variable modifications: name, specificity, and mass
         m_cMgfDatasetIO;        % Record MGF spectra
@@ -107,6 +111,10 @@ classdef CMSMSPepDeconv
                 obj.m_min_MSMS_num = taskParam.m_min_MSMS_num;
                 fixedMod = taskParam.m_fixed_mod;
                 variableMod = taskParam.m_variable_mod;
+
+                obj.m_case_penalty_intens = 'intens_sum';
+                obj.m_grid_penalty_intens = 'intens_sum';
+                obj.m_case_OLS_intens_weight = 'none';
             else
                 obj.m_specPath = specPath;
                 obj.m_modFile = modFile_or_taskparamobj;
@@ -123,6 +131,9 @@ classdef CMSMSPepDeconv
                 obj.m_enzyme = enzyme;
                 obj.m_outputDir = outputDir;
                 obj.m_min_MSMS_num = 1;
+                obj.m_case_penalty_intens = 'intens_sum';
+                obj.m_grid_penalty_intens = 'intens_sum';
+                obj.m_case_OLS_intens_weight = 'none';
                 if nargin >= 17
                     obj.m_ionTypes = ionTypes;
                 end

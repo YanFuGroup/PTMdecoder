@@ -1,10 +1,10 @@
 % Generate non-redundant ions for all IMPs
 % Input: 
-%   modSites - possible modification positions (numbers) on the peptide sequence
-%   massArrangement - arrangement of possible modifications at each position above, each row is a case
-%   fixedPosMod - fixed modification
+%   modSites (1 x S double/int) - possible modification positions (numbers) on the peptide sequence
+%   massArrangement (M x S double) - arrangement of possible modifications at each position above, each row is a case
+%   fixedPosMod (K x 3 cell) - fixed modification
 % Output: 
-%   vNonRedunTheoryIonMz - the matrix of ion properties determined by all modification combinations, 
+%   vNonRedunTheoryIonMz (L x T double) - the matrix of ion properties determined by all modification combinations, 
 %       each row is [m/z, bya type, position index, charge, number of modifications, [by position charge] ion index, ...
 %                   0-1 variable indicating whether each IMP can generate this ion]
 

@@ -2,19 +2,19 @@ function [massArrangement, vNonRedunTheoryIonMz] = delete_useless_peptidoforms( 
         ~, matchedExpPeaks, massArrangement, vNonRedunTheoryIonMz)
 % Delete the peptidoforms that have no matched peaks and the peptidoforms that are subsets of other peptidoforms.
 % Input:
-%   matchedExpPeaks:
+%   matchedExpPeaks (K x 3 double):
 %       List of matched experimental peaks.
 %       The first column is the index of the matched vNonRedunTheoryIonMz, the second column is the normalized intensity, the third column is the real intensity obtained from the experiment
-%   massArrangement:
+%   massArrangement (M x S double):
 %       The mass arrangement of the peptidoforms.
 %       Each row represent an IMP, each column corresponds to a modification site, in the order of the site in the peptide sequence
-%   vNonRedunTheoryIonMz:
+%   vNonRedunTheoryIonMz (L x T double):
 %       Theoretical non-redundant ions.
 %       Each row is a fragment ion, each column represents its various basic information, including modifications
 %       [m/z of the ion at p charge, type (1 is b ion, 2 is y ion), ion index (position), charge,
 %       number of modifications, type index charge group, which IMP can generate this ion]
 % Output:
-%   massArrangement, vNonRedunTheoryIonMz:
+%   massArrangement (M' x S double), vNonRedunTheoryIonMz (L x T' double):
 
 % Get the number of non-redundant ions
 num_nrti = size(vNonRedunTheoryIonMz, 2) - 6;

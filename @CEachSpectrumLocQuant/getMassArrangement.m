@@ -1,13 +1,13 @@
 function [ bSuccess,inxSites,massArrangement,warning_msg ] = getMassArrangement(obj,fixedPosMod)
 % Calculate all possible arrangements of multiple modifications, represented as mass, and return a ordered mass matrix
 % Input: 
-%   fixedPosMod - the fixed modification, which is added before calculating the modification combination
+%   fixedPosMod (K x 3 cell) - the fixed modification, which is added before calculating the modification combination
 % Output: 
-%   bSuccess - whether successful
-%   inxSites - the actual positions of modifications on the peptide for each column of massArrangement
-%   massArrangement - the various arrangements of modifications, given as a matrix in the form of mass.
+%   bSuccess (1 x 1 logical) - whether successful
+%   inxSites (1 x S double/int) - the actual positions of modifications on the peptide for each column of massArrangement
+%   massArrangement (M x S double) - the various arrangements of modifications, given as a matrix in the form of mass.
 %   Each row - a possible modification arrangement, each column represents a position
-%   warning_msg - the warning message
+%   warning_msg (1 x 1 char) - the warning message
 
 warning_msg = [];
 bSuccess = false;
@@ -114,16 +114,16 @@ function all_res = get_weights_comb(each_mass_shift, each_max_num, delta_mass, .
 % such that the sum of selected weights is nearly equal to "delta_mass".
 %
 % Input arguments:
-% - each_mass_shift: a vector of positive integers representing the available weights.
-% - each_max_num: a non-negative integer vector of the same length as "weights", indicating the maximum
+% - each_mass_shift (R x 1 double): a vector of positive integers representing the available weights.
+% - each_max_num (R x 1 double/int): a non-negative integer vector of the same length as "weights", indicating the maximum
 %       number of times each weight can be used.
-% - delta_mass: a positive integer representing the desired total weight.
-% - tolerance: the error tolerance.
-% - eachSpecfinVariList: the specificity and the index of the which
+% - delta_mass (1 x 1 double): a positive integer representing the desired total weight.
+% - tolerance (1 x 1 double): the error tolerance.
+% - eachSpecfinVariList (A x 3 cell): the specificity and the index of the which
 %       [each_mass_shift] belongs to this specificity.
-% - maxNumEachAA: the total number of the specificity.
+% - maxNumEachAA (A x 1 double/int): the total number of the specificity.
 % Output arguments:
-% - all_res: a matrix of all combination result, a row according to one
+% - all_res (C x R double): a matrix of all combination result, a row according to one
 %       combination.
 
 % Initial
@@ -224,13 +224,13 @@ function [massArrangement, is_too_many_candidate]=getMassArrangementUsingComb(mo
     eachSpecfinVariList,maxNumEachAA)
 % Calculate all combinations of modification mass + modification sites (just the order of potential modifications on the sequence, not the actual positions)
 % Input: 
-%   modComb - All possible modification combinations. Each row is one combination, the column order is consistent with the user-specified modification list
-%   variModNameMass - a matrix of modification types and modification masses, consistent with the order of all modifications specified by the user
-%   eachSpecfinVariList - a table of [amino acid, number of modification types with this specificity site, positions of this amino acid modification in the user-specified list]
-%   maxNumEachAA - the number of positions where various amino acids may be modified on the peptide sequence
+%   modComb (C x R double) - All possible modification combinations. Each row is one combination, the column order is consistent with the user-specified modification list
+%   variModNameMass (R x 3 cell) - a matrix of modification types and modification masses, consistent with the order of all modifications specified by the user
+%   eachSpecfinVariList (A x 3 cell) - a table of [amino acid, number of modification types with this specificity site, positions of this amino acid modification in the user-specified list]
+%   maxNumEachAA (A x 1 double/int) - the number of positions where various amino acids may be modified on the peptide sequence
 % Output: 
-%   massArrangement - a matrix of various combinations of modification masses, each row is a case, each column is the mass shift at several possible modification sites, the columns are organized by amino acids (block matrix) and cannot be used directly, some processing is needed.
-%   is_too_many_candidate - whether there are too many candidate peptidoforms
+%   massArrangement (M x S double) - a matrix of various combinations of modification masses, each row is a case, each column is the mass shift at several possible modification sites, the columns are organized by amino acids (block matrix) and cannot be used directly, some processing is needed.
+%   is_too_many_candidate (1 x 1 logical) - whether there are too many candidate peptidoforms
 massArrangement=[];
 is_too_many_candidate = false;
 for idxComb=1:size(modComb,1)

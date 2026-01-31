@@ -1,4 +1,10 @@
 function write_peptide_spectra_list_file(result, filename)
+% Write peptide-spectra list file
+% Input:
+%   result (1 x N struct)
+%       Mascot result entries
+%   filename (1 x 1 char/string)
+%       output file path
 
 fout = fopen(filename,'w');
 if 0 >= fout

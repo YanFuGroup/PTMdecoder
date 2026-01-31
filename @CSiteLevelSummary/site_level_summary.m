@@ -1,5 +1,8 @@
 function obj = site_level_summary(obj)
 % Summary the quantification of each modified PSM on site level.
+% Input:
+%   obj (CSiteLevelSummary)
+%       site-level summarizer instance
 % Using members of obj:
 %   m_input_path
 %       the path of the result file on peptide level

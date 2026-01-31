@@ -1,16 +1,21 @@
-function [X,ionTypePosCharge,ionIntens]=calculateX_FEV(~,vNonRedunTheoryIonMz,Peaks)
+function [X,ionTypePosCharge,ionIntens]=calculateX_FEV(~,vNonRedunTheoryIonMz,Peaks,case_OLS_intens_weight)
 % Calculate the X matrix in $Y=X\alpha+\epsilon$
 % Input: 
-%   vNonRedunTheoryIonMz - Site-discrimining ions, each row is a fragment ion:
+%   vNonRedunTheoryIonMz (L x M double) - Site-discrimining ions, each row is a fragment ion:
 %       [m/z, type (1 is b ion, 2 is y ion), ion number (position), charge, 
 %       number of modifications, class index, whether an IMP can generate this ion]
-%   massArrangement - the various mass arrangements of modifications on the peptide
-%   Peaks - the matched experimental spectrum peaks, the first column is the index matched to vNonRedunTheoryIonMz, the second column is the normalized intensity, the third column is the real intensity obtained experimentally
-%   ms2_tolerance - the fragment ion matching error
+%   massArrangement (unused, any) - the various mass arrangements of modifications on the peptide
+%   Peaks (K x 3 double) - the matched experimental spectrum peaks, the first column is the index matched to vNonRedunTheoryIonMz, the second column is the normalized intensity, the third column is the real intensity obtained experimentally
+%   case_OLS_intens_weight (1 x 1 char/string, optional)
+%       OLS intensity weighting mode: 'multi_self', 'multi_average_all', 'multi_average_self', 'multi_average_log', 'multi_average_sqrt'
 % Output: 
-%   X - the X matrix in $Y=X\alpha+\epsilon$
-%   ionTypePosCharge - the ion information contained in the matrix, each row corresponds to a column on the right half of the X matrix
-%   ionIntens - the matched intensity, organizes ion intensities to determine which ions to use and how, can be greater than 1
+%   X (N x P double) - the X matrix in $Y=X\alpha+\epsilon$
+%   ionTypePosCharge (U x 3 double) - the ion information contained in the matrix, each row corresponds to a column on the right half of the X matrix
+%   ionIntens (U x 1 double) - the matched intensity, organizes ion intensities to determine which ions to use and how, can be greater than 1
+if nargin < 4 || isempty(case_OLS_intens_weight)
+    case_OLS_intens_weight = 'none';
+end
+
 matPeaksBelong=vNonRedunTheoryIonMz(:,7:end); %Left half
 IonTypes=vNonRedunTheoryIonMz(Peaks(:,1),2:4);%Matched ion classes
 
@@ -28,8 +33,6 @@ delIonKind=sum(matPeaksIntens)==0;  % Delete unmatched ion classes (columns on t
 matPeaksIntens(:,delIonKind)=[];
 X=[matPeaksBelong,matPeaksIntens];
 
-
-global case_OLS_intens_weight
 if isequal(case_OLS_intens_weight, 'multi_self')
     % Weight the equation using relative ion intensity
     weight = abs(sum(X(:,size(matPeaksBelong,2)+1:end),2));

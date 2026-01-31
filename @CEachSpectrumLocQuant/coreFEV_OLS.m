@@ -1,10 +1,10 @@
 function [abundance]=coreFEV_OLS(~,X,massArrangement)
 % Core program for solving the optimization problem, does not depend on individual spectra, variable model of fragmentation efficiency, solves using OLS
 % Input:
-%   X - the A matrix in $A\beta$
-%   massArrangement - all possible mod mass combinations matrix. Each row is a case, each column is the mass shift at each possible modification site
+%   X (N x P double) - the A matrix in $A\beta$
+%   massArrangement (M x S double) - all possible mod mass combinations matrix. Each row is a case, each column is the mass shift at each possible modification site
 % Output: 
-%   abundance - $\beta$ in $A\beta$
+%   abundance (M x 1 double) - $\beta$ in $A\beta$
 H=X'*X;
 m=size(massArrangement,1);
 lb=zeros(size(X,2),1);

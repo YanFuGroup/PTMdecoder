@@ -2,6 +2,7 @@ classdef CConstant
 % CConstant - this class is used to define constants for the code.
     
     properties (Constant = true)    % Static properties, only one copy of the property exists for the class
+        % All masses are in Dalton (Da); m/z in Thomson; RT in minutes where applicable.
         % Mono mass of the amino acids. BJOUXZ six amino acids represents nothing. Just for the convenience of the code.
         vAAmass=...
             [71.037114,...% A

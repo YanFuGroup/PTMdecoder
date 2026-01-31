@@ -18,6 +18,15 @@ classdef CMergePairs
         function obj = CMergePairs(result_paths_or_task_param_obj,...
                 output_path, group_titles, column_idxs)
             % Construct an instance of this class
+            % Input:
+            %   result_paths_or_task_param_obj (cell or CTaskParam)
+            %       pair result paths or task parameter object
+            %   output_path (1 x 1 char/string)
+            %       output file path
+            %   group_titles (N x 2 cell)
+            %       group names for output header
+            %   column_idxs (struct, optional)
+            %       indices of columns in input files
             if nargin == 1
                 task_param = result_paths_or_task_param_obj;
                 obj.m_result_paths = task_param.m_pair;

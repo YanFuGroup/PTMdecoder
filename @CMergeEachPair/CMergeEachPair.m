@@ -28,6 +28,19 @@ classdef CMergeEachPair
         function obj = CMergeEachPair(result_path1,result_path2,output_path,...
                 group_titles,ignore_strings,column_idxs)
             % Construct an instance of this class
+            % Input:
+            %   result_path1 (1 x 1 char/string)
+            %       first site-level result file path
+            %   result_path2 (1 x 1 char/string)
+            %       second site-level result file path
+            %   output_path (1 x 1 char/string)
+            %       output file path
+            %   group_titles (1 x 2 cell)
+            %       group names for output header
+            %   ignore_strings (1 x M cell)
+            %       strings to remove from peptide sequence when comparing
+            %   column_idxs (struct, optional)
+            %       indices of columns in input files
             obj.m_result_path1 = result_path1;
             obj.m_result_path2 = result_path2;
             obj.m_output_path = output_path;

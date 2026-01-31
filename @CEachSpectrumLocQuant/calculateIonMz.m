@@ -1,9 +1,11 @@
 function theoryMz=calculateIonMz(obj,fixedPosMod)
 % Calculate the m/z of b and y ions with only fixed modifications
 % Input: 
-%   fixedPosMod - fixed modification
+%   fixedPosMod (M x 3 cell)
+%       fixed modification list [position, name, mass]
 % Output: 
-%   theoryMz - the m/z of various b and y ions
+%   theoryMz (L x C double) m/z
+%       m/z of various b and y ions
 
 % Maximum charge of fragment ions, prescribed rules
 if obj.m_iCharge<=2

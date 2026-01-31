@@ -1,5 +1,8 @@
 function write_file(obj)
 % Write to file
+% Input:
+%   obj (CSiteLevelSummary)
+%       site-level summarizer instance
 
 % Interested site-level
 keys_interested = keys(obj.m_result_output_index);

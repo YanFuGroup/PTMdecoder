@@ -3,7 +3,7 @@
 function main(varargin)
 % main function of PTMdecoder
 % Input:
-%   varargin:
+%   varargin (1 x N cell):
 %       paths of parameter files
 
 if nargin == 0
@@ -25,7 +25,7 @@ end
 function check_param_files(param_files)
 % Check whether the parameter files exist.
 % Input:
-%   param_files
+%   param_files (1 x N cell)
 %       the paths of parameter files.
 
 for i = 1:length(param_files)
@@ -39,6 +39,10 @@ end
 
 function exists = fileExists(fileName)
 % Check whether the file exists.
+% Input:
+%   fileName (1 x N char/string)
+% Output:
+%   exists (1 x 1 logical)
 fid = fopen(fileName, 'r');
 if fid == -1
     exists = false;

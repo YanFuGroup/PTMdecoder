@@ -1,15 +1,23 @@
 function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,warning_msg,is_X_full_column_rank]=runEach(obj)
 % Main entry point for discrimination and quantification of an IMP in a single spectrum
 % Output: 
-%   bSuccess - whether successful
-%   cstrIMP - the identified IMP strings, each row corresponds to one IMP
-%   abundance - content of various IMPs
-%   ionTypePosCharge - fragment ion information involved in decomposition [by type, position, charge], each column corresponds to a column on the right half of the X matrix
-%   ionIntens - intensity of each ion in ionTypePosCharge
-%   frageff - fragmentation efficiency, arranged in the order of m_ionTypePosCharge
+%   bSuccess (1 x 1 logical)
+%       whether successful
+%   cstrIMP (K x 1 cellstr/string)
+%       identified IMP strings
+%   abundance (K x 1 double)
+%       relative abundance of IMPs
+%   ionTypePosCharge (L x 3 double)
+%       fragment ion info [type, position, charge]
+%   ionIntens (L x 1 double)
+%       intensity of each ion in ionTypePosCharge
+%   frageff (L x 1 double)
+%       fragmentation efficiency in the order of ionTypePosCharge
 %       ionIntens and frageff are used to organize the fragmentation efficiency of ions involved in the model
-%   warning_msg - the warning message
-%   is_X_full_column_rank - true if X is full column rank, false otherwise
+%   warning_msg (1 x 1 char/string)
+%       warning message
+%   is_X_full_column_rank (1 x 1 logical)
+%       true if X is full column rank, false otherwise
 
 ionTypePosCharge=[];
 ionIntens=[];
@@ -74,11 +82,13 @@ else
 
     %% Core model
     if obj.m_method == 3
-        penalty_factor = obj.calculatePenaltyFactor(vNonRedunTheoryIonMz,matchedExpPeaks,obj.m_lambda);
+        penalty_factor = obj.calculatePenaltyFactor(vNonRedunTheoryIonMz,matchedExpPeaks,obj.m_lambda, ...
+            obj.m_case_penalty_intens,obj.m_grid_penalty_intens);
     end
     switch obj.m_model
         case 1 % Fragmentation efficiency variable
-            [X,ionTypePosCharge,ionIntens]=obj.calculateX_FEV(vNonRedunTheoryIonMz,matchedExpPeaks);    % A matrix
+            [X,ionTypePosCharge,ionIntens]=obj.calculateX_FEV(vNonRedunTheoryIonMz,matchedExpPeaks, ...
+                obj.m_case_OLS_intens_weight);    % A matrix
             switch obj.m_method
                 case 1 % OLS
                     abundance=obj.coreFEV_OLS(X,massArrangement);

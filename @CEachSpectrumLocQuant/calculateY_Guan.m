@@ -1,13 +1,12 @@
 function Y=calculateY_Guan(~,vNonRedunTheoryIonMz,matchedExpPeaks)
 % Calculate the Y matrix in $Y=X\alpha+\epsilon$
 % Input: 
-%   vNonRedunTheoryIonMz - Site-discrimining ions, each row is a fragment ion:
+%   vNonRedunTheoryIonMz (L x M double) - Site-discrimining ions, each row is a fragment ion:
 %       [m/z, type (1 is b ion, 2 is y ion), ion number (position), charge, 
 %       number of modifications, class index, whether an IMP can generate this ion]
-%   matchedExpPeaks - experimental spectrum peaks, first column is m/z, second column is normalized intensity, third column is the true intensity obtained experimentally
-%   ms2_tolerance - fragment ion matching error
+%   matchedExpPeaks (K x 3 double) - experimental spectrum peaks, first column is m/z, second column is normalized intensity, third column is the true intensity obtained experimentally
 % Output: 
-%   Y - the Y matrix in $Y=X\alpha+\epsilon$
+%   Y (L x 1 double) - the Y matrix in $Y=X\alpha+\epsilon$
 Y=zeros(size(vNonRedunTheoryIonMz,1),1);
 intenSum=zeros(max(vNonRedunTheoryIonMz(:,6)),1);   % intensity sum for the fragment ion in the same class
 for iPeak=1:size(matchedExpPeaks,1)

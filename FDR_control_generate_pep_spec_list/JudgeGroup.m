@@ -1,30 +1,28 @@
 function [DecoyType,GroupType,OriginalPeptide,scores,numrst,I] = JudgeGroup(result,TagType,DecoyTag,GroupTag)
 % input:
-%           result
-%               the result read from the search engine result file
-%           TagType
-%               the tag showing the type of grouping problem,
-%               Protein, Modification, SNP and so on
-%           DecoyTag
-%               the tag indicating the decoy match
-%           GroupTag
-%               the key word (tag) of grouping
+%           result (1 x N struct)
+%               result read from the search engine result file
+%           TagType (1 x 1 char/string)
+%               grouping type (Protein/Modification/SNP)
+%           DecoyTag (1 x 1 char/string)
+%               tag indicating decoy match
+%           GroupTag (char/string or cell)
+%               keyword(s) for grouping
 %           databaseHash
 %               only used in SNP problem
 % output:
-%           DecoyType
-%               one for each PSM, indicating whether it is a decoy match
-%           GroupType
-%               one for each PSM, indicating whether it is out of the
-%               target group, 0 is wanted
-%           OriginalPeptide
+%           DecoyType (1 x N double/logical)
+%               decoy indicator per PSM
+%           GroupType (1 x N double/logical)
+%               out-of-group indicator per PSM (0 is wanted)
+%           OriginalPeptide (N x 1 cell)
 %               only used in SNP problem
-%           scores
-%               the score of search engine, sorted
-%           numrst
-%               the number of results
-%           I
-%               the index of the PSMs in descend sort
+%           scores (1 x N double)
+%               search engine scores (sorted, descending)
+%           numrst (1 x 1 double/int)
+%               number of results
+%           I (1 x N double/int)
+%               indices of PSMs in descending sort
 
 Scores = [result(:).Score];
 [scores,I] = sort(Scores,'descend');

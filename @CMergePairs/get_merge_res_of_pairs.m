@@ -1,5 +1,8 @@
 function res_joint = get_merge_res_of_pairs(obj)
 % Get the merge result of pairs
+% Input:
+%   obj (CMergePairs)
+%       merge instance
 % Output:
 %   res_joint
 %       Merged result of pairs in site-level with joint of peptides in all pairs.

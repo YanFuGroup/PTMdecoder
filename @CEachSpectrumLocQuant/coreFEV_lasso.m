@@ -1,12 +1,12 @@
 function [abundance,frageffe]=coreFEV_lasso(~,X,massArrangement,lambda)
 % Core program for solving the optimization problem, does not depend on individual spectra, variable model of fragmentation efficiency, solves using lasso
 % Input:
-%   X - the A matrix in $A\beta$
-%   massArrangement - all possible mod mass combinations matrix. Each row is a case, each column is the mass shift at each possible modification site
-%   lambda - lasso regularization parameter
+%   X (N x P double) - the A matrix in $A\beta$
+%   massArrangement (M x S double) - all possible mod mass combinations matrix. Each row is a case, each column is the mass shift at each possible modification site
+%   lambda (1 x 1 double) - lasso regularization parameter
 % Output: 
-%   abundance - $\beta$ in $A\beta$
-%   frageffe - fragmentation efficiency of each ion
+%   abundance (M x 1 double) - $\beta$ in $A\beta$
+%   frageffe (P-M x 1 double) - fragmentation efficiency of each ion
 m=size(massArrangement,1);
 H=X'*X;
 vv=ones(size(X,2),1);

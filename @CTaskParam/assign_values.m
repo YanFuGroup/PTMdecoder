@@ -1,7 +1,9 @@
 function obj = assign_values(obj, task_param_map)
 % This function assigns values to the properties of the CTaskParam object based on the provided task_param_map.
 % Input:
-%   task_param_map
+%   obj (CTaskParam)
+%       task parameter instance
+%   task_param_map (containers.Map)
 %       A map containing the parameter names and their corresponding values.
 
 % Check if the task_param_map contains the keys of which modules are used
@@ -61,7 +63,9 @@ end
 function obj = set_msms_peptide_level_params_from_tpmap(obj, task_param_map)
 % This function assigns values to the properties of the CTaskParam object based on the provided task_param_map.
 % Input:
-%   task_param_map
+%   obj (CTaskParam)
+%       task parameter instance
+%   task_param_map (containers.Map)
 %       A map containing the parameter names and their corresponding values.
 
 % About modifications, including fixed_mod, variable_mod, and mod_file
@@ -119,7 +123,9 @@ end
 function obj = set_peptide_requant_params_from_tpmap(obj, task_param_map)
 % This function assigns values to the properties of the CTaskParam object based on the provided task_param_map.
 % Input:
-%   task_param_map
+%   obj (CTaskParam)
+%       task parameter instance
+%   task_param_map (containers.Map)
 %       A map containing the parameter names and their corresponding values.
 
 % About modifications, including fixed_mod, variable_mod, and mod_file
@@ -178,7 +184,9 @@ end
 function obj = set_peptide_only_params_from_tpmap(obj, task_param_map)
 % This function assigns values to the properties of the CTaskParam object based on the provided task_param_map.
 % Input:
-%   task_param_map
+%   obj (CTaskParam)
+%       task parameter instance
+%   task_param_map (containers.Map)
 %       A map containing the parameter names and their corresponding values.
 
 % About modifications, including fixed_mod, variable_mod, and mod_file
@@ -229,7 +237,9 @@ end
 function obj = set_site_level_params_from_tpmap(obj, task_param_map)
 % This function assigns values to the properties of the CTaskParam object based on the provided task_param_map.
 % Input:
-%   task_param_map
+%   obj (CTaskParam)
+%       task parameter instance
+%   task_param_map (containers.Map)
 %       A map containing the parameter names and their corresponding values.
 
 % About the target protein name and their abbreviation
@@ -277,7 +287,9 @@ end
 function obj = set_merge_to_pair_level_params_from_tpmap(obj, task_param_map)
 % This function assigns values to the properties of the CTaskParam object based on the provided task_param_map.
 % Input:
-%   task_param_map
+%   obj (CTaskParam)
+%       task parameter instance
+%   task_param_map (containers.Map)
 %       A map containing the parameter names and their corresponding values.
 
 % About the pathes
@@ -304,7 +316,9 @@ end
 function obj = set_merge_pairs_level_params_from_tpmap(obj, task_param_map)
 % This function assigns values to the properties of the CTaskParam object based on the provided task_param_map.
 % Input:
-%   task_param_map
+%   obj (CTaskParam)
+%       task parameter instance
+%   task_param_map (containers.Map)
 %       A map containing the parameter names and their corresponding values.
 
 % About the pathes and names of each pair

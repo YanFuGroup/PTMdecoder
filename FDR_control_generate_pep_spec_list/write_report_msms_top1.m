@@ -27,6 +27,11 @@
 %       result(1).Spectrum = 'Spectrum1';
 %       write_report_msms_top1('output.txt', result);
 function write_report_msms_top1(result, filename)
+% Input:
+%   result (1 x N struct)
+%       fields: peptide, modification, modificationlocation, DatasetName, Spectrum
+%   filename (1 x 1 char/string)
+%       output file path
 
 fout = fopen(filename,'w');
 if 0 >= fout
@@ -56,11 +61,11 @@ end
 function mod_pep = get_mod_pep(pep, mod_name, mod_pos)
 % Get the modified peptide string
 % Input:
-%   pep: peptide sequence
-%   mod_name: modification name
-%   mod_pos: modification position
+%   pep (1 x 1 char/string): peptide sequence
+%   mod_name (1 x 1 char/string): modification name(s)
+%   mod_pos (1 x 1 char/string): modification position(s)
 % Output:
-%   mod_pep: modified peptide string
+%   mod_pep (1 x 1 char/string): modified peptide string
 
 mod_pep = ['_', pep, '_'];
 if ~isequal(mod_name,'-')
