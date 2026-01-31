@@ -1,11 +1,11 @@
-function [rec_rt, rec_inten] = get_closed_peak_data(rt_grid, intensity_full, idx_start, idx_end)
+function [rec_rt, rec_inten] = get_closed_peak_data(xic_rt, xic_intensity_full, idx_start, idx_end)
 % get_closed_peak_data
 % Extracts XIC data with 1-point padding and zero-filled boundaries.
 %
 % Input:
-%   rt_grid (N x 1 double) minutes
+%   xic_rt (N x 1 double) minutes
 %       Full retention time grid
-%   intensity_full (N x 1 double) intensity
+%   xic_intensity_full (N x 1 double) intensity
 %       Full intensity vector (column vector)
 %   idx_start (1 x 1 double/int)
 %       Original start index
@@ -20,13 +20,13 @@ function [rec_rt, rec_inten] = get_closed_peak_data(rt_grid, intensity_full, idx
 
     % 1. Expand RT range if possible
     pad_start = max(1, idx_start - 1);
-    pad_end   = min(length(rt_grid), idx_end + 1);
+    pad_end   = min(length(xic_rt), idx_end + 1);
     
-    rec_rt = rt_grid(pad_start : pad_end);
+    rec_rt = xic_rt(pad_start : pad_end);
     
     % 2. Get Raw Intensity Segment
     % Get the actual intensities for the padded range first.
-    rec_inten = intensity_full(pad_start : pad_end);
+    rec_inten = xic_intensity_full(pad_start : pad_end);
     
     % 3. Apply Zero-Padding (Clamping)
     % Only force zero if we actually expanded the range.

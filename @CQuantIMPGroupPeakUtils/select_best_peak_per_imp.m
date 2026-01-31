@@ -1,11 +1,11 @@
-function idx_selected = select_best_peak_per_imp(imp_max_props, area_each_XIC_peak)
+function idx_selected = select_best_peak_per_imp(imp_max_props, area_imp_by_peak)
 % select_best_peak_per_imp
 % Select the best XIC peak for each IMP based on a weighted score.
 %
 % Inputs:
 %   imp_max_props (K x P double)
 %       Max ratio contribution per IMP per peak
-%   area_each_XIC_peak (K x P double) area
+%   area_imp_by_peak (K x P double) area
 %       Area contribution per IMP per peak
 %
 % Output:
@@ -20,7 +20,7 @@ for idx_imp = 1:num_imp
     % Ratio (Purity)
     props = imp_max_props(idx_imp, :);
     % Area Contribution
-    areas = area_each_XIC_peak(idx_imp, :);
+    areas = area_imp_by_peak(idx_imp, :);
 
     % Calculate Weighted Score = Area * Ratio
     % This handles two cases:

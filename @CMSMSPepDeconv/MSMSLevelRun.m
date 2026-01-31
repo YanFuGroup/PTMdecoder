@@ -123,10 +123,10 @@ while ~feof(fin)
                 if_the_first = false;
             end
             fprintf(fout,'S\t%s\t%s\n',str{1},str{2});
-            idxNonZero = find(abundance~=0);
-            for idx = 1:length(idxNonZero)
-                fprintf(fout,'%s\t%f\n',cstrIMP{idxNonZero(idx)},...
-                    abundance(idxNonZero(idx)));
+            imp_idx_nonzero = find(abundance~=0);
+            for idx = 1:length(imp_idx_nonzero)
+                fprintf(fout,'%s\t%f\n',cstrIMP{imp_idx_nonzero(idx)},...
+                    abundance(imp_idx_nonzero(idx)));
             end
         end
     end

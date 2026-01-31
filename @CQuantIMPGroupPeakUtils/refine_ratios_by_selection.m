@@ -1,10 +1,10 @@
-function esti_ratio = refine_ratios_by_selection(esti_ratio, XIC_peaks, idx_selected)
+function ratio_estimated = refine_ratios_by_selection(ratio_estimated, XIC_peaks, idx_selected)
 % refine_ratios_by_selection
 % Keep only the selected peak region for each IMP and zero out others.
 % Deprecated: this function is no longer used in the main workflow since the final area is gotten from precomputed peak areas.
 %
 % Inputs:
-%   esti_ratio (N x K double)
+%   ratio_estimated (N x K double)
 %       Estimated ratio matrix
 %   XIC_peaks (1 x P struct)
 %       Struct array with left_bound/right_bound indices
@@ -12,11 +12,11 @@ function esti_ratio = refine_ratios_by_selection(esti_ratio, XIC_peaks, idx_sele
 %       Selected peak index per IMP
 %
 % Output:
-%   esti_ratio (N x K double)
+%   ratio_estimated (N x K double)
 %       Refined ratio matrix
 
-num_imp = size(esti_ratio, 2);
-keep_mask = false(size(esti_ratio));
+num_imp = size(ratio_estimated, 2);
+keep_mask = false(size(ratio_estimated));
 
 for idx_imp = 1:num_imp
     sel_peak_idx = idx_selected(idx_imp);
@@ -27,5 +27,5 @@ for idx_imp = 1:num_imp
     end
 end
 
-esti_ratio(~keep_mask) = 0;
+ratio_estimated(~keep_mask) = 0;
 end

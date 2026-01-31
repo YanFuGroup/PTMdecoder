@@ -1,5 +1,5 @@
-function [sort_rts, sort_ratioMatrix, rt_grid, smoothed_intensity, intensity, is_valid] = ...
-    prepare_ms1_xic(cMs12DatasetIO, raw_name, current_rts, current_inten, current_ratioMatrix, ...
+function [rt_sorted, ratio_sorted, xic_rt, xic_intensity_smoothed, xic_intensity_raw, is_valid] = ...
+    prepare_ms1_xic(cMs12DatasetIO, raw_name, rt_raw, intensity_raw, ratio_raw, ...
         minMSMSnum, low_mz_bound, high_mz_bound, selected_charge)
 % Prepare MS1 inputs and load smoothed XIC.
 % input:
@@ -7,12 +7,12 @@ function [sort_rts, sort_ratioMatrix, rt_grid, smoothed_intensity, intensity, is
 %       MS12 dataset IO object
 %   raw_name (1 x 1 char/string)
 %       the name of the raw (mgf) file
-%   current_rts (N x 1 double) minutes
+%   rt_raw (N x 1 double) minutes
 %       retention time in current group
-%   current_inten (N x 1 double) intensity
+%   intensity_raw (N x 1 double) intensity
 %       intensity in current group
-%   current_ratioMatrix (N x K double)
-%       ratio matrix of quantification in current group; rows aligned to current_rts
+%   ratio_raw (N x K double)
+%       ratio matrix of quantification in current group; rows aligned to rt_raw
 %   minMSMSnum (1 x 1 double/int)
 %       minimum MSMS number threshold
 %   low_mz_bound (1 x 1 double) m/z
@@ -22,31 +22,31 @@ function [sort_rts, sort_ratioMatrix, rt_grid, smoothed_intensity, intensity, is
 %   selected_charge (1 x 1 double/int)
 %       current precursor charge
 % output:
-%   sort_rts (N x 1 double) minutes
+%   rt_sorted (N x 1 double) minutes
 %       sorted retention times
-%   sort_ratioMatrix (N x K double)
+%   ratio_sorted (N x K double)
 %       sorted ratio matrix
-%   rt_grid (M x 1 double) minutes
+%   xic_rt (M x 1 double) minutes
 %       retention time grid
-%   smoothed_intensity (M x 1 double) intensity
+%   xic_intensity_smoothed (M x 1 double) intensity
 %       smoothed intensity of XIC
-%   intensity (M x 1 double) intensity
+%   xic_intensity_raw (M x 1 double) intensity
 %       raw intensity of XIC
 %   is_valid (1 x 1 logical)
 %       is the input valid after preprocessing
 
-[sort_rts, sort_ratioMatrix, is_valid] = ...
+[rt_sorted, ratio_sorted, is_valid] = ...
     CChromatogramUtils.preprocess_ms1_inputs(...
-        current_rts, current_inten, current_ratioMatrix, minMSMSnum);
+        rt_raw, intensity_raw, ratio_raw, minMSMSnum);
 
 if ~is_valid
-    rt_grid = [];
-    smoothed_intensity = [];
-    intensity = [];
+    xic_rt = [];
+    xic_intensity_smoothed = [];
+    xic_intensity_raw = [];
     return;
 end
 
-[rt_grid, smoothed_intensity, intensity] = ...
+[xic_rt, xic_intensity_smoothed, xic_intensity_raw] = ...
     CChromatogramUtils.get_smoothed_xic(...
         cMs12DatasetIO, raw_name, low_mz_bound, high_mz_bound, selected_charge);
 end

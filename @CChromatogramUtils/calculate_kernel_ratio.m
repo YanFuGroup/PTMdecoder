@@ -1,23 +1,23 @@
-function esti_ratio = calculate_kernel_ratio(rt_grid, sort_rts, sort_ratioMatrix, peak_ranges, is_broadcast)
+function ratio_estimated = calculate_kernel_ratio(xic_rt, rt_sorted, ratio_sorted, peak_ranges, is_broadcast)
     % Calculate estimated ratio using Gaussian kernel
     % Inputs:
-    %   rt_grid (N x 1 double) minutes
+    %   xic_rt (N x 1 double) minutes
     %       RT grid (vector)
-    %   sort_rts (M x 1 double) minutes
+    %   rt_sorted (M x 1 double) minutes
     %       Sorted PSM RTs
-    %   sort_ratioMatrix (M x K double)
+    %   ratio_sorted (M x K double)
     %       Quantification matrix for K IMPs
     %   peak_ranges (1 x P struct) or (K x 1 struct)
-    %       Struct array with fields: left_bound/right_bound (indices into rt_grid)
+    %       Struct array with fields: left_bound/right_bound (indices into xic_rt)
     %   is_broadcast (1 x 1 logical)
     %       true if every peak_range applies to all IMPs (Quant),
     %       false if each peak corresponds to each IMP (Requant)
     % Output:
-    %   esti_ratio (N x K double)
-    %       Estimated ratio matrix across rt_grid
+    %   ratio_estimated (N x K double)
+    %       Estimated ratio matrix across xic_rt
     
-    num_imp = size(sort_ratioMatrix, 2);
-    esti_ratio = zeros(length(rt_grid), num_imp);
+    num_imp = size(ratio_sorted, 2);
+    ratio_estimated = zeros(length(xic_rt), num_imp);
     
     % Gaussian kernel function
     kernal_func = @(u) (1/sqrt(2*pi))*exp(-0.5*u.^2);
@@ -56,8 +56,8 @@ function esti_ratio = calculate_kernel_ratio(rt_grid, sort_rts, sort_ratioMatrix
         
         % Collect rts within current peak
         eps_rt_print = 1e-4;
-        idxs_rt_mask = sort_rts>=rt_grid(left)-eps_rt_print & sort_rts<=rt_grid(right)+eps_rt_print;
-        rts_current = sort_rts(idxs_rt_mask);
+        idxs_rt_mask = rt_sorted>=xic_rt(left)-eps_rt_print & rt_sorted<=xic_rt(right)+eps_rt_print;
+        rts_current = rt_sorted(idxs_rt_mask);
         
         if isempty(rts_current), continue; end
         
@@ -67,14 +67,14 @@ function esti_ratio = calculate_kernel_ratio(rt_grid, sort_rts, sort_ratioMatrix
         
         for idx_PSM = 1:length(rts_current)
             if bandwidth_val == 0, break; end
-            weights(:, idx_PSM) = kernal_func((rt_grid(range_indices) - rts_current(idx_PSM))/bandwidth_val);
+            weights(:, idx_PSM) = kernal_func((xic_rt(range_indices) - rts_current(idx_PSM))/bandwidth_val);
         end
         
         % Handle zero bandwidth or zero weights
-        if bandwidth_val == 0 || any(all(weights<1e-15/length(sort_rts), 2))
-            bandwidth_val = min(rt_grid(right)-rt_grid(left), 1);
+        if bandwidth_val == 0 || any(all(weights<1e-15/length(rt_sorted), 2))
+            bandwidth_val = min(xic_rt(right)-xic_rt(left), 1);
             for idx_PSM = 1:length(rts_current)
-                weights(:, idx_PSM) = kernal_func((rt_grid(range_indices) - rts_current(idx_PSM))/bandwidth_val);
+                weights(:, idx_PSM) = kernal_func((xic_rt(range_indices) - rts_current(idx_PSM))/bandwidth_val);
             end
         end
         
@@ -87,11 +87,11 @@ function esti_ratio = calculate_kernel_ratio(rt_grid, sort_rts, sort_ratioMatrix
         
         weight_sum = sum(weights, 2) + eps;
         for idx_imp = target_indices
-            esti_ratio(range_indices, idx_imp) = esti_ratio(range_indices, idx_imp) + ...
-                (weights * sort_ratioMatrix(idxs_rt_mask, idx_imp)) ./ weight_sum;
+            ratio_estimated(range_indices, idx_imp) = ratio_estimated(range_indices, idx_imp) + ...
+                (weights * ratio_sorted(idxs_rt_mask, idx_imp)) ./ weight_sum;
         end
     end
     
     % Normalize
-    esti_ratio = esti_ratio ./ (sum(esti_ratio, 2) + eps);
+    ratio_estimated = ratio_estimated ./ (sum(ratio_estimated, 2) + eps);
 end

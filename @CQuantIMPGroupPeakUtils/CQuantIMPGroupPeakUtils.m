@@ -2,13 +2,13 @@ classdef CQuantIMPGroupPeakUtils
     % CQuantIMPGroupPeakUtils
     % Peak detection/selection utilities for IMP group quant workflows.
     methods (Static)
-        esti_ratio = filter_and_normalize_peak_ratios(rt_grid, smoothed_intensity, esti_ratio, XIC_peaks, resFilterThres)
+        ratio_estimated = filter_and_normalize_peak_ratios(xic_rt, xic_intensity_smoothed, ratio_estimated, XIC_peaks, resFilterThres)
 
-        [imp_max_props, peak_fwhms, area_each_XIC_peak, rt_bound] = ...
-            compute_peak_features(rt_grid, smoothed_intensity, esti_ratio, XIC_peaks)
+        [imp_max_props, peak_fwhms, area_imp_by_peak, rt_bound] = ...
+            compute_peak_features(xic_rt, xic_intensity_smoothed, ratio_estimated, XIC_peaks)
 
-        idx_selected = select_best_peak_per_imp(imp_max_props, area_each_XIC_peak)
+        idx_selected = select_best_peak_per_imp(imp_max_props, area_imp_by_peak)
 
-        esti_ratio = refine_ratios_by_selection(esti_ratio, XIC_peaks, idx_selected)
+        ratio_estimated = refine_ratios_by_selection(ratio_estimated, XIC_peaks, idx_selected)
     end
 end

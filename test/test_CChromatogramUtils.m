@@ -18,17 +18,17 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % Denoising will remove < 0.05 * max. Max is ~800 (smoothed might be lower).
             % Nothing should be removed here since all > 40.
             
-            [sort_rts, sort_ratioMatrix, is_valid] = ...
+            [rt_sorted, ratio_sorted, is_valid] = ...
                 CChromatogramUtils.preprocess_ms1_inputs(rts, inten, ratioMatrix, minMSMSnum);
             
             % Assertions
             testCase.verifyTrue(is_valid);
-            testCase.verifyEqual(length(sort_rts), size(sort_ratioMatrix, 1));
-            testCase.verifyTrue(issorted(sort_rts), 'Retention times should be sorted');
+            testCase.verifyEqual(length(rt_sorted), size(ratio_sorted, 1));
+            testCase.verifyTrue(issorted(rt_sorted), 'Retention times should be sorted');
             
             % Verify the sorted order of RTs matches expectation
             expected_rts = sort(rts);
-            testCase.verifyEqual(sort_rts, expected_rts, 'AbsTol', 1e-6, 'Retention times are not sorted correctly');
+            testCase.verifyEqual(rt_sorted, expected_rts, 'AbsTol', 1e-6, 'Retention times are not sorted correctly');
         end
         
         function testPreprocessFiltering(testCase)
@@ -39,11 +39,11 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             minMSMSnum = 1;
             
             % 10 is 0.01 * 1000, should be removed (< 0.05 threshold)
-            [sort_rts, ~, is_valid] = ...
+            [rt_sorted, ~, is_valid] = ...
                 CChromatogramUtils.preprocess_ms1_inputs(rts, inten, ratioMatrix, minMSMSnum);
                 
             testCase.verifyTrue(is_valid);
-            testCase.verifyEqual(length(sort_rts), 5, 'Should filter out 5 low intensity points');
+            testCase.verifyEqual(length(rt_sorted), 5, 'Should filter out 5 low intensity points');
         end
         
         function testMinRowsValidation(testCase)
@@ -109,11 +109,11 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % Important: CConstant must be accessible.
             % If CConstant is missing, test will error.
             
-            [rt, smoothed, ~] = CChromatogramUtils.get_smoothed_xic(...
+            [xic_rt, xic_intensity_smoothed, ~] = CChromatogramUtils.get_smoothed_xic(...
                 datasetIO, 'test_raw.mgf', low_mz, high_mz, charge);
             
-            testCase.verifyEqual(length(rt), 3);
-            testCase.verifyEqual(length(smoothed), 3);
+            testCase.verifyEqual(length(xic_rt), 3);
+            testCase.verifyEqual(length(xic_intensity_smoothed), 3);
             % Check that data was extracted (intensity > 0)
             % The exact logic depends on CConstant.IPV filtering and cosine distance.
             % If filtering fails, it sets intensity to 0.
@@ -151,21 +151,21 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % Test XIC peak detection logic
             
             % Generate a synthetic XIC with two peaks
-            rt_grid = (0:0.1:20)'; % 201 points
+            xic_rt = (0:0.1:20)'; % 201 points
             % Peak 1: Center 5, Width 1
-            peak1 = 100 * exp(-0.5 * ((rt_grid - 5)/0.5).^2);
+            peak1 = 100 * exp(-0.5 * ((xic_rt - 5)/0.5).^2);
             % Peak 2: Center 15, Width 1
-            peak2 = 80 * exp(-0.5 * ((rt_grid - 15)/0.5).^2);
+            peak2 = 80 * exp(-0.5 * ((xic_rt - 15)/0.5).^2);
             
-            smoothed_intensity = peak1 + peak2;
-            raw_intensity = smoothed_intensity; % Assume raw is same for simplicity
+            xic_intensity_smoothed = peak1 + peak2;
+            xic_intensity_raw = xic_intensity_smoothed; % Assume raw is same for simplicity
             
             % Case 1: PSMs identify both peaks
-            sort_rts = [5.1; 14.9];
+            rt_sorted = [5.1; 14.9];
             alpha = 0.1; % Stop at 10% max height
             
             XIC_peaks = CChromatogramUtils.detect_xic_peaks(...
-                rt_grid, smoothed_intensity, raw_intensity, sort_rts, alpha);
+                xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, alpha);
             
             testCase.verifyEqual(length(XIC_peaks), 2);
             
@@ -177,30 +177,30 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % Let's check indices.
             p1_left_idx = XIC_peaks(1).left_bound;
             p1_right_idx = XIC_peaks(1).right_bound;
-            p1_rt_center = (rt_grid(p1_left_idx) + rt_grid(p1_right_idx)) / 2;
+            p1_rt_center = (xic_rt(p1_left_idx) + xic_rt(p1_right_idx)) / 2;
             
             testCase.verifyEqual(p1_rt_center, 5, 'AbsTol', 0.5);
-            testCase.verifyGreaterThan(rt_grid(p1_right_idx) - rt_grid(p1_left_idx), 1); % Should have some width
+            testCase.verifyGreaterThan(xic_rt(p1_right_idx) - xic_rt(p1_left_idx), 1); % Should have some width
             
             % Verify Peak 2
             p2_left_idx = XIC_peaks(2).left_bound;
             p2_right_idx = XIC_peaks(2).right_bound;
-            p2_rt_center = (rt_grid(p2_left_idx) + rt_grid(p2_right_idx)) / 2;
+            p2_rt_center = (xic_rt(p2_left_idx) + xic_rt(p2_right_idx)) / 2;
             testCase.verifyEqual(p2_rt_center, 15, 'AbsTol', 0.5);
             
             % Case 2: Only one peak identified by PSMs
-            sort_rts_single = 5.1;
+            rt_sorted_single = 5.1;
             XIC_peaks_single = CChromatogramUtils.detect_xic_peaks(...
-                rt_grid, smoothed_intensity, raw_intensity, sort_rts_single, alpha);
+                xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted_single, alpha);
              
             testCase.verifyEqual(length(XIC_peaks_single), 1);
-            testCase.verifyEqual((rt_grid(XIC_peaks_single(1).left_bound) + rt_grid(XIC_peaks_single(1).right_bound))/2, 5, 'AbsTol', 0.5);
+            testCase.verifyEqual((xic_rt(XIC_peaks_single(1).left_bound) + xic_rt(XIC_peaks_single(1).right_bound))/2, 5, 'AbsTol', 0.5);
 
             % Case 3: Filtering small peaks (raw intensity check)
             % If raw intensity is zero in the range, it should be removed.
-            raw_intensity_zero = zeros(size(raw_intensity)); 
+            xic_intensity_raw_zero = zeros(size(xic_intensity_raw)); 
             XIC_peaks_filtered = CChromatogramUtils.detect_xic_peaks(...
-                rt_grid, smoothed_intensity, raw_intensity_zero, sort_rts, alpha);
+                xic_rt, xic_intensity_smoothed, xic_intensity_raw_zero, rt_sorted, alpha);
             testCase.verifyEmpty(XIC_peaks_filtered);
         end
 
@@ -208,11 +208,11 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % Test Kernel Ratio Calculation
             
             % Grid: 0 to 10
-            rt_grid = (0:0.1:10)';
+            xic_rt = (0:0.1:10)';
             
             % PSMs at RT=5. Ratio=0.5 for IMP1, 0.8 for IMP2
-            sort_rts = [4.9; 5.0; 5.1];
-            sort_ratioMatrix = [0.2, 0.8; 
+            rt_sorted = [4.9; 5.0; 5.1];
+            ratio_sorted = [0.2, 0.8; 
                                 0.2, 0.8; 
                                 0.2, 0.8];
             
@@ -222,21 +222,21 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             
             % SCENARIO 1: is_broadcast = true (Same peak logic for all IMPs)
             % Should produce ratios approx 0.5 and 0.8 in the peak region
-            esti_ratio = CChromatogramUtils.calculate_kernel_ratio(...
-                rt_grid, sort_rts, sort_ratioMatrix, peak_range, true);
+            ratio_estimated = CChromatogramUtils.calculate_kernel_ratio(...
+                xic_rt, rt_sorted, ratio_sorted, peak_range, true);
             
             % Check dimensions
-            testCase.verifyEqual(size(esti_ratio), [101, 2]);
+            testCase.verifyEqual(size(ratio_estimated), [101, 2]);
             
             % Check value at center (index 51, rt=5.0)
-            center_ratio = esti_ratio(51, :);
+            center_ratio = ratio_estimated(51, :);
             % Since all PSMs have same ratio, the weighted average should be exactly that ratio.
             % (Weights are normalized)
             testCase.verifyEqual(center_ratio(1), 0.2, 'AbsTol', 0.01);
             testCase.verifyEqual(center_ratio(2), 0.8, 'AbsTol', 0.01);
             
             % Check that outside the peak, it is zero
-            testCase.verifyEqual(esti_ratio(10, :), [0 0]);
+            testCase.verifyEqual(ratio_estimated(10, :), [0 0]);
             
             % SCENARIO 2: is_broadcast = false (Different peaks per IMP)
             % IMP 1 uses the peak at 5.0. IMP 2 has NO peak (or different peak).
@@ -245,13 +245,13 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             peak_ranges_multi(1) = peak_range; % IMP 1 has peak
             % IMP 2 is empty/default
             
-            esti_ratio_multi = CChromatogramUtils.calculate_kernel_ratio(...
-                rt_grid, sort_rts, sort_ratioMatrix, peak_ranges_multi, false);
+            ratio_estimated_multi = CChromatogramUtils.calculate_kernel_ratio(...
+                xic_rt, rt_sorted, ratio_sorted, peak_ranges_multi, false);
             
             % IMP 1 should be populated
-            testCase.verifyEqual(esti_ratio_multi(51, 1), 1, 'AbsTol', 0.01);
+            testCase.verifyEqual(ratio_estimated_multi(51, 1), 1, 'AbsTol', 0.01);
             % IMP 2 should be zero (no peak defined)
-            testCase.verifyEqual(esti_ratio_multi(51, 2), 0, 'IMP 2 should be empty');
+            testCase.verifyEqual(ratio_estimated_multi(51, 2), 0, 'IMP 2 should be empty');
         end
 
         function testParseImpRtRanges(testCase)
@@ -294,7 +294,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
         function testMapRtToIndices(testCase)
             % Test map_rt_to_indices functionality
             
-            rt_grid = 10:0.1:20; % 10.0, 10.1, ..., 20.0
+            xic_rt = 10:0.1:20; % 10.0, 10.1, ..., 20.0
             % index 1 -> 10.0, index 21 -> 12.0
             
             num_imp = 2;
@@ -308,7 +308,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             skip_vec_map = [false, true];
             rt_tol = 0.001;
             
-            peak_ranges = CChromatogramUtils.map_rt_to_indices(rt_grid, final_XIC_peak, skip_vec_map, rt_tol);
+            peak_ranges = CChromatogramUtils.map_rt_to_indices(xic_rt, final_XIC_peak, skip_vec_map, rt_tol);
             
             testCase.verifyEqual(peak_ranges(1).left_bound, 21);
             testCase.verifyEqual(peak_ranges(1).right_bound, 31);
@@ -318,7 +318,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             skip_vec_err = [false, false]; % Unskip the bad one
             
             try
-                CChromatogramUtils.map_rt_to_indices(rt_grid, final_XIC_peak_err, skip_vec_err, rt_tol);
+                CChromatogramUtils.map_rt_to_indices(xic_rt, final_XIC_peak_err, skip_vec_err, rt_tol);
                 testCase.verifyFail('Should have thrown error for out of bound RT');
             catch ME
                 testCase.verifyTrue(contains(ME.message, 'Cannot find the spectra'), 'Error message mismatch');
@@ -328,9 +328,9 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
         function testGetClosedPeakData(testCase)
             % Test get_closed_peak_data functionality
             
-            rt_grid = (0:10)';
+            xic_rt = (0:10)';
             % intensity index 1(0) -> 0; index 2(10) -> 100; ...
-            intensity_full = (0:10)' * 10; 
+            xic_intensity_full = (0:10)' * 10; 
             
             % Case 1: Normal internal range
             % Original: Indices 3 to 5 (Values: 20, 30, 40)
@@ -345,9 +345,9 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             orig_end = 5;
             
             [rec_rt, rec_inten] = CChromatogramUtils.get_closed_peak_data(...
-                rt_grid, intensity_full, orig_start, orig_end);
+                xic_rt, xic_intensity_full, orig_start, orig_end);
             
-            testCase.verifyEqual(rec_rt, rt_grid(2:6));
+            testCase.verifyEqual(rec_rt, xic_rt(2:6));
             testCase.verifyEqual(rec_inten, [0; 20; 30; 40; 0]);
             
             % Case 2: Left Boundary (idx_start=1)
@@ -357,37 +357,37 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % Right pad (3) is > end (2). SO FORCE ZERO.
             
             % Use nonzero start to verify
-            intensity_nonzero = intensity_full;
-            intensity_nonzero(1) = 999; 
+              xic_intensity_nonzero = xic_intensity_full;
+              xic_intensity_nonzero(1) = 999; 
             
             [rec_rt_l, rec_inten_l] = CChromatogramUtils.get_closed_peak_data(...
-                 rt_grid, intensity_nonzero, 1, 2);
+                  xic_rt, xic_intensity_nonzero, 1, 2);
             
-            testCase.verifyEqual(rec_rt_l, rt_grid(1:3));
+              testCase.verifyEqual(rec_rt_l, xic_rt(1:3));
             % Expect: [999, 10, 0] because we couldn't pad left
             testCase.verifyEqual(rec_inten_l, [999; 10; 0]);
             
              % Case 3: Right Boundary (idx_end=11)
              [rec_rt_r, rec_inten_r] = CChromatogramUtils.get_closed_peak_data(...
-                 rt_grid, intensity_full, 10, 11);
+                 xic_rt, xic_intensity_full, 10, 11);
              
-             testCase.verifyEqual(rec_rt_r, rt_grid(9:11));
+             testCase.verifyEqual(rec_rt_r, xic_rt(9:11));
              testCase.verifyEqual(rec_inten_r, [0; 90; 100]);
         end
 
         function testCalculateArea(testCase)
             % Test calculate_area functionality (integration * 60)
             
-            rt_grid = (0:5)'; % 0, 1, 2, 3, 4, 5
+            xic_rt = (0:5)'; % 0, 1, 2, 3, 4, 5
             % Intensities: [0, 10, 20, 10, 0, 0]
-            intensity = [0; 10; 20; 10; 0; 0];
+            xic_intensity_full = [0; 10; 20; 10; 0; 0];
             
             % Case 1: Standard peak (indices 2 to 4 -> Values 10, 20, 10)
             % get_closed_peak_data will expand to 1 to 5 (0, 10, 20, 10, 0)
             % Trapezoidal area of [0, 10, 20, 10, 0] with dx=1 is 40.
             % calculate_area multiplies by 60 -> 2400.
             
-            area = CChromatogramUtils.calculate_area(rt_grid, intensity, 2, 4);
+            area = CChromatogramUtils.calculate_area(xic_rt, xic_intensity_full, 2, 4);
             testCase.verifyEqual(area, 2400, 'Area calculation incorrect');
             
             % Case 2: Verify it handles boundary behavior implicitly
@@ -397,7 +397,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % Area trapz: (0+10)/2 + (10+0)/2 = 5 + 5 = 10.
             % Result * 60 = 600.
             
-            area_boundary = CChromatogramUtils.calculate_area(rt_grid, intensity, 1, 2);
+            area_boundary = CChromatogramUtils.calculate_area(xic_rt, xic_intensity_full, 1, 2);
             testCase.verifyEqual(area_boundary, 600, 'Boundary area calculation incorrect');
         end
     end
