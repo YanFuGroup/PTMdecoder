@@ -4,12 +4,8 @@ function success = load_MS1_file(~,ms1_fullfile)
 %   Spectrum starting position in peaks, retention time, number of peaks obtained after filtering low-abundance peaks,
 %   baseline used for filtering peaks, IonInjectionTime in the MS1 file.
 % "Peak Index" (_MS1scans.mat) stores all peaks, with m/z on the left and intensity on the right, arranged densely without separation.
-% Input:
-%   ms1_fullfile (1 x 1 char/string)
-%       MS1 file path
-% Output:
-%   success (1 x 1 double/int)
-%       1 for success, 0 for failure
+% Input: ms1_fullfile is the name of the MS1 file, including path.
+% Output: success indicates whether it is successful, 1 for success, 0 for failure
 
 success = 0;
 
@@ -18,13 +14,6 @@ success = 0;
 MS1_scanfile = fullfile(datapath,[dataname,'_MS1scans.mat']);
 MS1_peakfile = fullfile(datapath,[dataname,'_MS1peaks.mat']);
 if 0~=exist(MS1_scanfile,'file') && 0~=exist(MS1_peakfile,'file')
-    %{%for old data do not have 'MS1Type'
-    load(MS1_scanfile);
-    if 0==exist('MS1Type')%#ok
-        MS1Type = 'FTMS';
-        save(MS1_scanfile,'MS1_index','MS1Type');
-    end
-    %}
     success = 1;
     return;
 end
@@ -56,12 +45,12 @@ pkno = 0;% real total peak number
 keyword0 = 'H	DataType';
 keyword1 = 'S';% the keyword to start record
 keyword2 = 'I	RetTime';% the keyword to start record
-keyword3 = 'I	InstrumentType';
+% keyword3 = 'I	InstrumentType';
 keyword4='I	IonInjectionTime';
 len0 = length(keyword0);
 len1 = length(keyword1);
 len2 = length(keyword2);
-len3 = length(keyword3);
+% len3 = length(keyword3);
 len4 = length(keyword4);
 %% get the MS1 info
 % get the datatype
@@ -109,16 +98,6 @@ while 0==feof(fid)
         MS1_injecTime = str2double(str(len4+2:end));
         % InstrumentType
         str = fgets(fid);
-		%
-        if 1==fno
-            MS1Type = str(len3+2:len3+5);
-%             if 1==strcmp(MS1Type,'ITMS')
-%                 fclose(fid);
-%                 disp([ms1_fullfile,': low resolution MS1!']);
-%                 return;
-%             end;
-        end
-		%}
 
         % 2.read the MS1 data
         mz = zeros([1,maxpeaknum]);
@@ -197,7 +176,7 @@ if pkno<totalpeaknum
 end
 
 % save the results
-save(MS1_scanfile,'MS1_index','MS1Type');
+save(MS1_scanfile,'MS1_index');
 save(MS1_peakfile,'MS1_peaks');
 
 success = 1;

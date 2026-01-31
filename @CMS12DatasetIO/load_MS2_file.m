@@ -71,7 +71,7 @@ keyword4 = 'I	IonInjectionTime';
 keyword5 = 'I	ActivationType';
 keyword6 = 'I	InstrumentType';
 keyword7 = 'I	PrecursorScan';
-keyword8 = 'I	ActivationCenter';
+% keyword8 = 'I	ActivationCenter';
 keyword9 = 'I	MonoiosotopicMz';
 keyword10 = 'Z';
 len0 = length(keyword0);
@@ -82,7 +82,7 @@ len4 = length(keyword4);
 len5 = length(keyword5);
 len6 = length(keyword6);
 len7 = length(keyword7);
-len8 = length(keyword8);
+% len8 = length(keyword8);
 len9 = length(keyword9);%#ok
 len10 = length(keyword10);
 
@@ -196,7 +196,7 @@ while 0==feof(fid)
         % monoisotopic peak. When Z. C. took over this code, this
         % block is not commented.
         % ActivationCenter
-        str=fgets(fid);
+        % str=fgets(fid);
 %         if 1==strcmp( str(1:len8),keyword8 )
 %             cen_mz = str2num(str(len8+2:end));%#ok
 %         end
