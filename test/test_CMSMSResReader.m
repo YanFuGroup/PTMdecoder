@@ -1,10 +1,18 @@
 function tests = test_CMSMSResReader
-% Test script for CMSMSResReader IO
+% TEST_CMSMSRESREADER Test script for CMSMSResReader IO
+% Input:
+%   (none)
+% Output:
+%   tests (matlab.unittest.Test)
     tests = functiontests(localfunctions);
 end
 
 function testIO(testCase)
-% Original test logic wrapped in a function for functiontests
+% TESTIO Validate CMSMSResReader read logic
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
 
 % Create dummy file
 testFile = fullfile(pwd, 'test_msms_res_temp.txt');
@@ -64,6 +72,11 @@ testCase.verifyTrue(strcmp(p2.spectrum_list(1).spectrum_name, 'SpecB2_Valid'), '
 end
 
 function deleteTestFile(testFile)
+% DELETETESTFILE Remove temp test file if exists
+% Input:
+%   testFile (1 x N char/string)
+% Output:
+%   (none)
     if exist(testFile, 'file')
         delete(testFile);
     end

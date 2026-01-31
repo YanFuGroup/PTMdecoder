@@ -1,5 +1,5 @@
 classdef test_CMsFileMapper < matlab.unittest.TestCase
-    % Test checking MS1/MGF filename matching logic in CMsFileMapper
+    % Unit tests for MS1/MGF filename matching logic in CMsFileMapper
     
     properties
         RepoRoot

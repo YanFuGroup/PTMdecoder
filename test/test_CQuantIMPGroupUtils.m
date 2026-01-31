@@ -1,4 +1,5 @@
 classdef test_CQuantIMPGroupUtils < matlab.unittest.TestCase
+    % Unit tests for CQuantIMPGroupUtils
     methods (Test)
         function testFilterAndNormalizePeakRatiosRemovesSmallImp(testCase)
             rt_grid = (1:5)';

@@ -1,10 +1,11 @@
 function helper_test_draw_xic(projectRootDir, testDataDir, outputDir)
 % HELPER_TEST_DRAW_XIC Runs the drawXIC test case
-%
-% Inputs:
-%   projectRootDir - Root of the codebase
-%   testDataDir    - Directory containing test data (e.g., .../code/test/data)
-%   outputDir      - Directory to write outputs
+% Input:
+%   projectRootDir (1 x 1 char/string) - root of the codebase
+%   testDataDir (1 x 1 char/string) - directory containing test data (e.g., .../code/test/data)
+%   outputDir (1 x 1 char/string) - directory to write outputs
+% Output:
+%   (none)
 
     % --- Configuration ---
     
@@ -61,6 +62,12 @@ function helper_test_draw_xic(projectRootDir, testDataDir, outputDir)
 end
 
 function [color_map, legend_map] = get_colormap_legendmap()
+% GET_COLORMAP_LEGENDMAP Build color/legend maps for drawXIC
+% Input:
+%   (none)
+% Output:
+%   color_map (containers.Map) - map from peptide string to RGB color
+%   legend_map (containers.Map) - map from peptide string to legend label
     % Target peptides
     peptides = {
         '_K{Trimethyl}SAPATGGVK{Dimethyl}KPHR_';

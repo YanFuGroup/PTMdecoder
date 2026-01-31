@@ -1,9 +1,19 @@
 function tests = test_CFastaReader
+% TEST_CFASTAREADER Unit tests for CFastaReader
+% Input:
+%   (none)
+% Output:
+%   tests (matlab.unittest.Test)
 tests = functiontests(localfunctions);
 end
 
 
 function testReadFasta(testCase)
+% TESTREADFASTA Validate reading a FASTA file
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
 % Prepare a temporary FASTA file
 fastaContent = ['>sp|P12345|ProtA Description' newline ...
                 'MKAWVLK' newline ...
@@ -52,6 +62,11 @@ end
 
 
 function testFileNotFound(testCase)
+% TESTFILENOTFOUND Validate missing file handling
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
 reader = CFastaReader('non_existent.fasta', '.*');
 try
     reader.read();

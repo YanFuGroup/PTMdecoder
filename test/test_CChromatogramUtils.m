@@ -1,4 +1,5 @@
 classdef test_CChromatogramUtils < matlab.unittest.TestCase
+    % Unit tests for CChromatogramUtils
     
     methods (Test)
         function testPreprocessMs1InputsBasicPreprocess(testCase)
@@ -70,7 +71,6 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             fileMapper = struct();
             fileMapper.get_ms1_stem = @(x) x;
             
-            rawName = 'test_raw';
             stemName = 'test_raw';
             
             % MS1 Index: [Scan, RT, PeakIndexStart, Baseline, InjTime]
@@ -87,8 +87,8 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             
             % unitdiff/charge = 1.00335/2 ~= 0.5016
             
-            mz_mono = 1000.0;
-            mz_iso1 = 1000.0 + 0.501675;
+            mz_mono = start_mz;
+            mz_iso1 = start_mz + 0.501675;
             
             ms1Peaks = [mz_mono, 100; mz_iso1, 50;
                         mz_mono, 200; mz_iso1, 80;
@@ -103,13 +103,13 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             datasetIO.m_mapNameMS1Peaks = peaksData;
             
             % Call function
-            low_mz = 999.9;
-            high_mz = 1000.1;
+            low_mz = start_mz - 0.1;
+            high_mz = start_mz + 0.1;
             
             % Important: CConstant must be accessible.
             % If CConstant is missing, test will error.
             
-            [rt, smoothed, raw] = CChromatogramUtils.get_smoothed_xic(...
+            [rt, smoothed, ~] = CChromatogramUtils.get_smoothed_xic(...
                 datasetIO, 'test_raw.mgf', low_mz, high_mz, charge);
             
             testCase.verifyEqual(length(rt), 3);
@@ -189,7 +189,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             testCase.verifyEqual(p2_rt_center, 15, 'AbsTol', 0.5);
             
             % Case 2: Only one peak identified by PSMs
-            sort_rts_single = [5.1];
+            sort_rts_single = 5.1;
             XIC_peaks_single = CChromatogramUtils.detect_xic_peaks(...
                 rt_grid, smoothed_intensity, raw_intensity, sort_rts_single, alpha);
              

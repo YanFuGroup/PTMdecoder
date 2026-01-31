@@ -1,4 +1,5 @@
 function system_test_runner()
+% SYSTEM_TEST_RUNNER Run end-to-end system tests and compare with golden outputs
     fclose all;
 
     % Set path
@@ -55,6 +56,12 @@ function system_test_runner()
 end
 
 function isMatch = compare_binary_files(file1, file2)
+    % COMPARE_BINARY_FILES Compare two files byte-by-byte
+    % Input:
+    %   file1 (1 x N char/string)
+    %   file2 (1 x N char/string)
+    % Output:
+    %   isMatch (1 x 1 logical)
     % Read and compare the contents of two files byte by byte
     f1 = java.io.File(file1);
     f2 = java.io.File(file2);
@@ -75,6 +82,13 @@ function isMatch = compare_binary_files(file1, file2)
 end
 
 function isMatch = compare_text_files(file1, file2, tol)
+    % COMPARE_TEXT_FILES Compare text files with numeric tolerance
+    % Input:
+    %   file1 (1 x N char/string)
+    %   file2 (1 x N char/string)
+    %   tol (1 x 1 double)
+    % Output:
+    %   isMatch (1 x 1 logical)
     % Compare text files allowing for small numerical differences
     
     % Read files
@@ -139,6 +153,13 @@ function isMatch = compare_text_files(file1, file2, tol)
 end
 
 function allMatch = compare_dir_recursive(currentDir, rootGoldenDir, rootOutputDir)
+    % COMPARE_DIR_RECURSIVE Recursively compare output directory to golden
+    % Input:
+    %   currentDir (1 x N char/string)
+    %   rootGoldenDir (1 x N char/string)
+    %   rootOutputDir (1 x N char/string)
+    % Output:
+    %   allMatch (1 x 1 logical)
     files = dir(currentDir);
     allMatch = true;
     

@@ -1,10 +1,18 @@
 function tests = test_CMSMSResult
-% Test script for CMSMSResult logic
+% TEST_CMSMSRESULT Test script for CMSMSResult logic
+% Input:
+%   (none)
+% Output:
+%   tests (matlab.unittest.Test)
 tests = functiontests(localfunctions);
 end
 
 function testLogic(testCase)
-% Original test logic wrapped in a function for functiontests
+% TESTLOGIC Validate CMSMSResult add/compress logic
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
 
 % Use verify functions instead of assert for better reporting
 import matlab.unittest.constraints.IsEqualTo;

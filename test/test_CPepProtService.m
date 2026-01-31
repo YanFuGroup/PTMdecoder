@@ -1,9 +1,19 @@
 function tests = test_CPepProtService
+% TEST_CPEPPROTSERVICE Unit tests for CPepProtService
+% Input:
+%   (none)
+% Output:
+%   tests (matlab.unittest.Test)
 tests = functiontests(localfunctions);
 end
 
 
 function setupOnce(testCase)
+% SETUPONCE Prepare shared test data
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
 % Create Fasta File
 fastaContent = ['>sp|P12345|ProtA' newline ...
                 'MKAWVLK' newline ...
@@ -37,12 +47,22 @@ end
 
 
 function teardownOnce(testCase)
+% TEARDOWNONCE Clean up shared test data
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
 delete(testCase.TestData.fastaParams.filename);
 delete(testCase.TestData.resParams.filename);
 end
 
 
 function testGetProteinNamePos_Single(testCase)
+% TESTGETPROTEINNAMEPOS_SINGLE Validate single protein hit
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
 srv = testCase.TestData.service;
 
 % Test MKAWVLK in P12345
@@ -61,6 +81,11 @@ end
 
 
 function testGetProteinNamePos_Multi(testCase)
+% TESTGETPROTEINNAMEPOS_MULTI Validate multiple protein hits
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
 srv = testCase.TestData.service;
 
 % Test MULTI in P_MULTI_1 (Pos 1) and P_MULTI_2 (Pos 2)
@@ -81,6 +106,11 @@ end
 
 
 function testGetWhetherProtNC(testCase)
+% TESTGETWHETHERPROTNC Validate N/C terminus flags
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
 srv = testCase.TestData.service;
 
 % MKAWVLK: Pos 1, Len 7, Total 7 -> N=True, C=True
@@ -108,6 +138,11 @@ end
 
 
 function testMissingPeptide(testCase)
+% TESTMISSINGPEPTIDE Validate behavior on missing peptide
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
 srv = testCase.TestData.service;
 
 res = srv.get_protein_name_pos('MISSING');
