@@ -1,15 +1,15 @@
-function draw_each_group(obj,raw_name,current_ratioMatrix,current_rts,...
-    current_inten, low_mz_bound, high_mz_bound, selected_charge,...
+function draw_each_group(obj,raw_name,ratio_raw,rt_raw,...
+    intensity_raw, low_mz_bound, high_mz_bound, selected_charge,...
     current_imp_rt_range, current_imp_name, dir_save, color_map, legend_map)
 % Re-quantify each group
 % input:
 %   raw_name (1 x 1 char/string)
 %       the name of the raw (mgf) file
-%   current_ratioMatrix (N x K double)
+%   ratio_raw (N x K double)
 %       ratio matrix of quantification in current group
-%   current_rts (N x 1 double) minutes
+%   rt_raw (N x 1 double) minutes
 %       retention time in current group
-%   current_inten (N x 1 double) intensity
+%   intensity_raw (N x 1 double) intensity
 %       intensity in current group
 %   low_mz_bound (1 x 1 double) m/z
 %       low precursor m/z bound
@@ -40,9 +40,9 @@ rt_error_tol = 1; % RT match tolerance, choose 1 arbitrarily
 
 % Sort MS1 signal (pair of retention time and intensity) by time
 % Sort and denoise using a relative abundance threshold method
-[sort_rts, sort_ratioMatrix, rt_grid, smoothed_intensity, ~, is_valid] = ...
+[rt_sorted, ratio_sorted, xic_rt, xic_intensity_smoothed, ~, is_valid] = ...
     CQuantIMPGroupUtils.prepare_ms1_xic(...
-        obj.m_cMs12DatasetIO, raw_name, current_rts, current_inten, current_ratioMatrix, ...
+        obj.m_cMs12DatasetIO, raw_name, rt_raw, intensity_raw, ratio_raw, ...
         obj.m_minMSMSnum, low_mz_bound, high_mz_bound, selected_charge);
 
 if ~is_valid
@@ -52,15 +52,15 @@ end
 % Extract the rt bound of XIC peak and convert to index bounds
 [~, ~, is_skip_vec, peak_ranges] = ...
     CQuantIMPGroupUtils.prepare_peak_ranges_from_imp_rt_range(...
-        rt_grid, current_imp_rt_range, rt_error_tol);
+        xic_rt, current_imp_rt_range, rt_error_tol);
 
 % Calculate the ratio on each XIC points using kernel method, and normalize
-esti_ratio = CChromatogramUtils.calculate_kernel_ratio(rt_grid, sort_rts, sort_ratioMatrix, peak_ranges, false);
+ratio_estimated = CChromatogramUtils.calculate_kernel_ratio(xic_rt, rt_sorted, ratio_sorted, peak_ranges, false);
 
 % Get deconvoluted XIC using revised RT
-total_xic = {rt_grid, smoothed_intensity};
+total_xic = {xic_rt, xic_intensity_smoothed};
 ric = CQuantIMPGroupUtils.build_ric_from_peaks(...
-    rt_grid, smoothed_intensity, esti_ratio, peak_ranges, is_skip_vec);
+    xic_rt, xic_intensity_smoothed, ratio_estimated, peak_ranges, is_skip_vec);
 
 % Check if the output directory exists
 if ~exist(dir_save,'dir')

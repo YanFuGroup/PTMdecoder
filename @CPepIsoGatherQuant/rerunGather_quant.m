@@ -10,7 +10,7 @@ fout = fopen(obj.m_outputPath,'a');
 if fout == -1
     error(['Cannot open the the report file ',obj.m_outputPath]);
 end
-is_protein_writen = false;
+has_written_protein = false;
 
 % Delete useless raws which are empty or blank.
 obj = obj.delUselessRaws();
@@ -25,59 +25,59 @@ for idx_keys = 1:obj.m_mapRawNames.Count
 
     % Quantify the IMPs in each group
     for idx_g = 1:length(group_idxs)
-        current_iso_name = obj.m_cstrIMPNames{idx_r}(group_idxs{idx_g});
-        current_ratioMatrix = obj.m_ratioMatrix{idx_r}(:,group_idxs{idx_g});
-        idxs_rt_inten = find(sum(current_ratioMatrix,2));
-        current_ratioMatrix = current_ratioMatrix(idxs_rt_inten,:);
+        current_imp_name = obj.m_cstrIMPNames{idx_r}(group_idxs{idx_g});
+        ratio_current = obj.m_ratioMatrix{idx_r}(:,group_idxs{idx_g});
+        idxs_rt_inten = find(sum(ratio_current,2));
+        ratio_current = ratio_current(idxs_rt_inten,:);
         current_rts = obj.m_curRts{idx_r}(idxs_rt_inten);
         current_inten = obj.m_curIntens{idx_r}(idxs_rt_inten);
-        current_iso_mass = obj.m_IMPMass{idx_r}(group_idxs{idx_g});
+        current_imp_mass = obj.m_IMPMass{idx_r}(group_idxs{idx_g});
         current_charge = obj.m_curCharge{idx_r}(idxs_rt_inten);
         [low_mz_bound, high_mz_bound, selected_charge, charge_group_idxs] = ...
-            obj.get_mz_bound(current_iso_mass,current_charge);
+            obj.get_mz_bound(current_imp_mass,current_charge);
 
         for idx_ch = 1:length(selected_charge)
             % Get retention time range for each IMP
-            current_iso_rt_range = cell(length(current_iso_name),1);
-            for idx_imp = 1:length(current_iso_name)
-                generated_key = [current_iso_name{idx_imp},'_+', ...
+            current_imp_rt_range = cell(length(current_imp_name),1);
+            for idx_imp = 1:length(current_imp_name)
+                generated_key = [current_imp_name{idx_imp},'_+', ...
                     num2str(selected_charge(idx_ch)), '_', keys_raw{idx_keys}];
                 if pep_rtrange_map.isKey(generated_key)
-                    current_iso_rt_range{idx_imp} = pep_rtrange_map(generated_key);
+                    current_imp_rt_range{idx_imp} = pep_rtrange_map(generated_key);
                 end
             end
-            if all(cellfun(@isempty,current_iso_rt_range))
+            if all(cellfun(@isempty,current_imp_rt_range))
                 % All of the IMPs are removed in manual checking
                 continue;
             end
 
             % group quant
-            [bhave_non_zeros, idx_cur, area, rt_bound, max_label, ratio_each_XIC_peak] = ...
+            [has_nonzero_imp, imp_idx_nonzero, area_imp_final, rt_bound, max_label, ratio_each_XIC_peak] = ...
                 obj.requant_each_group(keys_raw{idx_keys},...
-                current_ratioMatrix(charge_group_idxs{idx_ch},:),...
+                ratio_current(charge_group_idxs{idx_ch},:),...
                 current_rts(charge_group_idxs{idx_ch},:),...
                 current_inten(charge_group_idxs{idx_ch},:),...
                 low_mz_bound(idx_ch),high_mz_bound(idx_ch), ...
-                selected_charge(idx_ch),current_iso_rt_range);
+                selected_charge(idx_ch),current_imp_rt_range);
 
             % Save to file
             % only write the non zero result
-            if ~bhave_non_zeros
+            if ~has_nonzero_imp
                 continue;
             end
-            if ~is_protein_writen
-                is_protein_writen = true;
+            if ~has_written_protein
+                has_written_protein = true;
                 write_protein_start_position_line(fout, obj.m_prot_names_pos);
             end
-            for i_iso = 1:length(idx_cur)
+            for i_iso = 1:length(imp_idx_nonzero)
                 fprintf(fout, '*\t%s\t+%d\t%s\t%.4f\t%f\t%f\t%f\n', ...
-                    current_iso_name{idx_cur(i_iso)}, ...
+                    current_imp_name{imp_idx_nonzero(i_iso)}, ...
                     selected_charge(idx_ch),...
                     keys_raw{idx_keys},...
                     mean([low_mz_bound(idx_ch),high_mz_bound(idx_ch)]),...
                     low_mz_bound(idx_ch),...
                     high_mz_bound(idx_ch),...
-                    area(i_iso,1));
+                    area_imp_final(i_iso,1));
                 fprintf(fout, '@\t%f\t%f\t%f\t%d\n', ...
                     rt_bound(i_iso).start, ...
                     rt_bound(i_iso).end, ...

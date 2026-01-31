@@ -1,8 +1,8 @@
 function [low_mz_bound, high_mz_bound, selected_charge, charge_group_idxs] = ...
-    get_mz_bound(obj,current_iso_mass,current_charge)
+    get_mz_bound(obj,current_imp_mass,current_charge)
 % Get the m/z bound of ms1 peak
 % input:
-%   current_iso_mass (1 x K double) Da
+%   current_imp_mass (1 x K double) Da
 %       current neutral peptide IMP mass
 %   current_charge (N x 1 double/int)
 %       current precursor charge per spectrum
@@ -25,8 +25,8 @@ charge_group_idxs = cell(length(selected_charge),1);
 for idx_ch = 1:length(selected_charge)
     charge_group_idxs{idx_ch} = find(group_belong==idx_ch);
     temp_charge = selected_charge(idx_ch);
-    high_mz_bound(idx_ch) = max((current_iso_mass+temp_charge*CConstant.pmass)./temp_charge);
-    low_mz_bound(idx_ch) = min((current_iso_mass+temp_charge*CConstant.pmass)./temp_charge);
+    high_mz_bound(idx_ch) = max((current_imp_mass+temp_charge*CConstant.pmass)./temp_charge);
+    low_mz_bound(idx_ch) = min((current_imp_mass+temp_charge*CConstant.pmass)./temp_charge);
 end
 
 % % Record the high bound and the low bound of observed precursor m/z.

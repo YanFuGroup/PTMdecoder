@@ -34,9 +34,9 @@ for idx_keys = 1:obj.m_mapRawNames.Count
     % Quantify the IMPs in each group
     for idx_g = 1:length(group_idxs)
         current_imp_name = obj.m_cstrIMPNames{idx_r}(group_idxs{idx_g});
-        current_ratioMatrix = obj.m_ratioMatrix{idx_r}(:,group_idxs{idx_g});
-        idxs_rt_inten = find(sum(current_ratioMatrix,2));
-        current_ratioMatrix = current_ratioMatrix(idxs_rt_inten,:);
+        ratio_current = obj.m_ratioMatrix{idx_r}(:,group_idxs{idx_g});
+        idxs_rt_inten = find(sum(ratio_current,2));
+        ratio_current = ratio_current(idxs_rt_inten,:);
         current_rts = obj.m_curRts{idx_r}(idxs_rt_inten);
         current_inten = obj.m_curIntens{idx_r}(idxs_rt_inten);
         current_imp_mass = obj.m_IMPMass{idx_r}(group_idxs{idx_g});
@@ -61,7 +61,7 @@ for idx_keys = 1:obj.m_mapRawNames.Count
 
             % Draw for this group
             obj.draw_each_group(keys_raw{idx_keys},...
-                current_ratioMatrix(charge_group_idxs{idx_ch},:),...
+                ratio_current(charge_group_idxs{idx_ch},:),...
                 current_rts(charge_group_idxs{idx_ch},:),...
                 current_inten(charge_group_idxs{idx_ch},:),...
                 low_mz_bound(idx_ch),high_mz_bound(idx_ch), ...
