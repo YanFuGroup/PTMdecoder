@@ -21,7 +21,7 @@ for idx_keys = 1:obj.m_mapRawNames.Count
     idx_r = obj.m_mapRawNames(keys_raw{idx_keys});
 
     % Cluster the IMPs according to their masses
-    group_idxs = clustering_IMPs(obj.m_IMPMass{idx_r},obj.m_ms1_tolerance);
+    group_idxs = cluster_imps_by_mass(obj.m_IMPMass{idx_r},obj.m_ms1_tolerance);
 
     % Quantify the IMPs in each group
     for idx_g = 1:length(group_idxs)
@@ -88,68 +88,4 @@ for idx_keys = 1:obj.m_mapRawNames.Count
     end
 end
 fclose(fout);
-end
-
-% Cluster the IMPs according to their masses
-function idxs_res = clustering_IMPs(IMP_masses,ms1_tolerance)
-% Input:
-%   IMP_masses (1 x K double) Da
-%       Masses of IMPs
-%   ms1_tolerance (struct)
-%       Tolerance of MS1 (fields: isppm, value)
-% Output:
-%   idxs_res (1 x G cell)
-%       Indices of each group, in cell form
-[m_val,m_inx] = sort(IMP_masses);
-
-% Initialize variables
-idxs_res = {};
-currentCluster = [];
-
-% Iterate through the numbers
-for i = 1:length(m_val)-1
-    currentNumber = m_val(i);
-    nextNumber = m_val(i+1);
-    % Add the current number to the current cluster
-    currentCluster = [currentCluster, m_inx(i)]; %#ok<AGROW>
-
-    % Mass tolerance
-    if ms1_tolerance.isppm
-        tol = (ms1_tolerance.value * currentNumber)/1e6;
-    else
-        tol = ms1_tolerance.value;
-    end
-    
-    % Check if the next mass is beyond the threshold
-    if abs(nextNumber - currentNumber) > tol
-        % Add the current cluster to the list of clusters
-        idxs_res = [idxs_res, {currentCluster}]; %#ok<AGROW> 
-        
-        % Reset the current cluster
-        currentCluster = [];
-    end
-end
-
-% Add the last number to the current cluster
-currentCluster = [currentCluster, m_inx(end)];
-
-% Add the last cluster to the list of clusters
-idxs_res = [idxs_res, {currentCluster}];  
-
-end
-
-
-
-% Write protein start position line
-function write_protein_start_position_line(fid, prot_names_pos)
-% Input:
-%   fid (1 x 1 double/int)
-%       File identifier
-%   prot_names_pos (P x 2 cell)
-%       Protein name and start position pairs
-for idx_np = 1:size(prot_names_pos,1)
-    fprintf(fid, '%s,%d;', prot_names_pos{idx_np,1},...
-        prot_names_pos{idx_np,2});
-end
-fprintf(fid,'\n');
 end
