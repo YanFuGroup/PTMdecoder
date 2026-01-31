@@ -15,7 +15,7 @@ classdef CMgfDatasetIO<CDatasetIO
         
         CloseAllFile(obj); % Close all files in the MGF dictionary
         
-        SetMap(obj); % Load m_mapDatasetIdx from the MGF files in the directory 
+        SetMap(obj); % Load m_mapDatasetIdx from the MGF files in the directory
 
         % read the specified spectrum in the mgf file
         [Peaks,Charge,PrecursorMZ]=read_oneSpec(obj,filename,specname);

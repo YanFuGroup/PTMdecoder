@@ -3,6 +3,9 @@ classdef CPTMdecoder
 
     methods
         function obj = CPTMdecoder(varargin)
+            % Input:
+            %   varargin (1 x N cell)
+            %       list of task parameter file paths
             if nargin == 0
                 % Default constructor
                 error('No input arguments');

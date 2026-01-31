@@ -1,11 +1,20 @@
 function [Peaks,Charge,PrecursorMZ]=read_oneSpec(obj,filename,specname)
 % Read one spectrum from the dataset and output peak information
-% Input: filename - the dataset name
-%       specname - the spectrum name
-% Output: Peaks - the set of peaks
-%       Charge - the charge state
-%       PrecursorMZ - the precursor ion mass-to-charge ratio
-% ATTENTION: Before using this function, make sure that the SetFidmap member function has been applied to this object, otherwise the file cannot be opened.
+% Input:
+%   obj (CMgfDatasetIO)
+%       dataset IO instance
+%   filename (1 x 1 char/string)
+%       dataset name (mgf file name)
+%   specname (1 x 1 char/string)
+%       spectrum name
+% Output:
+%   Peaks (N x 2 double)
+%       peak list [m/z, intensity]
+%   Charge (1 x 1 double/int)
+%       charge state
+%   PrecursorMZ (1 x 1 double)
+%       precursor ion m/z
+% ATTENTION: Before using this function, call SetFidmap so files can be opened.
 
 BUF_LENGTH=500;
 Peaks=zeros(BUF_LENGTH,2);% Pre-allocate

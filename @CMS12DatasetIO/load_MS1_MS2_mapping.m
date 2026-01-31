@@ -1,9 +1,15 @@
 function success = load_MS1_MS2_mapping(~, ms2_fullfile)
 % Parse MS2 file to get mapping between MS2 scan and its precursor MS1 scan
 % Output file: *_MS2scans.mat containing MS2_index variable
-% MS2_index structure: 
+% MS2_index structure:
 %   Column 1: MS1 scan number (PrecursorScan)
 %   Column 2: MS2 scan number (from S line)
+% Input:
+%   ms2_fullfile (1 x 1 char/string)
+%       MS2 file path
+% Output:
+%   success (1 x 1 double/int)
+%       1 for success, 0 for failure
 
 success = 0;
 

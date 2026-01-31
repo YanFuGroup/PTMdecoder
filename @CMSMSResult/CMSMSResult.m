@@ -23,11 +23,15 @@ classdef CMSMSResult < handle
     
     methods
         function obj = CMSMSResult()
+            % Constructor
             obj.Peptides = struct('peptide_sequence', {}, 'spectrum_list', {});
             obj.CurrentPeptideIdx = 0;
         end
         
         function addPeptide(obj, sequence)
+            % Input:
+            %   sequence (1 x 1 char/string)
+            %       peptide sequence
             obj.CurrentPeptideIdx = obj.CurrentPeptideIdx + 1;
             obj.CurrentSpectrumIdx = 0;
             
@@ -39,6 +43,11 @@ classdef CMSMSResult < handle
         end
         
         function addSpectrum(obj, datasetName, spectrumName)
+            % Input:
+            %   datasetName (1 x 1 char/string)
+            %       dataset name
+            %   spectrumName (1 x 1 char/string)
+            %       spectrum name
             if obj.CurrentPeptideIdx == 0
                 error('CMSMSResult:NoPeptide', 'Cannot add spectrum without a peptide context.');
             end
@@ -66,6 +75,11 @@ classdef CMSMSResult < handle
         end
         
         function addPeptidoform(obj, peptidoform_str, relative_abundance)
+            % Input:
+            %   peptidoform_str (1 x 1 char/string)
+            %       peptidoform string
+            %   relative_abundance (1 x 1 double)
+            %       relative abundance
             if obj.CurrentPeptideIdx == 0 || obj.CurrentSpectrumIdx == 0
                 error('CMSMSResult:NoSpectrum', 'Cannot add peptidoform without peptide and spectrum context.');
             end
@@ -91,6 +105,7 @@ classdef CMSMSResult < handle
         end
         
         function compress(obj)
+            % Trim buffers and remove empty entries
             % Organize the data structure: delete the empty peptide, spectrum, and peptidoform
             % Also trim the buffers
             

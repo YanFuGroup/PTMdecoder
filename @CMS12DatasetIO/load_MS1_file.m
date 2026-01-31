@@ -4,8 +4,12 @@ function success = load_MS1_file(~,ms1_fullfile)
 %   Spectrum starting position in peaks, retention time, number of peaks obtained after filtering low-abundance peaks,
 %   baseline used for filtering peaks, IonInjectionTime in the MS1 file.
 % "Peak Index" (_MS1scans.mat) stores all peaks, with m/z on the left and intensity on the right, arranged densely without separation.
-% Input: ms1_fullfile is the name of the MS1 file, including path.
-% Output: success indicates whether it is successful, 1 for success, 0 for failure
+% Input:
+%   ms1_fullfile (1 x 1 char/string)
+%       MS1 file path
+% Output:
+%   success (1 x 1 double/int)
+%       1 for success, 0 for failure
 
 success = 0;
 

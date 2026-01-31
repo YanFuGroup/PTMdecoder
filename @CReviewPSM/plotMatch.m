@@ -1,5 +1,8 @@
 function plotMatch(obj)
 % Plot the spectra and mark the matched peaks in the spectrum
+% Input:
+%   obj (CReviewPSM)
+%       Review instance
 
 % Get relative intensity of all peaks
 experimental_peaks = obj.m_spectrum.peaks;

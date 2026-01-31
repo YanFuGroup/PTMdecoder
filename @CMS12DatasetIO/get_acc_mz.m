@@ -1,11 +1,17 @@
 function acc_mz = get_acc_mz(obj,cen_mz,cur_mz,cur_chg)
 % Calculate a more accurate mass-to-charge ratio
-% Input: 
-%   cen_mz - ActivationCenter
-%   cur_mz - the current m/z (original MS1 peak m/z)
-%   cur_chg - the current charge
-% Output: 
-%   acc_mz - the peak closest to ActivationCenter. If no precursor m/z can form this peak, then use the ActivationCenter peak directly.
+% Input:
+%   obj (CMS12DatasetIO)
+%       dataset IO instance
+%   cen_mz (1 x 1 double) m/z
+%       ActivationCenter
+%   cur_mz (1 x 1 double) m/z
+%       current m/z (original MS1 peak m/z)
+%   cur_chg (1 x 1 double/int)
+%       current charge
+% Output:
+%   acc_mz (1 x 1 double) m/z
+%       peak closest to ActivationCenter; if none, use ActivationCenter
 
 if obj.m_ms1_tolerance.isppm
     ptol = obj.m_ms1_tolerance.value*cen_mz*1e-6;

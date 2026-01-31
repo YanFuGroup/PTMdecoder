@@ -1,17 +1,21 @@
 function [isorts,c_ref_isointens,cur_mz,cur_ch] = getProfiles(obj,mgf_name,spectrum_name)
-% Get retention time and intensity of several (four) isotope peaks according to the specified MS1 spectrum. All are 0 when isotopes are incomplete
-% input:    strDatasetName
-%               name of dataset, mgf
-%           strSpecName
-%               name of spectra, dta
-% output:   isorts
-%               retention time
-%           c_ref_isointens
-%               vector of isotopic intensities
-%           mz
-%               precursor m/z of this spectra
-%           cur_ch
-%               precursor charge of this spectra
+% Get retention time and intensity of isotope peaks from MS1 spectrum
+% input:
+%   obj (CMSMSPepDeconv)
+%       Processor instance
+%   mgf_name (1 x 1 char/string)
+%       dataset name (mgf)
+%   spectrum_name (1 x 1 char/string)
+%       spectrum name (dta)
+% output:
+%   isorts (1 x 1 double) minutes
+%       retention time
+%   c_ref_isointens (1 x 1 double) intensity
+%       monoisotopic intensity
+%   cur_mz (1 x 1 double) m/z
+%       precursor m/z of this spectrum
+%   cur_ch (1 x 1 double/int)
+%       precursor charge of this spectrum
 
 % ATTENTION: The second digit separated by a dot is required to be the scan number of the spectrum. If this condition is not met, a serious error will occur!!!
 spec_name = regexp(spectrum_name,'\.','split');

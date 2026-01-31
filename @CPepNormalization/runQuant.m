@@ -1,5 +1,8 @@
 function runQuant(obj)
 % Execute the normalization peptide calculation for all experiments
+% Input:
+%   obj (CPepNormalization)
+%       Normalization processor instance
     
     fprintf('Starting quantifying normalization peptides...\n');
     

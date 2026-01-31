@@ -1,13 +1,13 @@
 function cell_prot_name_pos = get_protein_name_pos(obj, pepSeq)
-% return the protein names containing the specified peptide
+% Return the protein names containing the specified peptide
 % input:
-%       pepSeq
-%           the sequence of the specified peptide
+%   obj (CPepProtService)
+%       Protein/peptide service instance
+%   pepSeq (1 x 1 char/string)
+%       sequence of the specified peptide
 % output:
-%       cell_prot_name_pos
-%           the protein names containing this peptide sequence, and the
-%           start position of the peptide on these proteins, in cell
-%           format, N*2, N is the number of proteins. [name, pos]
+%   cell_prot_name_pos (N x 2 cell)
+%       protein names and start positions on these proteins: [name, pos]
 
 prot_name_cells = obj.m_pep_prot_mapper.get_proteins(pepSeq);
 cell_prot_name_pos = {};

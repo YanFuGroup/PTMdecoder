@@ -1,15 +1,20 @@
 function pep_res = get_pep_res(obj)
 % Get the peptide result structure
+% Input:
+%   obj (CPepResReader)
+%       Peptide result reader instance
 % Output:
-%   pep_res - A structure containing the peptide results with fields:
-%       peptidoform_name: The modified peptide name
-%       charge: The charge state of the peptide
-%       dataset_name: The dataset name
-%       mean_mz: The mean m/z value
-%       lb_mz: The lower bound m/z value
-%       ub_mz: The upper bound m/z value
-%       quant_value: The quantification value of the peptide
-%       rt_ranges: The retention time ranges for the peptide
+%   pep_res (1 x N struct)
+%       fields: peptidoform_name, charge, dataset_name, mean_mz, lb_mz, ub_mz,
+%       quant_value, rt_ranges
+%       peptidoform_name: modified peptide name
+%       charge: charge state
+%       dataset_name: dataset (raw/mgf) name
+%       mean_mz: mean m/z value
+%       lb_mz: lower bound m/z
+%       ub_mz: upper bound m/z
+%       quant_value: quantified peak area
+%       rt_ranges: struct array of RT ranges (rt_start, rt_end, ratio, check_label)
 
 pep_res = struct('peptidoform_name', {}, 'charge', {}, 'dataset_name', {}, ...
     'mean_mz', {}, 'lb_mz', {}, 'ub_mz', {}, 'quant_value', {}, 'rt_ranges', {});

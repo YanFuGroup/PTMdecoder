@@ -36,6 +36,16 @@ classdef CReviewPSM
     
     methods
         function obj = CReviewPSM(varargin)
+            % Input (3 args):
+            %   peptides (1 x P struct)
+            %       peptide(s) with fields: seq (char), mod_mass (1 x M double), mod_pos (1 x M double)
+            %   spectrum (struct)
+            %       fields: peaks (N x 2 double [m/z, intensity]), pre_charge (1 x 1 double/int), pre_mz (1 x 1 double)
+            %   tolerance (struct)
+            %       fields: value (double), is_ppm (logical)
+            % Input (8 args):
+            %   peptides, spectrum, tolerance, main_score, is_high_score_better,
+            %   main_score_upper_bound, main_score_lower_bound, weight_factor (1 x 5 double)
             if nargin ~= 3 && nargin ~= 8
                 error('Wrong number of input arguments. 3 or 8 arguments are needed.');
             end

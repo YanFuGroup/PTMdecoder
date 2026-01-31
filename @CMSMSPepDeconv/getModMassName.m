@@ -1,9 +1,14 @@
 function [modNameMass]=getModMassName(~,modificationTypes,mapModification)
 % Use the modification types input by the user to search the modification library and create a matrix of modification names corresponding to modification masses
-% Input: modificationTypes are user-specified modification types, separated by semicolons,
-% Example: 'Acetyl[K];Propionyl[K];Propionyl-Methylation[K]'
-% mapModification is the modification library read from the file
-% Output: modNameMass is a matrix of "modification name-specific site-modification mass" for all modification types specified by the user
+% Input:
+%   modificationTypes (1 x 1 char/string)
+%       user-specified modification types, separated by semicolons
+%       e.g., 'Carbamidomethyl[C];Oxidation[M]'
+%   mapModification (containers.Map)
+%       modification library map
+% Output:
+%   modNameMass (M x 3 cell)
+%       modification name, specificity, and mass
 modNameMass=[];
 if isempty(modificationTypes)
     return

@@ -1,5 +1,11 @@
 function review_score = reviewScoreing(obj)
 % Give a weighted score to help the researcher finding good matches.
+% Input:
+%   obj (CReviewPSM)
+%       Review instance
+% Output:
+%   review_score (5 x 1 double)
+%       Score vector for each criterion
 
 if isempty(obj.m_peptides)
     review_score = -1;
@@ -175,14 +181,15 @@ end
 function gap_num = count_gap(match_ions, pep_length)
 % Count the gap on peptide sequence
 % input:
-%   match_ions: [match_type, match_pos]
-%       match_type: the length is equal to the number of matched
-%           peaks, 1 means b-ion, 2 means y-ion
-%       match_pos:  same length as match_type, each element shows
-%           the position of the ion on sequence
-%   pep_length: the length of the peptide sequence
+%   match_ions (L x 2 double)
+%       [match_type, match_pos]
+%       match_type: 1 for b-ion, 2 for y-ion
+%       match_pos:  ion position on peptide sequence
+%   pep_length (1 x 1 double/int)
+%       length of the peptide sequence
 % output:
-%   gap_num:    the number of gap (missing ion on consecutive sequence)
+%   gap_num (1 x 1 double)
+%       number of gaps (missing ions)
 
 ion_types = [1, 2]; % only consider the b/y ion here
 gap_num = 0;

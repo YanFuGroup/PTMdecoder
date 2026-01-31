@@ -10,6 +10,11 @@ classdef CMS12DatasetIO<CDatasetIO
 
     methods  
         function obj = CMS12DatasetIO(strDatasetFoldname,ms1_tolerance)
+            % Input:
+            %   strDatasetFoldname (1 x 1 char/string)
+            %       dataset folder path
+            %   ms1_tolerance (struct)
+            %       MS1 tolerance (fields: value, isppm)
             obj.m_strFoldname=strDatasetFoldname;
             obj.m_mapNameMS1Index = containers.Map();
             obj.m_mapNameMS1Peaks = containers.Map();

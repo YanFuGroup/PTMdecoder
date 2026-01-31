@@ -8,6 +8,7 @@ classdef CMSMSResReader
     
     methods
         function obj = CMSMSResReader()
+            % Constructor
         end
 
         % Read from a msms result file

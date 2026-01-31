@@ -1,6 +1,9 @@
 function SetMap(obj)
 % Create a dictionary mapping filenames to *_index, *_peaks
 % build up spectral index for each dataset, including ms1_index, ms1_peaks, ms2_index
+% Input:
+%   obj (CMS12DatasetIO)
+%       dataset IO instance
 
 ms1_dataset_files=dir(fullfile(obj.m_strFoldname,'*.ms1'));
 ms2_dataset_files=dir(fullfile(obj.m_strFoldname,'*.ms2'));

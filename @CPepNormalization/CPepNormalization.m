@@ -25,14 +25,26 @@ classdef CPepNormalization < handle
                 input_file_name, output_file_name)
             % Constructor
             % Input:
-            %   peptide_list    - List of peptide sequences (cell array)
-            %   prot_list       - List of corresponding protein names (cell array)
-            %   result_dir      - Directory for storing results (string)
-            %   spectra_dir     - Directory containing spectral data (string)
-            %   experimentNames - List of experiment names (cell array)
-            %   ms1_tolerance   - MS1 mass accuracy tolerance structure (struct with .value and .isppm)
-            %   resFilterThres  - Threshold for filtering results (double)
-            %   alpha           - Threshold for filtering noise peaks (double)
+            %   peptide_list (K x 1 cellstr/string)
+            %       List of peptide sequences
+            %   prot_list (K x 1 cellstr/string)
+            %       List of corresponding protein names
+            %   result_dir (1 x 1 char/string)
+            %       Directory for storing results
+            %   spectra_dir (1 x 1 char/string)
+            %       Directory containing spectral data
+            %   experimentNames (E x 1 cellstr/string)
+            %       List of experiment names
+            %   ms1_tolerance (struct)
+            %       MS1 mass accuracy tolerance structure (fields: value, isppm)
+            %   resFilterThres (1 x 1 double)
+            %       Threshold for filtering results
+            %   alpha (1 x 1 double)
+            %       Threshold for filtering noise peaks
+            %   input_file_name (1 x 1 char/string, optional)
+            %       Name of the input file
+            %   output_file_name (1 x 1 char/string, optional)
+            %       Name of the output file
             
             obj.peptide_list = peptide_list;
             obj.prot_list = prot_list;

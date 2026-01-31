@@ -1,5 +1,11 @@
 function obj = requant_norm_pep(obj)
 % Re-quantify the normalization peptides using checked XIC peaks
+% Input:
+%   obj (CMSMSPepDeconv)
+%       Processor instance
+% Output:
+%   obj (CMSMSPepDeconv)
+%       Updated instance
 
 %% Read the checked peptides and their XIC range
 if isempty(obj.m_checked_peptides_res_path)
@@ -154,8 +160,11 @@ end
 % Get the median of rt bound
 function rt = get_median_rt(strline)
 % Input:
-%   strline
-%       the current line
+%   strline (1 x 1 char/string)
+%       current line
+% Output:
+%   rt (1 x 1 double) minutes
+%       median RT
 
 reg_exp_pat = '\d*\.?\d+';
 % Use regexp to find all matches
@@ -177,17 +186,15 @@ end
 function [mgf_name, current_charge, current_peptide] = ...
     get_information_from_peptide_line(strline)
 % Input:
-%   strline
-%       One peptide line
+%   strline (1 x 1 char/string)
+%       one peptide line
 % Output:
-%   mgf_name
-%       Name of mgf
-%   current_charge
-%       Charge of this PSM
-%   current_peptide
-%       Peptide sequence of this PSM
-%   peptide_line_minus_1
-%       String for output in this peptide line minus the last element
+%   mgf_name (1 x 1 char/string)
+%       mgf name
+%   current_charge (1 x 1 double/int)
+%       charge of this PSM
+%   current_peptide (1 x 1 char/string)
+%       peptide sequence of this PSM
 
 segment = regexp(strline,'\t','split');
 % Need the modified peptide (2), charge (3) and dataset name (4)
@@ -201,15 +208,15 @@ end
 % Get the rt range and check label
 function [rt_left, rt_right, check_label] = get_rt_range_check_label(strline)
 % Input:
-%   strline
-%       the current line
+%   strline (1 x 1 char/string)
+%       current line
 % Output:
-%   rt_left
-%       the left bound of rt range
-%   rt_right
-%       the right bound of rt range
-%   check_label
-%       the check label
+%   rt_left (1 x 1 double) minutes
+%       left bound of RT range
+%   rt_right (1 x 1 double) minutes
+%       right bound of RT range
+%   check_label (1 x 1 double/int)
+%       check label
 
 reg_exp_pat = '\d*\.?\d+';
 % Use regexp to find all matches
@@ -232,11 +239,11 @@ end
 % Get the key of mod peptide with a string
 function key_mod_pep = get_mod_pep_from_string(strline)
 % Input:
-%   strline
-%       the input string, read from report_peptide_all_checked
+%   strline (1 x 1 char/string)
+%       input string from report file
 % Output:
-%   key_mod_pep
-%       the modified peptide strings
+%   key_mod_pep (1 x 1 char/string)
+%       modified peptide key
 
 segment = regexp(strline,'\t','split');
 % Need the modified peptide (2), charge (3) and dataset name (4)
@@ -248,11 +255,11 @@ end
 % Get the mass of each IMPs
 function lfMass = get_mass_peptide(pep_seq)
 % Input:
-%   pep_seq
-%       The peptide sequence
+%   pep_seq (1 x 1 char/string)
+%       peptide sequence
 % Output:
-%   lfMass
-%       The mass of the peptide
+%   lfMass (1 x 1 double) Da
+%       mass of the peptide
 
 % Add the mass of each amino acid
 lfMass = sum(CConstant.vAAmass(pep_seq-'A'+1));

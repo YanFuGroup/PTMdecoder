@@ -1,9 +1,11 @@
-function lfMass = getPeptideMass(obj, pep_seq)
+function lfMass = getPeptideMass(~, pep_seq)
 % Get the mass of each peptide
 % Input:
-%   pep_seq - The peptide sequence
+%   pep_seq (1 x 1 char/string)
+%       Peptide sequence
 % Output:
-%   lfMass - The mass of the peptide
+%   lfMass (1 x 1 double) Da
+%       Mass of the peptide
     
     % Add the mass of each amino acid
     lfMass = sum(CConstant.vAAmass(pep_seq-'A'+1));

@@ -1,10 +1,12 @@
 function obj = append_one_peptidoform(obj, peptidoform_str, relative_abundance)
 % Add one peptidoform at the end of the peptidoform list
 % Input:
-%   peptidoform_str
-%       the peptidoform string
-%   relative_abundance
-%       the relative abundance of the peptidoform
+%   obj (CMSMSResReader)
+%       Reader instance
+%   peptidoform_str (1 x 1 char/string)
+%       peptidoform string
+%   relative_abundance (1 x 1 double)
+%       relative abundance of the peptidoform
 
 obj.m_peps_specs_forms(end).spectrum_list(end).peptidoform_num = ...
     obj.m_peps_specs_forms(end).spectrum_list(end).peptidoform_num + 1;

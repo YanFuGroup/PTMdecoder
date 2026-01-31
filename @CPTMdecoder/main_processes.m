@@ -1,8 +1,8 @@
 function main_processes(~, varargin)
 % Load the files and run PTMDecoder iteratively
 % Input:
-%   varargin
-%       a list of file names
+%   varargin (1 x N cell)
+%       list of task parameter file paths
 
 for i = 1:length(varargin)
     fprintf('Processing %s\n', varargin{i});

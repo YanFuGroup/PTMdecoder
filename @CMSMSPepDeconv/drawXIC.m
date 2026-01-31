@@ -1,14 +1,14 @@
 function drawXIC(obj, dir_save, color_map, legend_map)
 % Draw the XIC for gathered peptides using manually-checked rt range, to dir_save
 % Input:
-%   obj
-%       the current object
-%   dir_save
-%       the directory to save the XIC figures
-%   color_map
-%       the color map
-%   legend_map
-%       the legend map
+%   obj (CMSMSPepDeconv)
+%       Processor instance
+%   dir_save (1 x 1 char/string)
+%       directory to save XIC figures
+%   color_map (containers.Map or [])
+%       color map (key: imp name, value: RGB 1x3)
+%   legend_map (containers.Map or [])
+%       legend map (key: imp name, value: display string)
 
 if nargin < 4
     legend_map = [];
@@ -110,13 +110,13 @@ end
 % Get the mass of each IMPs
 function lfMasses = get_masses_IMPs(cstrIMP,modNameMass)
 % Input:
-%   cstrIMP
-%       The IMP names
-%   modNameMass
-%       The cell of modification names, specificities and masses
+%   cstrIMP (K x 1 cellstr/string)
+%       IMP names
+%   modNameMass (M x 3 cell)
+%       modification names, specificities, and masses
 % Output:
-%   lfMasses
-%       The masses of each IMPs
+%   lfMasses (K x 1 double) Da
+%       masses of each IMP
 lfMasses = zeros(length(cstrIMP),1);
 for idx_imp = 1:length(cstrIMP)
     % Split the sequence of peptide and the modification

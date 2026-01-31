@@ -1,7 +1,10 @@
 function runRequant(obj, checked_pep_file_name)
 % Execute the normalization peptide calculation for all experiments
 % Input:
-%   checked_pep_file_name: Name of the file containing checked peptides (optional)
+%   obj (CPepNormalization)
+%       Normalization processor instance
+%   checked_pep_file_name (1 x 1 char/string, optional)
+%       Name of the file containing checked peptides
 
 if nargin < 2 || isempty(checked_pep_file_name)
     checked_pep_file_name = 'peptide4normalization_checked.txt';

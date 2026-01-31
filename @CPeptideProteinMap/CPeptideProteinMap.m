@@ -9,7 +9,9 @@ classdef CPeptideProteinMap < handle
     methods
         function obj = CPeptideProteinMap(filePath)
             % CPeptideProteinMap constructor
-            % filePath: path to the tab-delimited text file
+            % Input:
+            %   filePath (1 x 1 char/string)
+            %       Path to the tab-delimited text file
             
             % Initialize Map
             obj.m_map = containers.Map('KeyType', 'char', 'ValueType', 'any');
@@ -21,8 +23,14 @@ classdef CPeptideProteinMap < handle
         
         function proteinCell = get_proteins(obj, peptide)
             % get_proteins takes a peptide string as input and returns a cell array of corresponding protein names
-            % peptide: peptide string
-            % proteinCell: cell array of protein names, returns {} if not found
+            % Input:
+            %   obj (CPeptideProteinMap)
+            %       Peptide->protein mapping instance
+            %   peptide (1 x 1 char/string)
+            %       Peptide sequence
+            % Output:
+            %   proteinCell (1 x N cell)
+            %       Cell array of protein names, {} if not found
             
             if ischar(peptide)
                 pepKey = peptide;
@@ -44,6 +52,11 @@ classdef CPeptideProteinMap < handle
     methods (Access = private)
         function load_file(obj, filePath)
             % load_file reads and parses the tab-delimited file
+            % Input:
+            %   obj (CPeptideProteinMap)
+            %       Peptide->protein mapping instance
+            %   filePath (1 x 1 char/string)
+            %       Path to the tab-delimited text file
             
             if ~exist(filePath, 'file')
                 error('File not found: %s', filePath);

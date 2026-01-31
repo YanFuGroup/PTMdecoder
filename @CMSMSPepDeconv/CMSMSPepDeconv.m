@@ -35,9 +35,53 @@ classdef CMSMSPepDeconv
 
     methods
         function obj = CMSMSPepDeconv(modFile_or_taskparamobj,fixedMod,variableMod,...
-                specPath,ms1_tolerance,ms2_tolerance,alpha,...
-                fastaFile,regular_express,pepSpecFile,model,method,lambda,...
-                resFilterThres,enzyme,outputDir,ionTypes,checked_peptides_res_path,msms_res_path,filtered_res_file_path)
+            specPath,ms1_tolerance,ms2_tolerance,alpha,...
+            fastaFile,regular_express,pepSpecFile,model,method,lambda,...
+            resFilterThres,enzyme,outputDir,ionTypes,checked_peptides_res_path,msms_res_path,filtered_res_file_path)
+            % Input (single arg):
+            %   modFile_or_taskparamobj (CTaskParam)
+            %       task parameter object
+            % Input (full args):
+            %   modFile_or_taskparamobj (1 x 1 char/string)
+            %       modification file path
+            %   fixedMod (1 x 1 char/string)
+            %       fixed modification specification
+            %   variableMod (1 x 1 char/string)
+            %       variable modification specification
+            %   specPath (1 x 1 char/string)
+            %       spectrum directory path
+            %   ms1_tolerance (struct)
+            %       MS1 tolerance (fields: value, isppm)
+            %   ms2_tolerance (struct)
+            %       MS2 tolerance (fields: value, isppm)
+            %   alpha (1 x 1 double)
+            %       noise filtering threshold factor
+            %   fastaFile (1 x 1 char/string)
+            %       FASTA file path
+            %   regular_express (1 x 1 char/string)
+            %       regex for protein name parsing
+            %   pepSpecFile (1 x 1 char/string)
+            %       peptide-spectrum list file path
+            %   model (1 x 1 double/int)
+            %       model index
+            %   method (1 x 1 double/int or char/string)
+            %       estimation method
+            %   lambda (1 x 1 double)
+            %       LASSO penalty parameter
+            %   resFilterThres (1 x 1 double)
+            %       result filter threshold
+            %   enzyme (struct)
+            %       enzyme settings
+            %   outputDir (1 x 1 char/string)
+            %       output directory
+            %   ionTypes (1 x T double/int, optional)
+            %       ion types for matching
+            %   checked_peptides_res_path (1 x 1 char/string, optional)
+            %       checked peptide results path
+            %   msms_res_path (1 x 1 char/string, optional)
+            %       MSMS results path
+            %   filtered_res_file_path (1 x 1 char/string, optional)
+            %       filtered PSM results path
             if nargin == 1
                 % This is a method to read parameters from a .param file
                 taskParam = modFile_or_taskparamobj;

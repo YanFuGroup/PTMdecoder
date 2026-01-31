@@ -10,12 +10,16 @@ classdef CMsFileMapper < handle
     
     methods
         function obj = CMsFileMapper(specPath)
+            % Input:
+            %   specPath (1 x 1 char/string)
+            %       spectra folder path
             obj.m_specPath = specPath;
             obj.m_mgf2ms1_map = containers.Map();
             obj.build_mapping();
         end
         
         function build_mapping(obj)
+            % Build mgf->ms1 mapping based on file stems and suffix rules
             mgf_files = dir(fullfile(obj.m_specPath, '*.mgf'));
             ms1_files = dir(fullfile(obj.m_specPath, '*.ms1'));
 
@@ -82,6 +86,12 @@ classdef CMsFileMapper < handle
         
         function ms1_stem = get_ms1_stem(obj, mgf_stem)
             % Returns the stem of the MS1 file corresponding to the given MGF stem
+            % Input:
+            %   mgf_stem (1 x 1 char/string)
+            %       mgf file stem (without extension)
+            % Output:
+            %   ms1_stem (1 x 1 char/string)
+            %       ms1 file stem
             if isKey(obj.m_mgf2ms1_map, mgf_stem)
                 ms1_stem = obj.m_mgf2ms1_map(mgf_stem);
             else
@@ -94,6 +104,12 @@ classdef CMsFileMapper < handle
 
         function ms2_stem = get_ms2_stem(obj, mgf_stem)
             % Returns the stem of the MS2 file corresponding to the given MGF stem
+            % Input:
+            %   mgf_stem (1 x 1 char/string)
+            %       mgf file stem (without extension)
+            % Output:
+            %   ms2_stem (1 x 1 char/string)
+            %       ms2 file stem
             ms1_stem = obj.get_ms1_stem(mgf_stem);
             ms2_stem = strrep(ms1_stem, '.ms1', '.ms2');
         end

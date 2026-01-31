@@ -1,5 +1,10 @@
 function createOutputFile(obj, outputPath)
     % Create and initialize the output file
+    % Input:
+    %   obj (CPepNormalization)
+    %       Normalization processor instance
+    %   outputPath (1 x 1 char/string)
+    %       Output directory path
 
     fout = fopen(fullfile(outputPath, obj.output_file_name), 'w');
     if fout <= 0

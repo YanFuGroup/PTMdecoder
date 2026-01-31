@@ -3,8 +3,8 @@ function check_files_existence(~, varargin)
 % If yes, do nothing.
 % If not, throw an error.
 % Input:
-%   varargin
-%       a list of file paths
+%   varargin (1 x N cell)
+%       list of file paths
 
 for i = 1:length(varargin)
     if ~exist(varargin{i}, 'file')

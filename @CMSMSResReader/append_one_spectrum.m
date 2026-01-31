@@ -1,8 +1,12 @@
 function obj = append_one_spectrum(obj, dataset_name, spectrum_name)
 % Add one spectrum at the end of the spectrum list
 % Input:
-%   spectrum_name
-%       the spectrum name
+%   obj (CMSMSResReader)
+%       Reader instance
+%   dataset_name (1 x 1 char/string)
+%       dataset name
+%   spectrum_name (1 x 1 char/string)
+%       spectrum name
 
 obj.m_peps_specs_forms(end).spectrum_list(end+1).dataset_name = dataset_name;
 obj.m_peps_specs_forms(end).spectrum_list(end).spectrum_name = spectrum_name;

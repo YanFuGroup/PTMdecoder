@@ -1,10 +1,10 @@
 function resultObj = read_from_msms_res_file(~, msms_res_path)
 % Read from a msms result file
 % Input:
-%   msms_res_path
-%       the path of the msms result file
+%   msms_res_path (1 x 1 char/string)
+%       path of the msms result file
 % Output:
-%   resultObj
+%   resultObj (CMSMSResult)
 %       CMSMSResult object containing the parsed data
 
 % Initialize result object

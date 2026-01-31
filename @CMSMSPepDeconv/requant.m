@@ -1,5 +1,11 @@
 function obj = requant(obj)
 % Re-quantify the IMPs using checked XIC peaks
+% Input:
+%   obj (CMSMSPepDeconv)
+%       Processor instance
+% Output:
+%   obj (CMSMSPepDeconv)
+%       Updated instance
 
 %% Read the checked peptides and their XIC range
 if isempty(obj.m_checked_peptides_res_path)
@@ -104,13 +110,13 @@ end
 % Get the mass of each IMPs
 function lfMasses = get_masses_IMPs(cstrIMP,modNameMass)
 % Input:
-%   cstrIMP
-%       The IMP names
-%   modNameMass
-%       The cell of modification names, specificities and masses
+%   cstrIMP (K x 1 cellstr/string)
+%       IMP names
+%   modNameMass (M x 3 cell)
+%       modification names, specificities, and masses
 % Output:
-%   lfMasses
-%       The masses of each IMPs
+%   lfMasses (K x 1 double) Da
+%       masses of each IMP
 lfMasses = zeros(length(cstrIMP),1);
 for idx_imp = 1:length(cstrIMP)
     % Split the sequence of peptide and the modification

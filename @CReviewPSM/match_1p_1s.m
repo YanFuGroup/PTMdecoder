@@ -1,25 +1,26 @@
 function [match_ions] = match_1p_1s(~, peptide, spectrum, tolerance)
 % Match one theoretical peptide ions with peaks in the spectrum.
-% input:    
-%   peptide ->      [seq, mod_mass, mod_pos]
-%       seq:    the sequence of the peptide
-%       mod_mass:   a cell of modification names
-%       mod_pos:    a cell of modification position on peptide
-%   spectrum ->     [peaks, pre_charge];
-%       peaks:      [m/z1, intens1; m/z2, intens2;...]
-%       pre_charge: the precursor charge according to the spectrum
-%   tolerance ->    [value, is_ppm]
-%       value:      the value of mass tolerance
-%       is_ppm:     if the type of mass tolerance is ppm, boolean
-% output:   
-%   match_ions ->   [match_type, match_pos, charge, expe_which]
-%       match_type: the length is equal to the number of matched 
-%           peaks, 1 means b-ion, 2 means y-ion
-%       match_pos:  same length as match_type, each element shows 
-%           the position of the ion on sequence
-%       charge:     the charge of theoretical ion
-%       expe_which: the index of matched experimental peak in 
-%           experimental spectrum
+% input:
+%   peptide (struct)
+%       fields: seq (char), mod_mass (1 x M double), mod_pos (1 x M double)
+%       seq:    peptide sequence
+%       mod_mass: modification masses
+%       mod_pos:  modification positions on the peptide
+%   spectrum (struct)
+%       fields: peaks (N x 2 double [m/z, intensity]), pre_charge (1 x 1 double/int)
+%       peaks:      experimental peaks
+%       pre_charge: precursor charge according to the spectrum
+%   tolerance (struct)
+%       fields: value (double), is_ppm (logical)
+%       value:  mass tolerance value
+%       is_ppm: true if tolerance is in ppm
+% output:
+%   match_ions (L x 4 double)
+%       [match_type, match_pos, charge, expe_which]
+%       match_type: 1 for b-ion, 2 for y-ion
+%       match_pos:  ion position on peptide sequence
+%       charge:     theoretical ion charge
+%       expe_which: index of matched experimental peak
 
 ion_types = [1, 2]; % only consider the b/y ion here
 match_ions = zeros(length(ion_types)*length(peptide.seq),4);
@@ -32,7 +33,7 @@ theo_ions = get_theoretical_ions(peptide, spectrum.pre_charge);
 % match between experiment peaks and theoretical peaks
 for iExpPeak = 1:size(spectrum.peaks,1)
     if tolerance.is_ppm
-        tol = spectrum(iExpPeak,1)*tolerance.value / 1e6;
+        tol = spectrum.peaks(iExpPeak,1)*tolerance.value / 1e6;
     end
     % find theoretical ions in the tolerance interval
     idx_first_match = find(theo_ions(:,4)>spectrum.peaks(iExpPeak,1)-tol & ...
@@ -53,14 +54,14 @@ end
 
 function theo_ions = get_theoretical_ions(peptide, pre_charge)
 % Get theoretical ions.
-% intput:   
-%   peptide ->      [seq, mod_mass, mod_pos]
-%       pep_seq:    the sequence of the peptide
-%       mod_mass:   an array of modification names
-%       mod_pos:    an array of modification position on peptide
-%   pre_charge:     the precursor charge according to the spectrum
-% output:   
-%   theo_ions:      the theoretical ions of the peptide,[types, positions, charge, m/zs]
+% input:
+%   peptide (struct)
+%       fields: seq (char), mod_mass (1 x M double), mod_pos (1 x M double)
+%   pre_charge (1 x 1 double/int)
+%       precursor charge according to the spectrum
+% output:
+%   theo_ions (T x 4 double)
+%       theoretical ions: [types, positions, charge, m/zs]
 
 % calculate the max charge of fragment ions according to precursor charge
 if pre_charge <= 2

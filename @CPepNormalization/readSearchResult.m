@@ -1,5 +1,19 @@
 function pep_quant = readSearchResult(obj, fin, input_file_path, ms12DatasetIO, pep_quant)
 % Process the filtered results file and extract peptide information
+% Input:
+%   obj (CPepNormalization)
+%       Normalization processor instance
+%   fin (1 x 1 double/int)
+%       File identifier of the filtered result file
+%   input_file_path (1 x 1 char/string)
+%       Path to the filtered result file
+%   ms12DatasetIO (object)
+%       MS1/MS2 dataset IO instance
+%   pep_quant (1 x K cell)
+%       Quantification objects per target peptide
+% Output:
+%   pep_quant (1 x K cell)
+%       Updated quantification objects
     
     progress_printer = CPrintProgress(dir(input_file_path).bytes);
     fgetl(fin); % skip the first line

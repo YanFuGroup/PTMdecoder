@@ -1,10 +1,13 @@
 function obj = MSMSLevelRun(obj, is_record_fragment_information)
 % MSMSLevelRun - Quantify the MSMS level results
 % Input:
-%   obj - The CMSMSPepDeconv object
-%   is_record_fragment_information - Whether to record the fragment information
+%   obj (CMSMSPepDeconv)
+%       Processor instance
+%   is_record_fragment_information (1 x 1 logical)
+%       Whether to record fragment information
 % Output:
-%   obj - The CMSMSPepDeconv object
+%   obj (CMSMSPepDeconv)
+%       Updated instance
 
 % Load protein sequences from fasta file
 if isempty(obj.CPepProtService)
@@ -59,7 +62,7 @@ while ~feof(fin)
         continue;
     end
     str = regexp(strLine,'\t','split');
-    if length(str)==1 || isempty(str{2}) 
+    if length(str)==1 || isempty(str{2})
         % meet a new peptide
         if_wrote_peptide = false;
         pepSeq = str{1};
@@ -74,49 +77,49 @@ while ~feof(fin)
             obj.m_ionTypes,obj.m_enzyme);
         [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff, ...
             warning_msg,is_X_full_column_rank] = eachSpecIMSLQ.runEach();
-        warning_message = [warning_message, warning_msg]; %#ok<AGROW> 
+        warning_message = [warning_message, warning_msg]; %#ok<AGROW>
         if bSuccess
             if is_X_full_column_rank
                 fprintf(fo_may_FP,'%s\t%s\n',str{1},str{2});
             end
             if is_record_fragment_information
-                if isempty(frageff) 
-                    % Skip the fragment information of this spectrum if it is empty 
+                if isempty(frageff)
+                    % Skip the fragment information of this spectrum if it is empty
                     %   (only one possible peptidoform and not have been deconvoluted)
                 else
                     if isempty(obj.m_matFragInfo)% Allocate space and add a column of data
-                    obj.m_matFragInfo=ionTypePosCharge;
-                    obj.m_matFragIntens=ionIntens;
-                    obj.m_matFragEff=frageff;
-                else
-                    obj.m_matFragEff=[obj.m_matFragEff,zeros(size(obj.m_matFragEff,1),1)];
-                    obj.m_matFragIntens=[obj.m_matFragIntens,zeros(size(obj.m_matFragIntens,1),1)];
-                    for idxFrag=1:size(ionTypePosCharge,1)
-                        [bIsExist,idxMatFE]=ismember(ionTypePosCharge(idxFrag,:), ...
-                            obj.m_matFragInfo,'rows');
-                        % Check whether this ion type exists, if it exists, record it directly, if not, allocate space and then record it
-                        if bIsExist
-                            obj.m_matFragEff(idxMatFE,end)=frageff(idxFrag);
-                            obj.m_matFragIntens(idxMatFE,end)=ionIntens(idxFrag);
-                        else
-                            obj.m_matFragInfo=[obj.m_matFragInfo;ionTypePosCharge(idxFrag,:)];
-                            obj.m_matFragIntens=[obj.m_matFragIntens;zeros(1,size(obj.m_matFragIntens,2))];
-                            obj.m_matFragIntens(end,end) = ionIntens(idxFrag);
-                            obj.m_matFragEff = [obj.m_matFragEff;zeros(1,size(obj.m_matFragEff,2))];
-                            obj.m_matFragEff(end,end) = frageff(idxFrag);
+                        obj.m_matFragInfo=ionTypePosCharge;
+                        obj.m_matFragIntens=ionIntens;
+                        obj.m_matFragEff=frageff;
+                    else
+                        obj.m_matFragEff=[obj.m_matFragEff,zeros(size(obj.m_matFragEff,1),1)];
+                        obj.m_matFragIntens=[obj.m_matFragIntens,zeros(size(obj.m_matFragIntens,1),1)];
+                        for idxFrag=1:size(ionTypePosCharge,1)
+                            [bIsExist,idxMatFE]=ismember(ionTypePosCharge(idxFrag,:), ...
+                                obj.m_matFragInfo,'rows');
+                            % Check whether this ion type exists, if it exists, record it directly, if not, allocate space and then record it
+                            if bIsExist
+                                obj.m_matFragEff(idxMatFE,end)=frageff(idxFrag);
+                                obj.m_matFragIntens(idxMatFE,end)=ionIntens(idxFrag);
+                            else
+                                obj.m_matFragInfo=[obj.m_matFragInfo;ionTypePosCharge(idxFrag,:)];
+                                obj.m_matFragIntens=[obj.m_matFragIntens;zeros(1,size(obj.m_matFragIntens,2))];
+                                obj.m_matFragIntens(end,end) = ionIntens(idxFrag);
+                                obj.m_matFragEff = [obj.m_matFragEff;zeros(1,size(obj.m_matFragEff,2))];
+                                obj.m_matFragEff(end,end) = frageff(idxFrag);
+                            end
                         end
                     end
                 end
-                end
             end
-
+            
             if ~if_wrote_peptide
                 if ~if_the_first
                     fprintf(fout,'\n\n');
                 end
                 fprintf(fout,'P\t%s\n',pepSeq);
                 if_wrote_peptide = true;
-                if_the_first = false;   
+                if_the_first = false;
             end
             fprintf(fout,'S\t%s\t%s\n',str{1},str{2});
             idxNonZero = find(abundance~=0);

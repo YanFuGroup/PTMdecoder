@@ -1,5 +1,8 @@
 function SetMap(obj)
 % Create an index from spectrum name to position in mgf files for all spectra.
+% Input:
+%   obj (CMgfDatasetIO)
+%       dataset IO instance
 
 dataset_files = dir(fullfile(obj.m_strFoldname,'*.mgf'));
 dataset_names = {dataset_files.name}'; % Arrange file names in a column

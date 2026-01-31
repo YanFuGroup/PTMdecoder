@@ -1,5 +1,15 @@
 function pep_quant = initializeQuantificationObjects(obj, outputPath, ms12DatasetIO)
     % Initialize quantification objects for each peptide
+    % Input:
+    %   obj (CPepNormalization)
+    %       Normalization processor instance
+    %   outputPath (1 x 1 char/string)
+    %       Output directory path
+    %   ms12DatasetIO (object)
+    %       MS1/MS2 dataset IO instance
+    % Output:
+    %   pep_quant (K x 1 cell)
+    %       Quantification objects per target peptide
     
     pep_quant = cell(length(obj.peptide_list), 1);
     for i_list = 1:length(obj.peptide_list)

@@ -10,6 +10,13 @@ classdef CPepProtService
         function obj = CPepProtService(fastaFilePath, regularExp, filtered_res_file_path)
             % Internalizes the reader creation logic (Composition)
             % This makes the service easier to use, as the caller only needs to provide file paths.
+            % Input:
+            %   fastaFilePath (1 x 1 char/string)
+            %       FASTA file path
+            %   regularExp (1 x 1 char/string)
+            %       Regular expression for FASTA parsing
+            %   filtered_res_file_path (1 x 1 char/string)
+            %       Filtered result file path (for peptide->protein mapping)
             reader = CFastaReader(fastaFilePath, regularExp);
             obj.m_mapProt = reader.read();
             

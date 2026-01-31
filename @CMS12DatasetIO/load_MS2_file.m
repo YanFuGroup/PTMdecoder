@@ -6,8 +6,12 @@ function success = load_MS2_file(obj,ms2_fullfile)
 %   MS1 scan number, retention time, MS2 scan number, precursor m/z, charge state, fragmentation type
 %   index of the first peak of the next spectrum, baseline for filtering peaks, MS2 retention time (same as the second item above, obtained in the same way), IonInjectionTime
 % "Peak Index" (_MS2_peaks.mat) stores all peaks, with m/z on the left and intensity on the right, arranged densely without separation.
-% Input: Name of the MS2 file, including path.
-% Output: Success status, 1 for success, 0 for failure
+% Input:
+%   ms2_fullfile (1 x 1 char/string)
+%       MS2 file path
+% Output:
+%   success (1 x 1 double/int)
+%       1 for success, 0 for failure
 
 success = 0;
 

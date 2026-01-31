@@ -1,5 +1,13 @@
 function obj = startRun(obj, is_record_fragment_information)
-% Start the run for MSMS level and Peptide level IMP discrimination and  quantification
+% Start the run for MSMS level and Peptide level IMP discrimination and quantification
+% Input:
+%   obj (CMSMSPepDeconv)
+%       Processor instance
+%   is_record_fragment_information (1 x 1 logical, optional)
+%       Whether to record fragment information
+% Output:
+%   obj (CMSMSPepDeconv)
+%       Updated instance
 
 if nargin < 2
     is_record_fragment_information = false;
