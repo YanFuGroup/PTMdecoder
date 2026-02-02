@@ -13,9 +13,7 @@ classdef CIMPGatherQuant
         m_mapRawNames;      % map of raw names to index in m_rawData
 
         % The following property stores per-raw grouped data
-        % Each cell element is a struct with fields:
-        %   length, capacity, curRts, curIntens, curMz, curCharge,
-        %   ratioMatrix, impNames, mapIMPNames, impMass
+        % Each cell element is a CIMPRawIdentStore
         m_rawData;
     end
     
@@ -55,9 +53,6 @@ classdef CIMPGatherQuant
         
         % Main entry point for summarizing the quantification of various modified form of a peptide
         runGather(obj);
-
-        % Add one record
-        obj = appendOneSpecQuant(obj,raw_name,curRts,curIntens,curMz,cur_ch,cstrIMP,lfMasses,abundance);
         
 
         % Quantify each group
@@ -91,6 +86,16 @@ classdef CIMPGatherQuant
 
         % Check whether the XIC peaks have at least min_rows PSMs
         has_min_rows = hasMinRows(obj, ratio_matrix, min_rows);
+
+        function [obj, rawStore] = getRawStore(obj, raw_name)
+            [obj, idx_raw] = obj.ensure_raw(raw_name);
+            rawStore = obj.get_raw(idx_raw);
+        end
+
+        function [obj] = setRawStore(obj, raw_name, rawStore)
+            [obj, idx_raw] = obj.ensure_raw(raw_name);
+            obj = obj.set_raw(idx_raw, rawStore);
+        end
     end
 
     methods (Access=private)
@@ -113,17 +118,7 @@ classdef CIMPGatherQuant
         end
 
         function raw = init_raw(obj)
-            raw = struct();
-            raw.length = 0;
-            raw.capacity = obj.m_buff_length;
-            raw.curRts = zeros(obj.m_buff_length,1);
-            raw.curIntens = zeros(obj.m_buff_length,1);
-            raw.curMz = zeros(obj.m_buff_length,1);
-            raw.curCharge = zeros(obj.m_buff_length,1);
-            raw.ratioMatrix = zeros(obj.m_buff_length,0);
-            raw.impNames = cell(0,1);
-            raw.impMass = [];
-            raw.mapIMPNames = containers.Map();
+            raw = CIMPRawIdentStore(obj.m_buff_length);
         end
     end
 end

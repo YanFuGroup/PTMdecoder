@@ -6,9 +6,7 @@ function state = iterate_imp_groups(obj, pep_rtrange_map, on_group_charge, state
 %       map of [modified peptide _ charge _ raw file name] -> [rt_start, rt_end, check_label]
 %   on_group_charge (function_handle)
 %       callback for each (raw, group, charge), signature:
-%       state = on_group_charge(state, obj, raw_name, group_imp_name, group_ratio,
-%           group_rts, group_inten, group_imp_mass, low_mz_bound, high_mz_bound,
-%           selected_charge, charge_group_idxs, current_imp_rt_range)
+%       state = on_group_charge(state, obj, group)
 %   state (any)
 %       accumulator passed through each callback
 
@@ -37,7 +35,7 @@ for idx_keys = 1:obj.m_mapRawNames.Count
     end
 
     % Cluster the IMPs according to their masses
-    group_idxs = cluster_imps_by_mass(raw.impMass,obj.m_ms1_tolerance);
+    group_idxs = CIMPGrouper.cluster_by_mass(raw.impMass,obj.m_ms1_tolerance);
 
     % Quantify the IMPs in each group
     for idx_g = 1:length(group_idxs)
@@ -69,9 +67,12 @@ for idx_keys = 1:obj.m_mapRawNames.Count
                 end
             end
 
-            state = on_group_charge(state, obj, keys_raw{idx_keys}, group_imp_name, group_ratio, group_rts, group_inten, ...
-                group_imp_mass, low_mz_bound(idx_ch), high_mz_bound(idx_ch), ...
-                selected_charge(idx_ch), charge_group_idxs{idx_ch}, current_imp_rt_range);
+            group = CIMPGroup(keys_raw{idx_keys}, group_imp_name, group_imp_mass, ...
+                group_ratio, group_rts, group_inten, group_charge, ...
+                low_mz_bound(idx_ch), high_mz_bound(idx_ch), selected_charge(idx_ch), ...
+                charge_group_idxs{idx_ch}, current_imp_rt_range);
+
+            state = on_group_charge(state, obj, group);
         end
     end
 end

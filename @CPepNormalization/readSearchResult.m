@@ -90,8 +90,9 @@ function pep_quant = readSearchResult(obj, fin, input_file_path, ms12DatasetIO, 
                 lfMass = obj.getPeptideMass(obj.peptide_list{i_list});
                 
                 % Add to quantification
-                pep_quant{i_list} = pep_quant{i_list}.appendOneSpecQuant(segment{2},cur_rt, ...
-                    cur_inten,cur_mz,cur_ch,{segment{10}},lfMass,1); %#ok<CCAT1>
+                [pep_quant{i_list}, rawStore] = pep_quant{i_list}.getRawStore(segment{2});
+                rawStore = rawStore.appendSpecQuant(cur_rt, cur_inten, cur_mz, cur_ch, {segment{10}}, lfMass, 1);   %#ok<CCAT1>
+                pep_quant{i_list} = pep_quant{i_list}.setRawStore(segment{2}, rawStore);
                 break;
             end
         end

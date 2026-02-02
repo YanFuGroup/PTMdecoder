@@ -92,8 +92,9 @@ for idx_psf = 1:length(msms_result.Peptides)
         % Get the masses of IMPs
         lfMasses = get_masses_IMPs(peptidoform_strs,[obj.m_fixedModNameMass;obj.m_variableModNameMass]);
         % Append the quantification
-        impGatherIMSLQ = impGatherIMSLQ.appendOneSpecQuant(dataset_name,isorts, ...
-            c_ref_isointens,c_mz,cur_ch,peptidoform_strs,lfMasses,peptidoform_abuns);
+        [impGatherIMSLQ, rawStore] = impGatherIMSLQ.getRawStore(dataset_name);
+        rawStore = rawStore.appendSpecQuant(isorts, c_ref_isointens, c_mz, cur_ch, peptidoform_strs, lfMasses, peptidoform_abuns);
+        impGatherIMSLQ = impGatherIMSLQ.setRawStore(dataset_name, rawStore);
     end
     % Run gather
     impGatherIMSLQ.drawGather(pep_rtrange_map, dir_save, color_map, legend_map);

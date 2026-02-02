@@ -112,9 +112,9 @@ while ~feof(fin)
     elseif strline(1) == '@'
         % Record one retention time line, complete a psm result
         rt_median = get_median_rt(strline);
-        impGatherIMSLQ = impGatherIMSLQ.appendOneSpecQuant(...
-            mgf_name, rt_median, 1,lfMz, current_charge, ...
-            {current_peptide}, lfMass, 1);
+        [impGatherIMSLQ, rawStore] = impGatherIMSLQ.getRawStore(mgf_name);
+        rawStore = rawStore.appendSpecQuant(rt_median, 1, lfMz, current_charge, {current_peptide}, lfMass, 1);
+        impGatherIMSLQ = impGatherIMSLQ.setRawStore(mgf_name, rawStore);
     elseif strline(1) == '*'
         % Record one peptide line
         if is_ready
