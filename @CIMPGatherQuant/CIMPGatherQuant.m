@@ -11,20 +11,13 @@ classdef CIMPGatherQuant
         m_outputPath;       % output path of the result file
         m_minMSMSnum;      % Minimum number of MSMS spectra for a peptide to be considered
         m_resStr;           % result string
-        m_mapRawNames;      % the map of raw names to which cell in m_curRts et.al.
+        m_mapRawNames;      % map of raw names to index in m_rawData
 
-        % The following properties are in cell format, each element means
-        %   different clusters of different MS files
-        m_length;           % the available value of each cluster
-        m_capacity;         % the capacity of the each cluster
-        m_curRts;           % Current retention time
-        m_curIntens;        % Current intensity
-        m_curMz;            % observed precursor m/zs of the MS2
-        m_curCharge;        % precursor charge of the MS2
-        m_ratioMatrix;      % Quantification matrix (can be relative or absolute abundance)
-        m_cstrIMPNames; % IMP strings
-        m_mapIMPNames;  % Map from IMP to the corresponding column in the quantification matrix
-        m_IMPMass;      % the mass of each IMP
+        % The following property stores per-raw grouped data
+        % Each cell element is a struct with fields:
+        %   length, capacity, curRts, curIntens, curMz, curCharge,
+        %   ratioMatrix, impNames, mapIMPNames, impMass
+        m_rawData;
     end
     
     methods
@@ -59,16 +52,7 @@ classdef CIMPGatherQuant
             obj.m_resStr = [];
             obj.m_mapRawNames = containers.Map();
             % different in different raw
-            obj.m_length = {};
-            obj.m_capacity = {};
-            obj.m_curRts = {};
-            obj.m_curIntens = {};
-            obj.m_curMz = {};
-            obj.m_curCharge = {};
-            obj.m_ratioMatrix = {};
-            obj.m_cstrIMPNames = {};
-            obj.m_mapIMPNames = {};
-            obj.m_IMPMass = {};
+            obj.m_rawData = {};
         end
         
         % Main entry point for summarizing the quantification of various modified form of a peptide
@@ -77,9 +61,6 @@ classdef CIMPGatherQuant
         % Add one record
         obj = appendOneSpecQuant(obj,raw_name,curRts,curIntens,curMz,cur_ch,cstrIMP,lfMasses,abundance);
         
-
-        % Clear useless rows
-        obj = delUselessRaws(obj);
 
         % Quantify each group
         [has_nonzero_imp, imp_idx_nonzero, area_imp_final, rt_bound, idx_selected, ratio_each_XIC_peak] = ...
@@ -112,6 +93,40 @@ classdef CIMPGatherQuant
 
         % Check whether the XIC peaks have at least min_rows PSMs
         has_min_rows = hasMinRows(obj, ratio_matrix, min_rows);
+    end
+
+    methods (Access=private)
+        function [obj, idx_raw] = ensure_raw(obj, raw_name)
+            if ~obj.m_mapRawNames.isKey(raw_name)
+                idx_raw = obj.m_mapRawNames.Count + 1;
+                obj.m_mapRawNames(raw_name) = idx_raw;
+                obj.m_rawData{idx_raw} = obj.init_raw();
+            else
+                idx_raw = obj.m_mapRawNames(raw_name);
+            end
+        end
+
+        function raw = get_raw(obj, idx_raw)
+            raw = obj.m_rawData{idx_raw};
+        end
+
+        function obj = set_raw(obj, idx_raw, raw)
+            obj.m_rawData{idx_raw} = raw;
+        end
+
+        function raw = init_raw(obj)
+            raw = struct();
+            raw.length = 0;
+            raw.capacity = obj.m_buff_length;
+            raw.curRts = zeros(obj.m_buff_length,1);
+            raw.curIntens = zeros(obj.m_buff_length,1);
+            raw.curMz = zeros(obj.m_buff_length,1);
+            raw.curCharge = zeros(obj.m_buff_length,1);
+            raw.ratioMatrix = zeros(obj.m_buff_length,0);
+            raw.impNames = cell(0,1);
+            raw.impMass = [];
+            raw.mapIMPNames = containers.Map();
+        end
     end
 end
 

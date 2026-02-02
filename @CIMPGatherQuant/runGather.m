@@ -12,27 +12,26 @@ imp_records = repmat(struct('imp_name','', 'charge',0, 'raw_name','', ...
     'mass_center',0, 'low_mz_bound',0, 'high_mz_bound',0, 'area',0, ...
     'rt_peaks',struct('start',{},'end',{},'ratio',{},'check_label',{})), 0, 1);
 
-% Delete useless raws which are empty or blank.
-obj = obj.delUselessRaws();
 
 % Do the same operation for gathered PSM for every raw file
 keys_raw = obj.m_mapRawNames.keys;
 for idx_keys = 1:obj.m_mapRawNames.Count
     idx_r = obj.m_mapRawNames(keys_raw{idx_keys});
+    raw = obj.get_raw(idx_r);
 
     % Cluster the IMPs according to their masses
-    group_idxs = cluster_imps_by_mass(obj.m_IMPMass{idx_r},obj.m_ms1_tolerance);
+    group_idxs = cluster_imps_by_mass(raw.impMass,obj.m_ms1_tolerance);
 
     % Quantify the IMPs in each group
     for idx_g = 1:length(group_idxs)
-        group_imp_name = obj.m_cstrIMPNames{idx_r}(group_idxs{idx_g});
-        group_ratio = obj.m_ratioMatrix{idx_r}(:,group_idxs{idx_g});
+        group_imp_name = raw.impNames(group_idxs{idx_g});
+        group_ratio = raw.ratioMatrix(1:raw.length,group_idxs{idx_g});
         idxs_rt_inten = find(sum(group_ratio,2));
         group_ratio = group_ratio(idxs_rt_inten,:);
-        group_rts = obj.m_curRts{idx_r}(idxs_rt_inten);
-        group_inten = obj.m_curIntens{idx_r}(idxs_rt_inten);
-        group_imp_mass = obj.m_IMPMass{idx_r}(group_idxs{idx_g});
-        group_charge = obj.m_curCharge{idx_r}(idxs_rt_inten);
+        group_rts = raw.curRts(idxs_rt_inten);
+        group_inten = raw.curIntens(idxs_rt_inten);
+        group_imp_mass = raw.impMass(group_idxs{idx_g});
+        group_charge = raw.curCharge(idxs_rt_inten);
         [low_mz_bound, high_mz_bound, selected_charge, charge_group_idxs] = ...
             obj.get_mz_bound(group_imp_mass,group_charge);
 

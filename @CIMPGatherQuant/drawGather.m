@@ -20,27 +20,26 @@ if nargin < 4
     color_map = [];
 end
 
-% Delete useless raws which are empty or blank.
-obj = obj.delUselessRaws();
 
 % Do the same operation for gathered PSM for every raw file
 keys_raw = obj.m_mapRawNames.keys;
 for idx_keys = 1:obj.m_mapRawNames.Count
     idx_r = obj.m_mapRawNames(keys_raw{idx_keys});
+    raw = obj.get_raw(idx_r);
 
     % Cluster the IMPs according to their masses
-    group_idxs = clustering_IMPs(obj.m_IMPMass{idx_r},obj.m_ms1_tolerance);
+    group_idxs = cluster_imps_by_mass(raw.impMass,obj.m_ms1_tolerance);
 
     % Quantify the IMPs in each group
     for idx_g = 1:length(group_idxs)
-        group_imp_name = obj.m_cstrIMPNames{idx_r}(group_idxs{idx_g});
-        group_ratio = obj.m_ratioMatrix{idx_r}(:,group_idxs{idx_g});
+        group_imp_name = raw.impNames(group_idxs{idx_g});
+        group_ratio = raw.ratioMatrix(1:raw.length,group_idxs{idx_g});
         idxs_rt_inten = find(sum(group_ratio,2));
         group_ratio = group_ratio(idxs_rt_inten,:);
-        group_rts = obj.m_curRts{idx_r}(idxs_rt_inten);
-        group_inten = obj.m_curIntens{idx_r}(idxs_rt_inten);
-        group_imp_mass = obj.m_IMPMass{idx_r}(group_idxs{idx_g});
-        group_charge = obj.m_curCharge{idx_r}(idxs_rt_inten);
+        group_rts = raw.curRts(idxs_rt_inten);
+        group_inten = raw.curIntens(idxs_rt_inten);
+        group_imp_mass = raw.impMass(group_idxs{idx_g});
+        group_charge = raw.curCharge(idxs_rt_inten);
         [low_mz_bound, high_mz_bound, selected_charge, charge_group_idxs] = ...
             obj.get_mz_bound(group_imp_mass,group_charge);
 
@@ -70,52 +69,4 @@ for idx_keys = 1:obj.m_mapRawNames.Count
         end
     end
 end
-end
-
-% Cluster the IMPs according to their masses
-function idxs_res = clustering_IMPs(IMP_masses,ms1_tolerance)
-% Input:
-%   IMP_masses (1 x K double) Da
-%       Masses of IMPs
-%   ms1_tolerance (struct)
-%       Tolerance of MS1 (fields: isppm, value)
-% Output:
-%   idxs_res (1 x G cell)
-%       Indices of each group, in cell form
-[m_val,m_inx] = sort(IMP_masses);
-
-% Initialize variables
-idxs_res = {};
-currentCluster = [];
-
-% Iterate through the numbers
-for i = 1:length(m_val)-1
-    currentNumber = m_val(i);
-    nextNumber = m_val(i+1);
-    % Add the current number to the current cluster
-    currentCluster = [currentCluster, m_inx(i)]; %#ok<AGROW>
-
-    % Mass tolerance
-    if ms1_tolerance.isppm
-        tol = (ms1_tolerance.value * currentNumber)/1e6;
-    else
-        tol = ms1_tolerance.value;
-    end
-    
-    % Check if the next mass is beyond the threshold
-    if abs(nextNumber - currentNumber) > tol
-        % Add the current cluster to the list of clusters
-        idxs_res = [idxs_res, {currentCluster}]; %#ok<AGROW> 
-        
-        % Reset the current cluster
-        currentCluster = [];
-    end
-end
-
-% Add the last number to the current cluster
-currentCluster = [currentCluster, m_inx(end)];
-
-% Add the last cluster to the list of clusters
-idxs_res = [idxs_res, {currentCluster}];  
-
 end

@@ -18,53 +18,44 @@ function obj = appendOneSpecQuant(obj,raw_name,curRts,curIntens,curMz,cur_ch,cst
 %   abundance (K x 1 double)
 %       relative abundance of each IMP for this spectrum
 
-% record the raw file if haven't been record
-if ~obj.m_mapRawNames.isKey(raw_name)
-    idx_raw = obj.m_mapRawNames.Count + 1;
-    obj.m_mapRawNames(raw_name) = idx_raw;
-    obj.m_length{idx_raw} = 0;
-    obj.m_capacity{idx_raw} = obj.m_buff_length;
-    obj.m_curRts{idx_raw} = zeros(obj.m_buff_length,1);
-    obj.m_curIntens{idx_raw} = zeros(obj.m_buff_length,1);
-    obj.m_curMz{idx_raw} = zeros(obj.m_buff_length,1);
-    obj.m_curCharge{idx_raw} = zeros(obj.m_buff_length,1);
-    obj.m_ratioMatrix{idx_raw} = zeros(obj.m_buff_length,0);
-    obj.m_cstrIMPNames{idx_raw} = cell(0);
-    obj.m_IMPMass{idx_raw} = [];
-    obj.m_mapIMPNames{idx_raw} = containers.Map();
+% Input validation
+if length(cstrIMP) ~= length(lfMasses) || length(cstrIMP) ~= length(abundance)
+    error('CIMPGatherQuant:InvalidInput', ...
+        'cstrIMP, lfMasses, and abundance must have the same length.');
 end
 
-% find the index of the raw file
-idx_raw = obj.m_mapRawNames(raw_name);
-obj.m_length{idx_raw} = obj.m_length{idx_raw}+1;
+% record the raw file if haven't been record
+[obj, idx_raw] = obj.ensure_raw(raw_name);
+raw = obj.get_raw(idx_raw);
+raw.length = raw.length + 1;
 
 % reallocate memory if there is no available place to record this
-if obj.m_length{idx_raw} > obj.m_capacity{idx_raw}
-    obj.m_curRts{idx_raw}(obj.m_capacity{idx_raw}+obj.m_buff_length, 1) = 0;
-    obj.m_curIntens{idx_raw}(obj.m_capacity{idx_raw}+obj.m_buff_length, 1) = 0;
-    obj.m_curMz{idx_raw}(obj.m_capacity{idx_raw}+obj.m_buff_length, 1) = 0;
-    obj.m_curCharge{idx_raw}(obj.m_capacity{idx_raw}+obj.m_buff_length, 1) = 0;
-    obj.m_ratioMatrix{idx_raw} = [obj.m_ratioMatrix{idx_raw};zeros(obj.m_buff_length,size(obj.m_ratioMatrix{idx_raw},2))];
-    obj.m_capacity{idx_raw} = obj.m_capacity{idx_raw}+obj.m_buff_length;
+if raw.length > raw.capacity
+    raw.curRts(raw.capacity+obj.m_buff_length, 1) = 0;
+    raw.curIntens(raw.capacity+obj.m_buff_length, 1) = 0;
+    raw.curMz(raw.capacity+obj.m_buff_length, 1) = 0;
+    raw.curCharge(raw.capacity+obj.m_buff_length, 1) = 0;
+    raw.ratioMatrix = [raw.ratioMatrix;zeros(obj.m_buff_length,size(raw.ratioMatrix,2))];
+    raw.capacity = raw.capacity + obj.m_buff_length;
 end
 
 % record formally
-obj.m_curRts{idx_raw}(obj.m_length{idx_raw}) = curRts;
-obj.m_curIntens{idx_raw}(obj.m_length{idx_raw}) = curIntens;
-obj.m_curMz{idx_raw}(obj.m_length{idx_raw}) = curMz;
-obj.m_curCharge{idx_raw}(obj.m_length{idx_raw}) = cur_ch;
+raw.curRts(raw.length) = curRts;
+raw.curIntens(raw.length) = curIntens;
+raw.curMz(raw.length) = curMz;
+raw.curCharge(raw.length) = cur_ch;
 for iIso = 1:length(cstrIMP)
-    if isKey(obj.m_mapIMPNames{idx_raw},cstrIMP{iIso})
-        obj.m_ratioMatrix{idx_raw}(obj.m_length{idx_raw},...
-            obj.m_mapIMPNames{idx_raw}(cstrIMP{iIso})) = abundance(iIso);
+    if isKey(raw.mapIMPNames,cstrIMP{iIso})
+        raw.ratioMatrix(raw.length,raw.mapIMPNames(cstrIMP{iIso})) = abundance(iIso);
     else
         % If not found, record it and append a column to ratioMatrix
-        obj.m_mapIMPNames{idx_raw}(cstrIMP{iIso}) = obj.m_mapIMPNames{idx_raw}.Count+1;
-        obj.m_IMPMass{idx_raw} = [obj.m_IMPMass{idx_raw}, lfMasses(iIso)];
-        obj.m_cstrIMPNames{idx_raw}{obj.m_mapIMPNames{idx_raw}.Count,1} = cstrIMP{iIso};
-        obj.m_ratioMatrix{idx_raw} = [obj.m_ratioMatrix{idx_raw},zeros(obj.m_capacity{idx_raw},1)];
-        obj.m_ratioMatrix{idx_raw}(obj.m_length{idx_raw},obj.m_mapIMPNames{idx_raw}.Count) = abundance(iIso);
+        raw.mapIMPNames(cstrIMP{iIso}) = raw.mapIMPNames.Count+1;
+        raw.impMass = [raw.impMass, lfMasses(iIso)];
+        raw.impNames{raw.mapIMPNames.Count,1} = cstrIMP{iIso};
+        raw.ratioMatrix = [raw.ratioMatrix,zeros(raw.capacity,1)];
+        raw.ratioMatrix(raw.length,raw.mapIMPNames.Count) = abundance(iIso);
     end
 end
+obj = obj.set_raw(idx_raw, raw);
 end
 
