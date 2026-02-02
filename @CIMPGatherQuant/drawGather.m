@@ -27,6 +27,17 @@ for idx_keys = 1:obj.m_mapRawNames.Count
     idx_r = obj.m_mapRawNames(keys_raw{idx_keys});
     raw = obj.get_raw(idx_r);
 
+    if raw.length <= 0
+        error('CIMPGatherQuant:InvalidRawLength', ...
+            'raw.length must be > 0 (raw: %s).', keys_raw{idx_keys});
+    end
+    ratio_cols = size(raw.ratioMatrix,2);
+    if length(raw.impNames) ~= ratio_cols || length(raw.impMass) ~= ratio_cols
+        error('CIMPGatherQuant:InvalidRawRatioColumns', ...
+            'impNames/impMass length must match ratioMatrix columns (raw: %s).', ...
+            keys_raw{idx_keys});
+    end
+
     % Cluster the IMPs according to their masses
     group_idxs = cluster_imps_by_mass(raw.impMass,obj.m_ms1_tolerance);
 
