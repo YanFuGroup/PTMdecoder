@@ -57,7 +57,7 @@ if isempty(XIC_peaks)
 end
 
 % Calculate the ratio on each XIC points using kernel method
-ratio_estimated = CChromatogramUtils.calculate_kernel_ratio(xic_rt, rt_sorted, ratio_sorted, XIC_peaks, true);
+ratio_estimated = CQuantIMPGroupPeakUtils.calculate_kernel_ratio(xic_rt, rt_sorted, ratio_sorted, XIC_peaks, true);
 
 % Peak-wise filtering and normalization
 ratio_estimated = CQuantIMPGroupPeakUtils.filter_and_normalize_peak_ratios(...

@@ -12,8 +12,6 @@ classdef CChromatogramUtils
         
         XIC_peaks = detect_xic_peaks(xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, alpha)
         
-        ratio_estimated = calculate_kernel_ratio(xic_rt, rt_sorted, ratio_sorted, peak_ranges, is_broadcast)
-        
         [final_XIC_peak, max_label, is_skip_vec] = parse_imp_rt_ranges(imp_rt_range, is_skip_vec)
         
         peak_ranges = map_rt_to_indices(xic_rt, final_XIC_peak, is_skip_vec, rt_error_tol)

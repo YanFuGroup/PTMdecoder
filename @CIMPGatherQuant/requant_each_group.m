@@ -58,7 +58,7 @@ end
         xic_rt, current_imp_rt_range, rt_error_tol);
 
 % Calculate the ratio on each XIC points using kernel method
-ratio_estimated = CChromatogramUtils.calculate_kernel_ratio(xic_rt, rt_sorted, ratio_sorted, peak_ranges, false);
+ratio_estimated = CQuantIMPGroupPeakUtils.calculate_kernel_ratio(xic_rt, rt_sorted, ratio_sorted, peak_ranges, false);
 
 
 % Requantification using revised RT
