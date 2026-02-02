@@ -1,10 +1,12 @@
-function rerunGather_quant(obj,pep_rtrange_map)
-% Re-quantification for gathered peptides using manually-checked rt range
+function runGather(obj)
+% Main entry point for summarizing the quantification of various IMPs of a peptide
+% Output to a file
+% Below each peptide, there are several lines starting with '*', representing the overall information of IMP.
+% Each line starting with '*' (IMP line) is followed by several retention time lines ('@' starting lines).
+%
 % Input:
-%   obj (CPepIsoGatherQuant)
+%   obj (CIMPGatherQuant)
 %       Quantification aggregator instance
-%   pep_rtrange_map (containers.Map)
-%       map of [modified peptide _ charge _ raw file name] -> [rt_start, rt_end, check_label]
 
 fout = fopen(obj.m_outputPath,'a');
 if fout == -1
@@ -37,32 +39,19 @@ for idx_keys = 1:obj.m_mapRawNames.Count
             obj.get_mz_bound(group_imp_mass,group_charge);
 
         for idx_ch = 1:length(selected_charge)
-            % Get retention time range for each IMP
-            current_imp_rt_range = cell(length(group_imp_name),1);
-            for idx_imp = 1:length(group_imp_name)
-                generated_key = [group_imp_name{idx_imp},'_+', ...
-                    num2str(selected_charge(idx_ch)), '_', keys_raw{idx_keys}];
-                if pep_rtrange_map.isKey(generated_key)
-                    current_imp_rt_range{idx_imp} = pep_rtrange_map(generated_key);
-                end
-            end
-            if all(cellfun(@isempty,current_imp_rt_range))
-                % All of the IMPs are removed in manual checking
-                continue;
-            end
-
             % group quant
-            [has_nonzero_imp, imp_idx_nonzero, area_imp_final, rt_bound, max_label, ratio_each_XIC_peak] = ...
-                obj.requant_each_group(keys_raw{idx_keys},...
+            [has_nonzero_imp, imp_idx_nonzero, area_imp_final, rt_bound, idx_selected, ratio_each_XIC_peak] = ...
+                obj.quant_each_group(keys_raw{idx_keys},...
                 group_ratio(charge_group_idxs{idx_ch},:),...
                 group_rts(charge_group_idxs{idx_ch},:),...
                 group_inten(charge_group_idxs{idx_ch},:),...
-                low_mz_bound(idx_ch),high_mz_bound(idx_ch), ...
-                selected_charge(idx_ch),current_imp_rt_range);
+                low_mz_bound(idx_ch),high_mz_bound(idx_ch),selected_charge(idx_ch));
 
             % Save to file
             % only write the non zero result
             if ~has_nonzero_imp
+                % TODO?
+                % Show that there is no quantification for this group
                 continue;
             end
             if ~has_written_protein
@@ -70,6 +59,7 @@ for idx_keys = 1:obj.m_mapRawNames.Count
                 write_protein_start_position_line(fout, obj.m_prot_names_pos);
             end
             for i_iso = 1:length(imp_idx_nonzero)
+                % Write the line of peptide, charge, mass, area
                 fprintf(fout, '*\t%s\t+%d\t%s\t%.4f\t%f\t%f\t%f\n', ...
                     group_imp_name{imp_idx_nonzero(i_iso)}, ...
                     selected_charge(idx_ch),...
@@ -78,14 +68,27 @@ for idx_keys = 1:obj.m_mapRawNames.Count
                     low_mz_bound(idx_ch),...
                     high_mz_bound(idx_ch),...
                     area_imp_final(i_iso,1));
-                fprintf(fout, '@\t%f\t%f\t%f\t%d\n', ...
-                    rt_bound(i_iso).start, ...
-                    rt_bound(i_iso).end, ...
-                    ratio_each_XIC_peak(i_iso), ...
-                    max_label(i_iso));
+                % Write the line of rt range, ratio, check label
+                for i_peak = 1:size(rt_bound,2)
+                    % If the ratio is 0, skip
+                    if ratio_each_XIC_peak(i_iso,i_peak) == 0
+                        continue;
+                    end
+                    if i_peak == idx_selected(i_iso)
+                        check_label = 1;
+                    else
+                        check_label = 0;
+                    end
+                    fprintf(fout, '@\t%f\t%f\t%f\t%d\n',...
+                        rt_bound(i_iso,i_peak).start,...
+                        rt_bound(i_iso,i_peak).end, ...
+                        ratio_each_XIC_peak(i_iso,i_peak), ...
+                        check_label);
+                end
             end
         end
     end
 end
 fclose(fout);
+
 end

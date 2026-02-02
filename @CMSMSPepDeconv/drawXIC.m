@@ -77,8 +77,8 @@ for idx_psf = 1:length(msms_result.Peptides)
     peptide_sequence = msms_result.Peptides(idx_psf).peptide_sequence;
     % Get the protein name and position
     cell_prot_name_pos = obj.CPepProtService.get_protein_name_pos(peptide_sequence);
-    % Initialize the CPepIsoGatherQuant object
-    pepIsoGatherIMSLQ = CPepIsoGatherQuant(cell_prot_name_pos,obj.m_cMs12DatasetIO,...
+    % Initialize the CIMPGatherQuant object
+    impGatherIMSLQ = CIMPGatherQuant(cell_prot_name_pos,obj.m_cMs12DatasetIO,...
         obj.m_resFilterThres,obj.m_ms1_tolerance,obj.m_alpha,'');
     % Get the spectrum list
     for idx_spec = 1:length(msms_result.Peptides(idx_psf).spectrum_list)
@@ -92,11 +92,11 @@ for idx_psf = 1:length(msms_result.Peptides)
         % Get the masses of IMPs
         lfMasses = get_masses_IMPs(peptidoform_strs,[obj.m_fixedModNameMass;obj.m_variableModNameMass]);
         % Append the quantification
-        pepIsoGatherIMSLQ = pepIsoGatherIMSLQ.appendOneSpecQuant(dataset_name,isorts, ...
+        impGatherIMSLQ = impGatherIMSLQ.appendOneSpecQuant(dataset_name,isorts, ...
             c_ref_isointens,c_mz,cur_ch,peptidoform_strs,lfMasses,peptidoform_abuns);
     end
     % Run gather
-    pepIsoGatherIMSLQ.drawGather(pep_rtrange_map, dir_save, color_map, legend_map);
+    impGatherIMSLQ.drawGather(pep_rtrange_map, dir_save, color_map, legend_map);
 end
 
 print_progress.last_update();

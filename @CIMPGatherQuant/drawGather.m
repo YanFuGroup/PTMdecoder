@@ -1,7 +1,7 @@
 function drawGather(obj, pep_rtrange_map, dir_save, color_map, legend_map)
 % Draw the XIC for gathered peptides using manually-checked rt range
 % Input:
-%   obj (CPepIsoGatherQuant)
+%   obj (CIMPGatherQuant)
 %       Quantification aggregator instance
 %   pep_rtrange_map (containers.Map)
 %       map of [modified peptide _ charge _ raw file name] -> [rt_start, rt_end, check_label]

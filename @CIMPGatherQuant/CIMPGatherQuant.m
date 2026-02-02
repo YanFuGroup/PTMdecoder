@@ -1,5 +1,5 @@
-classdef CPepIsoGatherQuant
-    % A class for summarizing quantification at the peptide level
+classdef CIMPGatherQuant
+    % A class for summarizing quantification at the IMP level
     
     properties(Access=public)
         m_buff_length;      % the length of the buffer
@@ -28,7 +28,7 @@ classdef CPepIsoGatherQuant
     end
     
     methods
-        function obj = CPepIsoGatherQuant(prot_names_pos,cMs12DatasetIO,...
+        function obj = CIMPGatherQuant(prot_names_pos,cMs12DatasetIO,...
             resFilterThres,ms1_tolerance, alpha, outputPath, minMSMSnum)
             % Input:
             %   prot_names_pos (P x 2 cell)

@@ -119,33 +119,33 @@ while ~feof(fin)
     elseif strline(1) == '@'
         % Record one retention time line, complete a psm result
         rt_median = get_median_rt(strline);
-        pepIsoGatherIMSLQ = pepIsoGatherIMSLQ.appendOneSpecQuant(...
+        impGatherIMSLQ = impGatherIMSLQ.appendOneSpecQuant(...
             mgf_name, rt_median, 1,lfMz, current_charge, ...
             {current_peptide}, lfMass, 1);
     elseif strline(1) == '*'
         % Record one peptide line
         if is_ready
-            pepIsoGatherIMSLQ.rerunGather_quant(pep_rtrange_map);
+            impGatherIMSLQ.rerunGather_quant(pep_rtrange_map);
         end
         [mgf_name, current_charge, current_peptide] = ...
             get_information_from_peptide_line(strline);
         lfMass = get_mass_peptide(current_peptide);
         lfMz = (lfMass+current_charge*CConstant.pmass)/current_charge;
         current_key = [current_peptide,'_+',num2str(current_charge),'_',mgf_name];
-        pepIsoGatherIMSLQ = CPepIsoGatherQuant({pep_prot_map(current_key),-1}, ...
+        impGatherIMSLQ = CIMPGatherQuant({pep_prot_map(current_key),-1}, ...
             obj.m_cMs12DatasetIO,obj.m_resFilterThres,obj.m_ms1_tolerance, ...
             obj.m_alpha,output_path);
         is_ready = true;
     else
         % Record one protein-site line
         if is_ready
-            pepIsoGatherIMSLQ.rerunGather_quant(pep_rtrange_map);
+            impGatherIMSLQ.rerunGather_quant(pep_rtrange_map);
             is_ready = false;
         end
     end
 end
 % Record once more at the end of the file
-pepIsoGatherIMSLQ.rerunGather_quant(pep_rtrange_map);
+impGatherIMSLQ.rerunGather_quant(pep_rtrange_map);
 fclose(fin);
 print_progress.last_update();
 fprintf('done.\n');
