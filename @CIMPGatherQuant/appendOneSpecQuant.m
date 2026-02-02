@@ -44,16 +44,16 @@ raw.curRts(raw.length) = curRts;
 raw.curIntens(raw.length) = curIntens;
 raw.curMz(raw.length) = curMz;
 raw.curCharge(raw.length) = cur_ch;
-for iIso = 1:length(cstrIMP)
-    if isKey(raw.mapIMPNames,cstrIMP{iIso})
-        raw.ratioMatrix(raw.length,raw.mapIMPNames(cstrIMP{iIso})) = abundance(iIso);
+for idx = 1:length(cstrIMP)
+    if isKey(raw.mapIMPNames,cstrIMP{idx})
+        raw.ratioMatrix(raw.length,raw.mapIMPNames(cstrIMP{idx})) = abundance(idx);
     else
         % If not found, record it and append a column to ratioMatrix
-        raw.mapIMPNames(cstrIMP{iIso}) = raw.mapIMPNames.Count+1;
-        raw.impMass = [raw.impMass, lfMasses(iIso)];
-        raw.impNames{raw.mapIMPNames.Count,1} = cstrIMP{iIso};
+        raw.mapIMPNames(cstrIMP{idx}) = raw.mapIMPNames.Count+1;
+        raw.impMass = [raw.impMass, lfMasses(idx)];
+        raw.impNames{raw.mapIMPNames.Count,1} = cstrIMP{idx};
         raw.ratioMatrix = [raw.ratioMatrix,zeros(raw.capacity,1)];
-        raw.ratioMatrix(raw.length,raw.mapIMPNames.Count) = abundance(iIso);
+        raw.ratioMatrix(raw.length,raw.mapIMPNames.Count) = abundance(idx);
     end
 end
 obj = obj.set_raw(idx_raw, raw);
