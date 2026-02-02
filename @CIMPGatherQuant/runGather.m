@@ -25,13 +25,16 @@ for idx_keys = 1:obj.m_mapRawNames.Count
     % Quantify the IMPs in each group
     for idx_g = 1:length(group_idxs)
         group_imp_name = raw.impNames(group_idxs{idx_g});
-        group_ratio = raw.ratioMatrix(1:raw.length,group_idxs{idx_g});
-        idxs_rt_inten = find(sum(group_ratio,2));
-        group_ratio = group_ratio(idxs_rt_inten,:);
-        group_rts = raw.curRts(idxs_rt_inten);
-        group_inten = raw.curIntens(idxs_rt_inten);
+        cur_ratio = raw.ratioMatrix(1:raw.length,group_idxs{idx_g});
+        cur_rts = raw.curRts(1:raw.length);
+        cur_inten = raw.curIntens(1:raw.length);
+        cur_charge = raw.curCharge(1:raw.length);
+        idxs_rt_inten = find(sum(cur_ratio,2));
+        group_ratio = cur_ratio(idxs_rt_inten,:);
+        group_rts = cur_rts(idxs_rt_inten);
+        group_inten = cur_inten(idxs_rt_inten);
         group_imp_mass = raw.impMass(group_idxs{idx_g});
-        group_charge = raw.curCharge(idxs_rt_inten);
+        group_charge = cur_charge(idxs_rt_inten);
         [low_mz_bound, high_mz_bound, selected_charge, charge_group_idxs] = ...
             obj.get_mz_bound(group_imp_mass,group_charge);
 

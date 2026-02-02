@@ -10,7 +10,6 @@ classdef CIMPGatherQuant
         m_alpha;            % the filter threshold factor, thres is max*alpha
         m_outputPath;       % output path of the result file
         m_minMSMSnum;      % Minimum number of MSMS spectra for a peptide to be considered
-        m_resStr;           % result string
         m_mapRawNames;      % map of raw names to index in m_rawData
 
         % The following property stores per-raw grouped data
@@ -49,7 +48,6 @@ classdef CIMPGatherQuant
                 minMSMSnum = 1; % Default minimum number of MSMS spectra
             end
             obj.m_minMSMSnum = minMSMSnum;
-            obj.m_resStr = [];
             obj.m_mapRawNames = containers.Map();
             % different in different raw
             obj.m_rawData = {};
