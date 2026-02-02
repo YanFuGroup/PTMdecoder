@@ -37,10 +37,7 @@ end
 %     error(['Cannot open the msms level result:"',each_PSM_results_path,'"!']);
 % end
 output_path = fullfile(obj.m_outputDir, 'report_peptide_all_requant.txt');
-fout = fopen(output_path, 'w');
-if fout < 0
-    error(['Cannot open the re-quantification result file:"',output_path,'"!']);
-end
+CIMPGatherWriter.start_new_run(output_path);
 % file_total_length = dir(each_PSM_results_path).bytes;
 % if file_total_length == 0
 %     fprintf(['Warning: The file "', each_PSM_results_path, '" is empty']);
@@ -56,10 +53,6 @@ obj.m_cMgfDatasetIO.SetMap();
 obj.m_cMgfDatasetIO.SetFidmap();
 
 % check and create a new output file
-fprintf(fout,'Protein_name,Peptide_start_position_on_protein;\n');
-fprintf(fout,'*\tIMP\tCharge\tDataset\tMass_center\tLow_mass_bound\tHigh_mass_bound\tPeak_area\n');
-fprintf(fout,'@\tRT_start\tRT_end\tProportion\tCheck_label\n');
-fclose(fout);
 
 % Initial the fasta IO
 obj.CPepProtService = CPepProtService(obj.m_fastaFile, obj.m_regular_express, obj.m_filtered_res_file_path);

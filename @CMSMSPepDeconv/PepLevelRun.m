@@ -52,14 +52,7 @@ end
 
 % Check and create a new output file
 each_peptide_results_path = fullfile(obj.m_outputDir,'report_peptide_all.txt');
-fout = fopen(each_peptide_results_path,'w');
-if fout <= 0
-    error(['Cannot open the peptide level report file ',each_peptide_results_path]);
-end
-fprintf(fout,'Protein_name,Peptide_start_position_on_protein;\n');
-fprintf(fout,'*\tIMP\tCharge\tDataset\tMass_center\tLow_mass_bound\tHigh_mass_bound\tPeak_area\n');
-fprintf(fout,'@\tRT_start\tRT_end\tProportion\tCheck_label\n');
-fclose(fout);
+CIMPGatherWriter.start_new_run(each_peptide_results_path);
 
 % Read and process
 msms_reader = CMSMSResReader();

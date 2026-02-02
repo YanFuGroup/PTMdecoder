@@ -73,14 +73,7 @@ end
 
 %% Requantify the normalization peptides
 output_path = fullfile(obj.m_outputDir, 'peptide4normalization_requant.txt');
-fout = fopen(output_path, 'w');
-if fout < 0
-    error(['Cannot open the re-quantification result file:"',output_path,'"!']);
-end
-fprintf(fout,'Protein_name,Peptide_start_position_on_protein;\n');
-fprintf(fout,'*\tIMP\tCharge\tDataset\tMass_center\tLow_mass_bound\tHigh_mass_bound\tPeak_area\n');
-fprintf(fout,'@\tRT_start\tRT_end\tProportion\tCheck_label\n');
-fclose(fout);
+CIMPGatherWriter.start_new_run(output_path);
 
 % Indexing the dataset IO
 obj.m_cMs12DatasetIO = CMS12DatasetIO(obj.m_specPath,obj.m_ms1_tolerance);
