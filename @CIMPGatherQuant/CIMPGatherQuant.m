@@ -1,4 +1,4 @@
-classdef CIMPGatherQuant
+classdef CIMPGatherQuant < handle
     % A class for summarizing quantification at the IMP level
     
     properties(Access=public)
@@ -10,6 +10,9 @@ classdef CIMPGatherQuant
         m_alpha;            % the filter threshold factor, thres is max*alpha
         m_outputPath;       % output path of the result file
         m_minMSMSnum;      % Minimum number of MSMS spectra for a peptide to be considered
+    end
+    
+    properties(Access=private)
         m_mapRawNames;      % map of raw names to index in m_rawData
 
         % The following property stores per-raw grouped data
@@ -46,7 +49,7 @@ classdef CIMPGatherQuant
                 minMSMSnum = 1; % Default minimum number of MSMS spectra
             end
             obj.m_minMSMSnum = minMSMSnum;
-            obj.m_mapRawNames = containers.Map();
+            obj.m_mapRawNames = containers.Map('KeyType','char','ValueType','any');
             % different in different raw
             obj.m_rawData = {};
         end
@@ -75,19 +78,19 @@ classdef CIMPGatherQuant
         % Check whether the XIC peaks have at least min_rows PSMs
         has_min_rows = hasMinRows(obj, ratio_matrix, min_rows);
 
-        function [obj, rawStore] = getRawStore(obj, raw_name)
-            [obj, idx_raw] = obj.ensure_raw(raw_name);
+        function rawStore = getRawStore(obj, raw_name)
+            idx_raw = obj.ensure_raw(raw_name);
             rawStore = obj.get_raw(idx_raw);
         end
 
-        function [obj] = setRawStore(obj, raw_name, rawStore)
-            [obj, idx_raw] = obj.ensure_raw(raw_name);
-            obj = obj.set_raw(idx_raw, rawStore);
+        function setRawStore(obj, raw_name, rawStore)
+            idx_raw = obj.ensure_raw(raw_name);
+            obj.set_raw(idx_raw, rawStore);
         end
     end
 
     methods (Access=private)
-        function [obj, idx_raw] = ensure_raw(obj, raw_name)
+        function idx_raw = ensure_raw(obj, raw_name)
             if ~obj.m_mapRawNames.isKey(raw_name)
                 idx_raw = obj.m_mapRawNames.Count + 1;
                 obj.m_mapRawNames(raw_name) = idx_raw;
@@ -101,7 +104,7 @@ classdef CIMPGatherQuant
             raw = obj.m_rawData{idx_raw};
         end
 
-        function obj = set_raw(obj, idx_raw, raw)
+        function set_raw(obj, idx_raw, raw)
             obj.m_rawData{idx_raw} = raw;
         end
 
