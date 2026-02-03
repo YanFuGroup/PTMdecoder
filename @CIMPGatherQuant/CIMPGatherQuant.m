@@ -75,9 +75,6 @@ classdef CIMPGatherQuant < handle
             current_imp_rt_range, current_imp_name, current_imp_mass, ...
             current_charge, dir_save, color_map, legend_map)
 
-        % Check whether the XIC peaks have at least min_rows PSMs
-        has_min_rows = hasMinRows(obj, ratio_matrix, min_rows);
-
         function rawStore = getRawStore(obj, raw_name)
             idx_raw = obj.ensure_raw(raw_name);
             rawStore = obj.get_raw(idx_raw);

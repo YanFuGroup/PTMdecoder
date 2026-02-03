@@ -1,4 +1,4 @@
-function is_reserved = hasMinRows(~, ratio_matrix, min_rows)
+function is_reserved = hasMinRows(ratio_matrix, min_rows)
 % Check whether the XIC peaks have at least a minimum number of PSMs.
 % Inputs:
 %   ratio_matrix (N x K double)
@@ -9,7 +9,7 @@ function is_reserved = hasMinRows(~, ratio_matrix, min_rows)
 %   is_reserved (1 x 1 logical)
 %       whether the matrix has at least min_rows rows
 
-if nargin < 3
+if nargin < 2
     min_rows = 1; % Default minimum number of rows
 end
 
