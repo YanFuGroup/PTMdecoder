@@ -53,6 +53,10 @@ for idx_imp = 1:num_imp
     total_temp = CChromatogramUtils.calculate_area(...
         xic_rt, xic_intensity_smoothed, idx_start, idx_end);
 
-    ratio_each_XIC_peak(idx_imp,1) = area_imp_final(idx_imp,1) / total_temp;
+    if total_temp > 0
+        ratio_each_XIC_peak(idx_imp,1) = area_imp_final(idx_imp,1) / total_temp;
+    else
+        ratio_each_XIC_peak(idx_imp,1) = 0;
+    end
 end
 end

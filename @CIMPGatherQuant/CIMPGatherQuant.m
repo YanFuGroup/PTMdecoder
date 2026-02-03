@@ -52,26 +52,14 @@ classdef CIMPGatherQuant
         end
         
         % Main entry point for summarizing the quantification of various modified form of a peptide
-        runGather(obj);
-        
-
-        % Quantify each group
-        [has_nonzero_imp, imp_idx_nonzero, area_imp_final, rt_bound, idx_selected, ratio_each_XIC_peak] = ...
-            quant_each_group(obj, raw_name, ratio_raw, rt_raw, ...
-            intensity_raw, low_mz_bound, high_mz_bound, selected_charge);
+        quantifyIMPs(obj);
 
         % Get the m/z bound of ms1 peak
         [low_bound,high_bound, selected_charge, charge_group_idxs] = ...
             get_mz_bound(obj, current_imp_mass, current_charge);
 
         % Re-quantification for gathered peptides using manually-checked rt range
-        rerunGather_quant(obj,pep_rtrange_map);
-
-        % Re-quantify each group
-        [has_nonzero_imp, imp_idx_nonzero, area_imp_final, rt_bound, max_label, ratio_each_XIC_peak] = ...
-            requant_each_group(obj, raw_name, ratio_raw, rt_raw, ...
-            intensity_raw, low_mz_bound, high_mz_bound, selected_charge, ...
-            current_imp_rt_range);
+        requantifyIMPsWithRTRanges(obj,pep_rtrange_map);
 
         % Draw the XIC for gathered peptides using manually-checked rt range to dir_save
         % The color_map and legend_map are optional

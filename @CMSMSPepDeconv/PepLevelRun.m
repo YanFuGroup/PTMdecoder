@@ -87,7 +87,7 @@ for idx_psf = 1:length(msms_result.Peptides)
         impGatherIMSLQ = impGatherIMSLQ.setRawStore(dataset_name, rawStore);
     end
     % Run gather
-    impGatherIMSLQ.runGather();
+    impGatherIMSLQ.quantifyIMPs();
 end
 print_progress.last_update();
 fprintf('done.\n');

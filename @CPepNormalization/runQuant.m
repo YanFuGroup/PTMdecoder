@@ -40,7 +40,7 @@ function runQuant(obj)
         % Run quantification
         fprintf('Quantifying %s...', experimentName);
         for i_list = 1:length(obj.peptide_list)
-            pep_quant{i_list}.runGather();
+            pep_quant{i_list}.quantifyIMPs();
         end
         fprintf('done.\n');
 

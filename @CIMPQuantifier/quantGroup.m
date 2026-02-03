@@ -1,8 +1,9 @@
-function [has_nonzero_imp, imp_idx_nonzero, area_imp_final, rt_bound, idx_selected, ratio_each_XIC_peak]...
-    = quant_each_group(obj,raw_name,ratio_raw,rt_raw,...
-    intensity_raw, low_mz_bound, high_mz_bound, selected_charge)
+function [has_nonzero_imp, imp_idx_nonzero, area_imp_final, rt_bound, idx_selected, ratio_each_XIC_peak] = ...
+    quantGroup(cMs12DatasetIO, raw_name, ratio_raw, rt_raw, intensity_raw, low_mz_bound, high_mz_bound, selected_charge, minMSMSnum, alpha, resFilterThres)
 % Quantify each group
 % input:
+%   cMs12DatasetIO (object)
+%       dataset IO object
 %   raw_name (1 x 1 char/string)
 %       the name of the raw (mgf) file
 %   ratio_raw (N x K double)
@@ -18,6 +19,12 @@ function [has_nonzero_imp, imp_idx_nonzero, area_imp_final, rt_bound, idx_select
 %       high precursor m/z bound
 %   selected_charge (1 x 1 double/int)
 %       current precursor charge
+%   minMSMSnum (1 x 1 double/int)
+%       minimum MSMS number
+%   alpha (1 x 1 double)
+%       threshold parameter
+%   resFilterThres (1 x 1 double)
+%       resolution filter threshold
 % output:
 %   has_nonzero_imp (1 x 1 logical)
 %       is there non zero area under XIC
@@ -25,12 +32,12 @@ function [has_nonzero_imp, imp_idx_nonzero, area_imp_final, rt_bound, idx_select
 %       indices of non-zero area IMPs (subset of 1..K)
 %   area_imp_final (M x 1 double) area
 %       total quantification of each selected IMP, area under curve of XIC
-%   rt_bound (M x 1 struct)
-%       retention time bound for each selected IMP, fields: .start/.end (minutes)
+%   rt_bound (struct array)
+%       retention time bounds for peaks
 %   idx_selected (M x 1 double)
-%       selected XIC peak index per selected IMP
+%       indices of selected peaks
 %   ratio_each_XIC_peak (M x P double)
-%       area ratio of each IMP within each candidate peak
+%       ratio for each XIC peak
 
 has_nonzero_imp = false;
 imp_idx_nonzero = [];
@@ -42,15 +49,15 @@ ratio_each_XIC_peak = [];
 % Preprocess inputs (Sort, Smooth, Denoise)
 [rt_sorted, ratio_sorted, xic_rt, xic_intensity_smoothed, xic_intensity_raw, is_valid] = ...
     CQuantIMPGroupPreprocessUtils.prepare_ms1_xic(...
-        obj.m_cMs12DatasetIO, raw_name, rt_raw, intensity_raw, ratio_raw, ...
-        obj.m_minMSMSnum, low_mz_bound, high_mz_bound, selected_charge);
+        cMs12DatasetIO, raw_name, rt_raw, intensity_raw, ratio_raw, ...
+        minMSMSnum, low_mz_bound, high_mz_bound, selected_charge);
 
 if ~is_valid
     return;
 end
 
 % Extract the XIC peaks around the identified MSMS precursor
-XIC_peaks = CChromatogramUtils.detect_xic_peaks(xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, obj.m_alpha);
+XIC_peaks = CChromatogramUtils.detect_xic_peaks(xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, alpha);
 
 if isempty(XIC_peaks)
     return;
@@ -61,7 +68,7 @@ ratio_estimated = CQuantIMPGroupPeakUtils.calculate_kernel_ratio(xic_rt, rt_sort
 
 % Peak-wise filtering and normalization
 ratio_estimated = CQuantIMPGroupPeakUtils.filter_and_normalize_peak_ratios(...
-    xic_rt, xic_intensity_smoothed, ratio_estimated, XIC_peaks, obj.m_resFilterThres);
+    xic_rt, xic_intensity_smoothed, ratio_estimated, XIC_peaks, resFilterThres);
 
 % For each IMP, evaluate all candidate XIC peaks by computing:
 %   - imp_max_props, max peak contribution ratio

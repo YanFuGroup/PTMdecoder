@@ -118,7 +118,7 @@ while ~feof(fin)
     elseif strline(1) == '*'
         % Record one peptide line
         if is_ready
-            impGatherIMSLQ.rerunGather_quant(pep_rtrange_map);
+            impGatherIMSLQ.requantifyIMPsWithRTRanges(pep_rtrange_map);
         end
         [mgf_name, current_charge, current_peptide] = ...
             get_information_from_peptide_line(strline);
@@ -132,13 +132,13 @@ while ~feof(fin)
     else
         % Record one protein-site line
         if is_ready
-            impGatherIMSLQ.rerunGather_quant(pep_rtrange_map);
+            impGatherIMSLQ.requantifyIMPsWithRTRanges(pep_rtrange_map);
             is_ready = false;
         end
     end
 end
 % Record once more at the end of the file
-impGatherIMSLQ.rerunGather_quant(pep_rtrange_map);
+impGatherIMSLQ.requantifyIMPsWithRTRanges(pep_rtrange_map);
 fclose(fin);
 print_progress.last_update();
 fprintf('done.\n');
