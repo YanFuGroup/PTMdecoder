@@ -1,4 +1,4 @@
-function [has_nonzero_imp, imp_idx_nonzero, area_imp_final, rt_bound, idx_selected, ratio_each_XIC_peak] = ...
+function [has_nonzero_imp, imp_idx_nonzero, area_imp_final, xic_peak_rt_bounds, idx_selected, ratio_each_XIC_peak] = ...
     quantGroup(cMs12DatasetIO, raw_name, ratio_raw, rt_raw, intensity_raw, low_mz_bound, high_mz_bound, selected_charge, minMSMSnum, alpha, resFilterThres)
 % Quantify each group
 % input:
@@ -32,7 +32,7 @@ function [has_nonzero_imp, imp_idx_nonzero, area_imp_final, rt_bound, idx_select
 %       indices of non-zero area IMPs (subset of 1..K)
 %   area_imp_final (M x 1 double) area
 %       total quantification of each selected IMP, area under curve of XIC
-%   rt_bound (struct array)
+%   xic_peak_rt_bounds (struct array)
 %       retention time bounds for peaks
 %   idx_selected (M x 1 double)
 %       indices of selected peaks
@@ -42,7 +42,7 @@ function [has_nonzero_imp, imp_idx_nonzero, area_imp_final, rt_bound, idx_select
 has_nonzero_imp = false;
 imp_idx_nonzero = [];
 area_imp_final = [];
-rt_bound = [];
+xic_peak_rt_bounds = [];
 idx_selected = [];
 ratio_each_XIC_peak = [];
 
@@ -57,40 +57,40 @@ if ~is_valid
 end
 
 % Extract the XIC peaks around the identified MSMS precursor
-XIC_peaks = CChromatogramUtils.detect_xic_peaks(xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, alpha);
+xic_peak_idx_bounds = CChromatogramUtils.detect_xic_peaks(xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, alpha);
 
-if isempty(XIC_peaks)
+if isempty(xic_peak_idx_bounds)
     return;
 end
 
-% Calculate the ratio on each XIC points using kernel method
-ratio_estimated = CQuantIMPGroupPeakUtils.calculate_kernel_ratio(xic_rt, rt_sorted, ratio_sorted, XIC_peaks, true);
+% Calculate the ratio on each XIC point using kernel method
+xic_ratio_estimated = CQuantIMPGroupPeakUtils.calculate_kernel_ratio(xic_rt, rt_sorted, ratio_sorted, xic_peak_idx_bounds, true);
 
 % Peak-wise filtering and normalization
-ratio_estimated = CQuantIMPGroupPeakUtils.filter_and_normalize_peak_ratios(...
-    xic_rt, xic_intensity_smoothed, ratio_estimated, XIC_peaks, resFilterThres);
+xic_ratio_estimated = CQuantIMPGroupPeakUtils.filter_and_normalize_peak_ratios(...
+    xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds, resFilterThres);
 
 % For each IMP, evaluate all candidate XIC peaks by computing:
 %   - imp_max_props, max peak contribution ratio
 %   - peak_fwhms: half maximum peak width (not used currently)
 %   - area_imp_by_peak: area contribution in each peak
-% [imp_max_props, peak_fwhms, area_imp_by_peak, rt_bound] = ...
-[imp_max_props, ~, area_imp_by_peak, rt_bound] = ...
-    CQuantIMPGroupPeakUtils.compute_peak_features(xic_rt, xic_intensity_smoothed, ratio_estimated, XIC_peaks);
+% [imp_max_props, peak_fwhms, area_imp_by_peak, xic_peak_rt_bounds] = ...
+[imp_max_props, ~, area_imp_by_peak, xic_peak_rt_bounds] = ...
+    CQuantIMPGroupPeakUtils.compute_peak_features(xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds);
 
 % Peak Selection (Per IMP)
 idx_selected = CQuantIMPGroupPeakUtils.select_best_peak_per_imp(imp_max_props, area_imp_by_peak);
 
 % Global Refinement (Re-distribution based on Selection)
-% ratio_estimated = CQuantIMPGroupPeakUtils.refine_ratios_by_selection(ratio_estimated, XIC_peaks, idx_selected);
+% xic_ratio_estimated = CQuantIMPGroupPeakUtils.refine_ratios_by_selection(xic_ratio_estimated, xic_peak_idx_bounds, idx_selected);
 
 % Final Area Calculation (reuse cached peak areas)
 area_imp_final = CQuantIMPGroupAreaUtils.get_final_area_from_peak_areas(...
     area_imp_by_peak, idx_selected);
 
-% Get the non-zero area under XIC, index and rt_bound
-[imp_idx_nonzero, area_imp_final, rt_bound, idx_selected, area_imp_by_peak] = ...
-    CQuantIMPGroupAreaUtils.filter_nonzero_xic(area_imp_final, rt_bound, ...
+% Get the non-zero area under XIC, index and xic_peak_rt_bounds
+[imp_idx_nonzero, area_imp_final, xic_peak_rt_bounds, idx_selected, area_imp_by_peak] = ...
+    CQuantIMPGroupAreaUtils.filter_nonzero_xic(area_imp_final, xic_peak_rt_bounds, ...
     idx_selected, area_imp_by_peak);
 sums = sum(area_imp_by_peak, 1);
 ratio_each_XIC_peak = zeros(size(area_imp_by_peak));

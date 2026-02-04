@@ -1,4 +1,4 @@
-function ratio_estimated = filter_and_normalize_peak_ratios(xic_rt, xic_intensity_smoothed, ratio_estimated, XIC_peaks, resFilterThres)
+function xic_ratio_estimated = filter_and_normalize_peak_ratios(xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds, resFilterThres)
 % filter_and_normalize_peak_ratios
 % For each detected XIC peak, remove IMPs with very small area
 % and normalize ratios within the peak.
@@ -8,23 +8,23 @@ function ratio_estimated = filter_and_normalize_peak_ratios(xic_rt, xic_intensit
 %       RT grid vector
 %   xic_intensity_smoothed (N x 1 double) intensity
 %       Smoothed XIC intensity (aligned to xic_rt)
-%   ratio_estimated (N x K double)
+%   xic_ratio_estimated (N x K double)
 %       Estimated ratio matrix for K IMPs
-%   XIC_peaks (1 x P struct)
-%       Struct array with fields: left_bound/right_bound (indices into xic_rt)
+%   xic_peak_idx_bounds (1 x P struct)
+%       Struct array with fields: idx_start/idx_end (indices into xic_rt)
 %   resFilterThres (1 x 1 double)
 %       Threshold (relative to max area in a peak)
 %
 % Output:
-%   ratio_estimated (N x K double)
+%   xic_ratio_estimated (N x K double)
 %       Updated ratio matrix after filtering/normalization
 
-num_imp = size(ratio_estimated, 2);
-intensityMatrix = ratio_estimated .* xic_intensity_smoothed;
+num_imp = size(xic_ratio_estimated, 2);
+intensityMatrix = xic_ratio_estimated .* xic_intensity_smoothed;
 
-for i_Xp = 1:length(XIC_peaks)
-    curr_start = XIC_peaks(i_Xp).left_bound;
-    curr_end = XIC_peaks(i_Xp).right_bound;
+for i_Xp = 1:length(xic_peak_idx_bounds)
+    curr_start = xic_peak_idx_bounds(i_Xp).idx_start;
+    curr_end = xic_peak_idx_bounds(i_Xp).idx_end;
 
     % Calculate area for each IMP in this peak
     area_filter = zeros(num_imp, 1);
@@ -37,11 +37,11 @@ for i_Xp = 1:length(XIC_peaks)
     % Filter: keep only IMPs with area >= max_area * threshold
     max_area = max(area_filter);
     keep_mask = area_filter >= max_area * resFilterThres;
-    ratio_estimated(curr_start:curr_end, ~keep_mask) = 0;
+    xic_ratio_estimated(curr_start:curr_end, ~keep_mask) = 0;
 
     % Normalize rows
-    row_sum = sum(ratio_estimated(curr_start:curr_end, :), 2);
+    row_sum = sum(xic_ratio_estimated(curr_start:curr_end, :), 2);
     row_sum(row_sum == 0) = 1;
-    ratio_estimated(curr_start:curr_end, :) = ratio_estimated(curr_start:curr_end, :) ./ repmat(row_sum, 1, num_imp);
+    xic_ratio_estimated(curr_start:curr_end, :) = xic_ratio_estimated(curr_start:curr_end, :) ./ repmat(row_sum, 1, num_imp);
 end
 end

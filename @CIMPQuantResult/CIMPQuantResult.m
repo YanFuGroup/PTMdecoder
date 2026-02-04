@@ -32,8 +32,8 @@ classdef CIMPQuantResult
             %       quantified area
             %   rt_peaks (struct array) 
             %       array of structs, each with fields:
-            %       - start (double) minutes: start retention time of the peak
-            %       - end (double) minutes: end retention time of the peak
+            %       - rt_start (double) minutes: start retention time of the peak
+            %       - rt_end (double) minutes: end retention time of the peak
             %       - ratio (double): ratio contribution of the peak
             %       - check_label (int): 1 if selected peak, 0 otherwise,and 2 for checked selected peak
             if nargin == 0

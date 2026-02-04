@@ -1,4 +1,4 @@
-function [has_nonzero_imp, imp_idx_nonzero, area_imp_final, rt_bound, max_label, ratio_each_XIC_peak] = ...
+function [has_nonzero_imp, imp_idx_nonzero, area_imp_final, xic_peak_rt_bounds, max_label, ratio_each_XIC_peak] = ...
     requantGroup(cMs12DatasetIO, raw_name, ratio_raw, rt_raw, intensity_raw, low_mz_bound, high_mz_bound, selected_charge, current_imp_rt_range, minMSMSnum)
 % Re-quantify each group
 % input:
@@ -30,7 +30,7 @@ function [has_nonzero_imp, imp_idx_nonzero, area_imp_final, rt_bound, max_label,
 %       indices of non-zero area IMPs (subset of 1..K)
 %   area_imp_final (M x 1 double) area
 %       total quantification of each selected IMP, area under curve of XIC
-%   rt_bound (struct array)
+%   xic_peak_rt_bounds (struct array)
 %       retention time bounds for peaks
 %   max_label (array)
 %       max labels
@@ -40,7 +40,7 @@ function [has_nonzero_imp, imp_idx_nonzero, area_imp_final, rt_bound, max_label,
 has_nonzero_imp = false;
 imp_idx_nonzero = [];
 area_imp_final = [];
-rt_bound = [];
+xic_peak_rt_bounds = [];
 max_label = [];
 ratio_each_XIC_peak = [];
 
@@ -55,25 +55,25 @@ if ~is_valid
 end
 
 % Filter peaks by manual RT range
-[final_XIC_peak_for_IMP, max_label, is_skip_vec, peak_ranges] = CQuantIMPGroupPreprocessUtils.prepare_peak_ranges_from_imp_rt_range(...
+[final_xic_peak_rt_bounds, max_label, is_skip_vec, xic_peak_idx_bounds] = CQuantIMPGroupPreprocessUtils.prepare_peak_ranges_from_imp_rt_range(...
     xic_rt, current_imp_rt_range, 1);
 
-if isempty(final_XIC_peak_for_IMP)
+if isempty(final_xic_peak_rt_bounds)
     return;
 end
 
-% Calculate the ratio on each XIC points using kernel method
-ratio_estimated = CQuantIMPGroupPeakUtils.calculate_kernel_ratio(xic_rt, rt_sorted, ratio_sorted, peak_ranges, false);
+% Calculate the ratio on each XIC point using kernel method
+xic_ratio_estimated = CQuantIMPGroupPeakUtils.calculate_kernel_ratio(xic_rt, rt_sorted, ratio_sorted, xic_peak_idx_bounds, false);
 
 % Requantification using revised RT
-[area_imp_final, rt_bound, ratio_each_XIC_peak] = ...
+[area_imp_final, xic_peak_rt_bounds, ratio_each_XIC_peak] = ...
     CQuantIMPGroupAreaUtils.compute_imp_peak_area_and_ratio(...
-        xic_rt, xic_intensity_smoothed, ratio_estimated, ...
-        peak_ranges, final_XIC_peak_for_IMP, is_skip_vec);
+        xic_rt, xic_intensity_smoothed, xic_ratio_estimated, ...
+        xic_peak_idx_bounds, final_xic_peak_rt_bounds, is_skip_vec);
 
-% Get the non-zero area under XIC, index and rt_bound
-[imp_idx_nonzero, area_imp_final, rt_bound, max_label, ratio_each_XIC_peak] = ...
-    CQuantIMPGroupAreaUtils.filter_nonzero_xic(area_imp_final, rt_bound, max_label, ratio_each_XIC_peak);
+% Get the non-zero area under XIC, index and xic_peak_rt_bounds
+[imp_idx_nonzero, area_imp_final, xic_peak_rt_bounds, max_label, ratio_each_XIC_peak] = ...
+    CQuantIMPGroupAreaUtils.filter_nonzero_xic(area_imp_final, xic_peak_rt_bounds, max_label, ratio_each_XIC_peak);
 if ~isempty(imp_idx_nonzero)
     has_nonzero_imp = true;
 end

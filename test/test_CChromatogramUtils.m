@@ -164,10 +164,10 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             rt_sorted = [5.1; 14.9];
             alpha = 0.1; % Stop at 10% max height
             
-            XIC_peaks = CChromatogramUtils.detect_xic_peaks(...
+            xic_peak_idx_bounds = CChromatogramUtils.detect_xic_peaks(...
                 xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, alpha);
             
-            testCase.verifyEqual(length(XIC_peaks), 2);
+            testCase.verifyEqual(length(xic_peak_idx_bounds), 2);
             
             % Verify Peak 1 bounds
             % Approx FWHM is 2.35*0.5 ~ 1.2. 
@@ -175,33 +175,33 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % exp(-0.5*x^2) = 0.1 => -0.5x^2 = ln(0.1)=-2.3 => x^2=4.6 => x=2.15 sigma
             % sigma=0.5 => dist=1.07. So bounds approx [3.9, 6.1]
             % Let's check indices.
-            p1_left_idx = XIC_peaks(1).left_bound;
-            p1_right_idx = XIC_peaks(1).right_bound;
+            p1_left_idx = xic_peak_idx_bounds(1).idx_start;
+            p1_right_idx = xic_peak_idx_bounds(1).idx_end;
             p1_rt_center = (xic_rt(p1_left_idx) + xic_rt(p1_right_idx)) / 2;
             
             testCase.verifyEqual(p1_rt_center, 5, 'AbsTol', 0.5);
             testCase.verifyGreaterThan(xic_rt(p1_right_idx) - xic_rt(p1_left_idx), 1); % Should have some width
             
             % Verify Peak 2
-            p2_left_idx = XIC_peaks(2).left_bound;
-            p2_right_idx = XIC_peaks(2).right_bound;
+            p2_left_idx = xic_peak_idx_bounds(2).idx_start;
+            p2_right_idx = xic_peak_idx_bounds(2).idx_end;
             p2_rt_center = (xic_rt(p2_left_idx) + xic_rt(p2_right_idx)) / 2;
             testCase.verifyEqual(p2_rt_center, 15, 'AbsTol', 0.5);
             
             % Case 2: Only one peak identified by PSMs
             rt_sorted_single = 5.1;
-            XIC_peaks_single = CChromatogramUtils.detect_xic_peaks(...
+            xic_peak_idx_bounds_single = CChromatogramUtils.detect_xic_peaks(...
                 xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted_single, alpha);
              
-            testCase.verifyEqual(length(XIC_peaks_single), 1);
-            testCase.verifyEqual((xic_rt(XIC_peaks_single(1).left_bound) + xic_rt(XIC_peaks_single(1).right_bound))/2, 5, 'AbsTol', 0.5);
+            testCase.verifyEqual(length(xic_peak_idx_bounds_single), 1);
+            testCase.verifyEqual((xic_rt(xic_peak_idx_bounds_single(1).idx_start) + xic_rt(xic_peak_idx_bounds_single(1).idx_end))/2, 5, 'AbsTol', 0.5);
 
             % Case 3: Filtering small peaks (raw intensity check)
             % If raw intensity is zero in the range, it should be removed.
             xic_intensity_raw_zero = zeros(size(xic_intensity_raw)); 
-            XIC_peaks_filtered = CChromatogramUtils.detect_xic_peaks(...
+            xic_peak_idx_bounds_filtered = CChromatogramUtils.detect_xic_peaks(...
                 xic_rt, xic_intensity_smoothed, xic_intensity_raw_zero, rt_sorted, alpha);
-            testCase.verifyEmpty(XIC_peaks_filtered);
+            testCase.verifyEmpty(xic_peak_idx_bounds_filtered);
         end
 
         function testParseImpRtRanges(testCase)
@@ -225,11 +225,11 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             imp_rt_range = {imp1, imp2, imp3, imp4};
             is_skip_vec = [false, false, false, true];
             
-            [final_XIC_peak, max_label, new_skip_vec] = CChromatogramUtils.parse_imp_rt_ranges(imp_rt_range, is_skip_vec);
+            [final_xic_peak_rt_bounds, max_label, new_skip_vec] = CChromatogramUtils.parse_imp_rt_ranges(imp_rt_range, is_skip_vec);
             
             % Assertions
-            testCase.verifyEqual(final_XIC_peak(1).left_bound, 12.0);
-            testCase.verifyEqual(final_XIC_peak(1).right_bound, 12.5);
+            testCase.verifyEqual(final_xic_peak_rt_bounds(1).rt_start, 12.0);
+            testCase.verifyEqual(final_xic_peak_rt_bounds(1).rt_end, 12.5);
             testCase.verifyEqual(max_label(1), 2);
             testCase.verifyFalse(new_skip_vec(1));
             
@@ -248,27 +248,27 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % index 1 -> 10.0, index 21 -> 12.0
             
             num_imp = 2;
-            final_XIC_peak = repmat(struct('left_bound',0,'right_bound',0), num_imp, 1);
-            final_XIC_peak(1).left_bound = 12.0; % Exact match, index 21
-            final_XIC_peak(1).right_bound = 13.0; % Exact match, index 31
+            final_xic_peak_rt_bounds = repmat(struct('rt_start',0,'rt_end',0), num_imp, 1);
+            final_xic_peak_rt_bounds(1).rt_start = 12.0; % Exact match, index 21
+            final_xic_peak_rt_bounds(1).rt_end = 13.0; % Exact match, index 31
             
-            final_XIC_peak(2).left_bound = 999; % Out of bounds
-            final_XIC_peak(2).right_bound = 999; 
+            final_xic_peak_rt_bounds(2).rt_start = 999; % Out of bounds
+            final_xic_peak_rt_bounds(2).rt_end = 999; 
             
             skip_vec_map = [false, true];
             rt_tol = 0.001;
             
-            peak_ranges = CChromatogramUtils.map_rt_to_indices(xic_rt, final_XIC_peak, skip_vec_map, rt_tol);
+            xic_peak_idx_bounds = CChromatogramUtils.map_rt_to_indices(xic_rt, final_xic_peak_rt_bounds, skip_vec_map, rt_tol);
             
-            testCase.verifyEqual(peak_ranges(1).left_bound, 21);
-            testCase.verifyEqual(peak_ranges(1).right_bound, 31);
+            testCase.verifyEqual(xic_peak_idx_bounds(1).idx_start, 21);
+            testCase.verifyEqual(xic_peak_idx_bounds(1).idx_end, 31);
             
             % Test Error Case
-            final_XIC_peak_err = final_XIC_peak;
+            final_xic_peak_rt_bounds_err = final_xic_peak_rt_bounds;
             skip_vec_err = [false, false]; % Unskip the bad one
             
             try
-                CChromatogramUtils.map_rt_to_indices(xic_rt, final_XIC_peak_err, skip_vec_err, rt_tol);
+                CChromatogramUtils.map_rt_to_indices(xic_rt, final_xic_peak_rt_bounds_err, skip_vec_err, rt_tol);
                 testCase.verifyFail('Should have thrown error for out of bound RT');
             catch ME
                 testCase.verifyTrue(contains(ME.message, 'Cannot find the spectra'), 'Error message mismatch');

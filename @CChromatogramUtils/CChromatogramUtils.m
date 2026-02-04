@@ -10,11 +10,11 @@ classdef CChromatogramUtils
         
         fwhm = get_fwhm(peak_rts, peak_intens)
         
-        XIC_peaks = detect_xic_peaks(xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, alpha)
+        xic_peak_idx_bounds = detect_xic_peaks(xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, alpha)
         
-        [final_XIC_peak, max_label, is_skip_vec] = parse_imp_rt_ranges(imp_rt_range, is_skip_vec)
+        [final_xic_peak_rt_bounds, max_label, is_skip_vec] = parse_imp_rt_ranges(imp_rt_range, is_skip_vec)
         
-        peak_ranges = map_rt_to_indices(xic_rt, final_XIC_peak, is_skip_vec, rt_error_tol)
+        xic_peak_idx_bounds = map_rt_to_indices(xic_rt, final_xic_peak_rt_bounds, is_skip_vec, rt_error_tol)
 
         [rec_rt, rec_inten] = get_closed_peak_data(xic_rt, xic_intensity_full, idx_start, idx_end)
         

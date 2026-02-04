@@ -4,7 +4,7 @@ classdef test_CIMPGatherWriter < matlab.unittest.TestCase
         function testWriteAllSingleRecord(testCase)
             tmp_file = [tempname, '.txt'];
             protein_name_pos = {'P1', 10};
-            rt_peaks = struct('start', 1.0, 'end', 2.0, 'ratio', 0.5, 'check_label', 1);
+            rt_peaks = struct('rt_start', 1.0, 'rt_end', 2.0, 'ratio', 0.5, 'check_label', 1);
             imp_records = CIMPQuantResult('IMP_A', 2, 'RAW1', 500.1234, 499.5, 500.8, 123.4, rt_peaks);
 
             CIMPGatherWriter.start_new_run(tmp_file);

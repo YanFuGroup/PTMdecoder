@@ -1,4 +1,4 @@
-function [final_XIC_peak, max_label, is_skip_vec] = parse_imp_rt_ranges(imp_rt_range, is_skip_vec)
+function [final_xic_peak_rt_bounds, max_label, is_skip_vec] = parse_imp_rt_ranges(imp_rt_range, is_skip_vec)
 % parse_imp_rt_ranges
 % Parses the retention time ranges structure to find the best peak for each IMP.
 %
@@ -9,15 +9,15 @@ function [final_XIC_peak, max_label, is_skip_vec] = parse_imp_rt_ranges(imp_rt_r
 %       Boolean vector indicating which IMP to skip
 %
 % Output:
-%   final_XIC_peak (K x 1 struct)
-%       Structure array with .left_bound and .right_bound (RT values in minutes)
+%   final_xic_peak_rt_bounds (K x 1 struct)
+%       Structure array with .rt_start and .rt_end (RT values in minutes)
 %   max_label (K x 1 double)
 %       Vector of max check labels found for each IMP
 %   is_skip_vec (K x 1 logical)
 %       Updated boolean vector (skips if max_label is 0)
 
     num_imp = length(imp_rt_range);
-    final_XIC_peak = repmat(struct('left_bound',0,'right_bound',0), num_imp, 1);
+    final_xic_peak_rt_bounds = repmat(struct('rt_start',0,'rt_end',0), num_imp, 1);
     max_label = zeros(num_imp,1);
 
     for idx_imp = 1:num_imp
@@ -44,7 +44,7 @@ function [final_XIC_peak, max_label, is_skip_vec] = parse_imp_rt_ranges(imp_rt_r
             continue;
         end
         
-        final_XIC_peak(idx_imp).left_bound = curr_range(idx_max).rt_start;
-        final_XIC_peak(idx_imp).right_bound = curr_range(idx_max).rt_end;
+        final_xic_peak_rt_bounds(idx_imp).rt_start = curr_range(idx_max).rt_start;
+        final_xic_peak_rt_bounds(idx_imp).rt_end = curr_range(idx_max).rt_end;
     end
 end

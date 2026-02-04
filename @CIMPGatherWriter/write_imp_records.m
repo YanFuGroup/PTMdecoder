@@ -21,7 +21,7 @@ for idx_rec = 1:numel(imp_records)
     for idx_peak = 1:numel(rec.rt_peaks)
         peak = rec.rt_peaks(idx_peak);
         fprintf(fid, '@\t%f\t%f\t%f\t%d\n', ...
-            peak.start, peak.end, peak.ratio, peak.check_label);
+            peak.rt_start, peak.rt_end, peak.ratio, peak.check_label);
     end
 end
 end

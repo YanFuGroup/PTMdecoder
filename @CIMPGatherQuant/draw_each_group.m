@@ -50,17 +50,17 @@ if ~is_valid
 end
 
 % Extract the rt bound of XIC peak and convert to index bounds
-[~, ~, is_skip_vec, peak_ranges] = ...
+[~, ~, is_skip_vec, xic_peak_idx_bounds] = ...
     CQuantIMPGroupPreprocessUtils.prepare_peak_ranges_from_imp_rt_range(...
         xic_rt, current_imp_rt_range, rt_error_tol);
 
-% Calculate the ratio on each XIC points using kernel method, and normalize
-ratio_estimated = CQuantIMPGroupPeakUtils.calculate_kernel_ratio(xic_rt, rt_sorted, ratio_sorted, peak_ranges, false);
+% Calculate the ratio on each XIC point using kernel method, and normalize
+xic_ratio_estimated = CQuantIMPGroupPeakUtils.calculate_kernel_ratio(xic_rt, rt_sorted, ratio_sorted, xic_peak_idx_bounds, false);
 
 % Get deconvoluted XIC using revised RT
 total_xic = {xic_rt, xic_intensity_smoothed};
 ric = CQuantIMPGroupAreaUtils.build_ric_from_peaks(...
-    xic_rt, xic_intensity_smoothed, ratio_estimated, peak_ranges, is_skip_vec);
+    xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds, is_skip_vec);
 
 % Check if the output directory exists
 if ~exist(dir_save,'dir')
