@@ -164,5 +164,25 @@ classdef test_CQuantIMPGroupPeakUtils < matlab.unittest.TestCase
             % IMP2 keeps peak2 only (rows 4-5)
             testCase.verifyEqual(ratio_estimated_out(:, 2), [0; 0; 0; 0.6; 0.6; 0], 'AbsTol', 1e-10);
         end
+
+        function testHasMinRows(testCase)
+            % Test hasMinRows function
+
+            % Test with default min_rows = 1
+            ratio_matrix_empty = zeros(0, 2);
+            testCase.verifyFalse(CQuantIMPGroupPeakUtils.hasMinRows(ratio_matrix_empty));
+
+            ratio_matrix_one_row = ones(1, 2);
+            testCase.verifyTrue(CQuantIMPGroupPeakUtils.hasMinRows(ratio_matrix_one_row));
+
+            ratio_matrix_multi_row = ones(5, 2);
+            testCase.verifyTrue(CQuantIMPGroupPeakUtils.hasMinRows(ratio_matrix_multi_row));
+
+            % Test with specified min_rows
+            testCase.verifyTrue(CQuantIMPGroupPeakUtils.hasMinRows(ratio_matrix_multi_row, 3));
+            testCase.verifyFalse(CQuantIMPGroupPeakUtils.hasMinRows(ratio_matrix_one_row, 3));
+            testCase.verifyTrue(CQuantIMPGroupPeakUtils.hasMinRows(ratio_matrix_multi_row, 5));
+            testCase.verifyFalse(CQuantIMPGroupPeakUtils.hasMinRows(ratio_matrix_multi_row, 6));
+        end
     end
 end
