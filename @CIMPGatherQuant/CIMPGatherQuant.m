@@ -10,14 +10,15 @@ classdef CIMPGatherQuant < handle
         m_alpha;            % the filter threshold factor, thres is max*alpha
         m_outputPath;       % output path of the result file
         m_minMSMSnum;      % Minimum number of MSMS spectra for a peptide to be considered
+        m_groupAggregator; % group aggregation helper
     end
     
     properties(Access=private)
-        m_mapRawNames;      % map of raw names to index in m_rawData
+        m_mapRawNames;      % map of raw names to index in m_rawIdentData
 
         % The following property stores per-raw grouped data
         % Each cell element is a CIMPRawIdentStore
-        m_rawData;
+        m_rawIdentData;
     end
     
     methods
@@ -49,17 +50,14 @@ classdef CIMPGatherQuant < handle
                 minMSMSnum = 1; % Default minimum number of MSMS spectra
             end
             obj.m_minMSMSnum = minMSMSnum;
+            obj.m_groupAggregator = CIMPGroupAggregator(obj.m_ms1_tolerance);
             obj.m_mapRawNames = containers.Map('KeyType','char','ValueType','any');
             % different in different raw
-            obj.m_rawData = {};
+            obj.m_rawIdentData = {};
         end
         
         % Main entry point for summarizing the quantification of various modified form of a peptide
         quantifyIMPs(obj);
-
-        % Get the m/z bound of ms1 peak
-        [low_bound,high_bound, selected_charge, charge_group_idxs] = ...
-            get_mz_bound(obj, current_imp_mass, current_charge);
 
         % Re-quantification for gathered peptides using manually-checked rt range
         requantifyIMPsWithRTRanges(obj,pep_rtrange_map);
@@ -67,13 +65,6 @@ classdef CIMPGatherQuant < handle
         % Draw the XIC for gathered peptides using manually-checked rt range to dir_save
         % The color_map and legend_map are optional
         drawGather(obj, pep_rtrange_map, dir_save, color_map, legend_map);
-
-        % Draw the XIC for each group
-        % The color_map and legend_map are optional
-        draw_each_group(obj, raw_name, ratio_raw, rt_raw, ...
-            intensity_raw, low_mz_bound, high_mz_bound, selected_charge, ...
-            current_imp_rt_range, current_imp_name, current_imp_mass, ...
-            current_charge, dir_save, color_map, legend_map)
 
         function rawStore = getRawStore(obj, raw_name)
             idx_raw = obj.ensure_raw(raw_name);
@@ -91,22 +82,31 @@ classdef CIMPGatherQuant < handle
             if ~obj.m_mapRawNames.isKey(raw_name)
                 idx_raw = obj.m_mapRawNames.Count + 1;
                 obj.m_mapRawNames(raw_name) = idx_raw;
-                obj.m_rawData{idx_raw} = obj.init_raw();
+                obj.m_rawIdentData{idx_raw} = obj.init_raw();
             else
                 idx_raw = obj.m_mapRawNames(raw_name);
             end
         end
 
         function raw = get_raw(obj, idx_raw)
-            raw = obj.m_rawData{idx_raw};
+            raw = obj.m_rawIdentData{idx_raw};
         end
 
         function set_raw(obj, idx_raw, raw)
-            obj.m_rawData{idx_raw} = raw;
+            obj.m_rawIdentData{idx_raw} = raw;
         end
 
         function raw = init_raw(obj)
             raw = CIMPRawIdentStore(obj.m_buff_length);
+        end
+
+        function [raw_names, raw_ident_stores] = getRawEntries(obj)
+            raw_names = obj.m_mapRawNames.keys;
+            raw_ident_stores = cell(size(raw_names));
+            for idx_keys = 1:obj.m_mapRawNames.Count
+                idx_r = obj.m_mapRawNames(raw_names{idx_keys});
+                raw_ident_stores{idx_keys} = obj.get_raw(idx_r);
+            end
         end
     end
 end

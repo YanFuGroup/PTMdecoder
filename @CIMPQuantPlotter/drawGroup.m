@@ -1,8 +1,12 @@
-function draw_each_group(obj,raw_name,ratio_raw,rt_raw,...
-    intensity_raw, low_mz_bound, high_mz_bound, selected_charge,...
+function drawGroup(ms12DatasetIO, minMSMSnum, raw_name, ratio_raw, rt_raw, ...
+    intensity_raw, low_mz_bound, high_mz_bound, selected_charge, ...
     current_imp_rt_range, current_imp_name, dir_save, color_map, legend_map)
 % Re-quantify each group
 % input:
+%   ms12DatasetIO (CMs12DatasetIO)
+%       the dataset IO for accessing MS1 and MS2 spectra
+%   minMSMSnum (1 x 1 double/int)
+%       minimum number of MSMS spectra for a peptide to be considered
 %   raw_name (1 x 1 char/string)
 %       the name of the raw (mgf) file
 %   ratio_raw (N x K double)
@@ -27,49 +31,46 @@ function draw_each_group(obj,raw_name,ratio_raw,rt_raw,...
 %       color map (key: imp name, value: RGB 1x3)
 %   legend_map (containers.Map or [])
 %       legend map (key: imp name, value: display string)
+    if nargin < 14
+        legend_map = [];
+    end
+    if nargin < 13
+        color_map = [];
+    end
 
+    rt_error_tol = 1; % RT match tolerance
 
-if nargin < 10
-    legend_map = [];
-end
-if nargin < 9
-    color_map = [];
-end
+    % Sort and denoise using a relative abundance threshold method
+    [rt_sorted, ratio_sorted, xic_rt, xic_intensity_smoothed, ~, is_valid] = ...
+        CQuantIMPGroupPreprocessUtils.prepare_ms1_xic(...
+            ms12DatasetIO, raw_name, rt_raw, intensity_raw, ratio_raw, ...
+            minMSMSnum, low_mz_bound, high_mz_bound, selected_charge);
 
-rt_error_tol = 1; % RT match tolerance, choose 1 arbitrarily
+    if ~is_valid
+        return;
+    end
 
-% Sort MS1 signal (pair of retention time and intensity) by time
-% Sort and denoise using a relative abundance threshold method
-[rt_sorted, ratio_sorted, xic_rt, xic_intensity_smoothed, ~, is_valid] = ...
-    CQuantIMPGroupPreprocessUtils.prepare_ms1_xic(...
-        obj.m_cMs12DatasetIO, raw_name, rt_raw, intensity_raw, ratio_raw, ...
-        obj.m_minMSMSnum, low_mz_bound, high_mz_bound, selected_charge);
+    % Extract the rt bound of XIC peak and convert to index bounds
+    [~, ~, is_skip_vec, xic_peak_idx_bounds] = ...
+        CQuantIMPGroupPreprocessUtils.prepare_peak_ranges_from_imp_rt_range(...
+            xic_rt, current_imp_rt_range, rt_error_tol);
 
-if ~is_valid
-    return;
-end
+    % Calculate the ratio on each XIC point using kernel method, and normalize
+    xic_ratio_estimated = CQuantIMPGroupPeakUtils.calculate_kernel_ratio(...
+        xic_rt, rt_sorted, ratio_sorted, xic_peak_idx_bounds, false);
 
-% Extract the rt bound of XIC peak and convert to index bounds
-[~, ~, is_skip_vec, xic_peak_idx_bounds] = ...
-    CQuantIMPGroupPreprocessUtils.prepare_peak_ranges_from_imp_rt_range(...
-        xic_rt, current_imp_rt_range, rt_error_tol);
+    % Get deconvoluted XIC using revised RT
+    total_xic = {xic_rt, xic_intensity_smoothed};
+    ric = CQuantIMPGroupAreaUtils.build_ric_from_peaks(...
+        xic_rt, xic_intensity_smoothed, xic_ratio_estimated, ...
+        xic_peak_idx_bounds, is_skip_vec);
 
-% Calculate the ratio on each XIC point using kernel method, and normalize
-xic_ratio_estimated = CQuantIMPGroupPeakUtils.calculate_kernel_ratio(xic_rt, rt_sorted, ratio_sorted, xic_peak_idx_bounds, false);
+    if ~exist(dir_save, 'dir')
+        mkdir(dir_save);
+    end
 
-% Get deconvoluted XIC using revised RT
-total_xic = {xic_rt, xic_intensity_smoothed};
-ric = CQuantIMPGroupAreaUtils.build_ric_from_peaks(...
-    xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds, is_skip_vec);
-
-% Check if the output directory exists
-if ~exist(dir_save,'dir')
-    mkdir(dir_save);
-end
-
-% Plot the total XIC and RIC
-plot_xics(ric, current_imp_name, total_xic, dir_save, raw_name, ...
-    low_mz_bound, high_mz_bound, selected_charge, color_map, legend_map);
+    plot_xics(ric, current_imp_name, total_xic, dir_save, raw_name, ...
+        low_mz_bound, high_mz_bound, selected_charge, color_map, legend_map);
 end
 
 
@@ -99,15 +100,14 @@ function plot_xics(ric, current_imp_name, total_xic, dir_save, raw_name, ...
 %   legend_map (containers.Map or [])
 %       legend map
 
-% Sort the retention time intervals and categorize them
 if any(cellfun(@(x) isempty(x), ric(:, 1)))
     del_rows = cellfun(@(x) isempty(x), ric(:, 1));
-    ric(del_rows,:) = [];
-    current_imp_name(del_rows,:) = [];
+    ric(del_rows, :) = [];
+    current_imp_name(del_rows, :) = [];
 end
 start_rt_array = cell2mat(cellfun(@(x) x(1), ric(:, 1), 'UniformOutput', false));
 end_rt_array = cell2mat(cellfun(@(x) x(end), ric(:, 1), 'UniformOutput', false));
-tolerance_rt = (end_rt_array-start_rt_array) ./ 5;
+tolerance_rt = (end_rt_array - start_rt_array) ./ 5;
 rt_intervals = [start_rt_array - tolerance_rt, end_rt_array + tolerance_rt];
 [sorted_intervals, sort_idx] = sortrows(rt_intervals);
 [categorized_intervals, categorized_indices] = categorize_intervals(sorted_intervals);
@@ -115,13 +115,13 @@ for idx_cat = 1:max(categorized_indices)
     % Extract the retention times and intensities of each IMP in the current category
     group_current_ric = ric(sort_idx(categorized_indices == idx_cat), :);
     group_current_imp_name = current_imp_name(sort_idx(categorized_indices == idx_cat));
-    plot_each_xic_group(group_current_ric, total_xic, categorized_intervals{idx_cat}, group_current_imp_name, ...
-        fullfile(dir_save,[raw_name, '_', num2str(low_mz_bound), '-', num2str(high_mz_bound), ...
-        '_+', num2str(selected_charge), '_', num2str(idx_cat), '.svg']), color_map, legend_map);
+    plot_each_xic_group(group_current_ric, total_xic, categorized_intervals{idx_cat}, ...
+        group_current_imp_name, fullfile(dir_save, [raw_name, '_', ...
+        num2str(low_mz_bound), '-', num2str(high_mz_bound), '_+', ...
+        num2str(selected_charge), '_', num2str(idx_cat), '.svg']), ...
+        color_map, legend_map);
 end
 end
-
-
 
 function [categorized_intervals, categorized_indices] = categorize_intervals(intervals)
 % Helper function to categorize retention time intervals

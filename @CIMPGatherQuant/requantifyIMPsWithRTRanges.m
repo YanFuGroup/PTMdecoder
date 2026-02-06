@@ -8,9 +8,12 @@ function requantifyIMPsWithRTRanges(obj,pep_rtrange_map)
 
 imp_records = CIMPQuantResult.empty(0,1);
 
-
 % Do the same operation for gathered PSM for every raw file
-imp_records = iterate_imp_groups(obj, pep_rtrange_map, @handle_group_charge, imp_records);
+[raw_names, raw_ident_stores] = obj.getRawEntries();
+for idx_raw = 1:numel(raw_names)
+    imp_records = obj.m_groupAggregator.aggregate(raw_names{idx_raw}, raw_ident_stores{idx_raw}, pep_rtrange_map, ...
+        @(state, group) handle_group_charge(state, obj, group), imp_records);
+end
 CIMPGatherWriter.write_imp_group_block(obj.m_outputPath, obj.m_prot_names_pos, imp_records);
 end
 

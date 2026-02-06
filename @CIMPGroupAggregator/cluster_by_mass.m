@@ -1,8 +1,7 @@
-function idxs_res = cluster_by_mass(imp_masses, ms1_tolerance)
+function idxs_res = cluster_by_mass(obj, imp_masses)
     % Cluster the IMPs according to their masses.
     % Input:
     %   imp_masses (1 x K double) Da
-    %   ms1_tolerance (struct) fields: isppm, value
     % Output:
     %   idxs_res (1 x G cell) indices of each group
 
@@ -16,10 +15,10 @@ function idxs_res = cluster_by_mass(imp_masses, ms1_tolerance)
         nextNumber = m_val(i+1);
         currentCluster = [currentCluster, m_inx(i)]; %#ok<AGROW>
 
-        if ms1_tolerance.isppm
-            tol = (ms1_tolerance.value * currentNumber)/1e6;
+        if obj.m_ms1_tolerance.isppm
+            tol = (obj.m_ms1_tolerance.value * currentNumber)/1e6;
         else
-            tol = ms1_tolerance.value;
+            tol = obj.m_ms1_tolerance.value;
         end
 
         if abs(nextNumber - currentNumber) > tol
