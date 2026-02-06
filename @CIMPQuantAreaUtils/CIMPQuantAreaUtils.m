@@ -1,6 +1,6 @@
-classdef CQuantIMPGroupAreaUtils
-    % CQuantIMPGroupAreaUtils
-    % Area/aggregation utilities for IMP group quant workflows.
+classdef CIMPQuantAreaUtils
+    % CIMPQuantAreaUtils
+    % Area/aggregation utilities for IMP quant workflows.
     methods (Static)
         area_imp_final = compute_final_area(xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds, idx_selected)
 

@@ -1,4 +1,4 @@
-classdef test_CQuantIMPGroupAreaUtils < matlab.unittest.TestCase
+classdef test_CIMPQuantAreaUtils < matlab.unittest.TestCase
     % Unit tests for area-domain IMP group utils
     methods (Test)
         function testComputeFinalArea(testCase)
@@ -17,7 +17,7 @@ classdef test_CQuantIMPGroupAreaUtils < matlab.unittest.TestCase
             xic_peak_idx_bounds(2).idx_end = 5;
             idx_selected = [1; 2];
 
-            area_imp_final = CQuantIMPGroupAreaUtils.compute_final_area(...
+            area_imp_final = CIMPQuantAreaUtils.compute_final_area(...
                 xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds, idx_selected);
 
             % Expected: imp1 uses peak1 -> 1.6*60=96, imp2 uses peak2 -> 1.2*60=72
@@ -29,7 +29,7 @@ classdef test_CQuantIMPGroupAreaUtils < matlab.unittest.TestCase
                                   5,  15, 25];
             idx_selected = [3; 2];
 
-            area_imp_final = CQuantIMPGroupAreaUtils.get_final_area_from_peak_areas(...
+            area_imp_final = CIMPQuantAreaUtils.get_final_area_from_peak_areas(...
                 area_imp_by_peak, idx_selected);
 
             testCase.verifyEqual(area_imp_final, [30; 15], 'AbsTol', 1e-10);
@@ -46,7 +46,7 @@ classdef test_CQuantIMPGroupAreaUtils < matlab.unittest.TestCase
             extra_empty = [];
 
             [imp_idx_nonzero, area_imp_final_f, xic_peak_rt_bounds_f, extra_numeric_f, extra_empty_f] = ...
-                CQuantIMPGroupAreaUtils.filter_nonzero_xic(area_imp_final, xic_peak_rt_bounds, extra_numeric, extra_empty);
+                CIMPQuantAreaUtils.filter_nonzero_xic(area_imp_final, xic_peak_rt_bounds, extra_numeric, extra_empty);
 
             testCase.verifyEqual(imp_idx_nonzero, [2; 4]);
             testCase.verifyEqual(area_imp_final_f, [5; 2]);
@@ -65,7 +65,7 @@ classdef test_CQuantIMPGroupAreaUtils < matlab.unittest.TestCase
             end
 
             [imp_idx_nonzero, area_imp_final_f, xic_peak_rt_bounds_f] = ...
-                CQuantIMPGroupAreaUtils.filter_nonzero_xic(area_imp_final, xic_peak_rt_bounds);
+                CIMPQuantAreaUtils.filter_nonzero_xic(area_imp_final, xic_peak_rt_bounds);
 
             testCase.verifyEqual(imp_idx_nonzero, [2; 3]);
             testCase.verifyEqual(area_imp_final_f, [3; 4]);
@@ -100,7 +100,7 @@ classdef test_CQuantIMPGroupAreaUtils < matlab.unittest.TestCase
             is_skip_vec = [false; false];
 
             [area_imp_final, xic_peak_rt_bounds, ratio_each_XIC_peak] = ...
-                CQuantIMPGroupAreaUtils.compute_imp_peak_area_and_ratio(...
+                CIMPQuantAreaUtils.compute_imp_peak_area_and_ratio(...
                     xic_rt, xic_intensity_smoothed, xic_ratio_estimated, ...
                     xic_peak_idx_bounds, final_xic_peak_rt_bounds, is_skip_vec);
 
@@ -137,7 +137,7 @@ classdef test_CQuantIMPGroupAreaUtils < matlab.unittest.TestCase
             is_skip_vec = [false; true];
 
             [area_imp_final, xic_peak_rt_bounds, ratio_each_XIC_peak] = ...
-                CQuantIMPGroupAreaUtils.compute_imp_peak_area_and_ratio(...
+                CIMPQuantAreaUtils.compute_imp_peak_area_and_ratio(...
                     xic_rt, xic_intensity_smoothed, xic_ratio_estimated, ...
                     xic_peak_idx_bounds, final_xic_peak_rt_bounds, is_skip_vec);
 
@@ -167,7 +167,7 @@ classdef test_CQuantIMPGroupAreaUtils < matlab.unittest.TestCase
 
             is_skip_vec = [false; true];
 
-            ric = CQuantIMPGroupAreaUtils.build_ric_from_peaks(...
+            ric = CIMPQuantAreaUtils.build_ric_from_peaks(...
                 xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds, is_skip_vec);
 
             testCase.verifyEqual(ric{1, 1}, xic_rt(1:5));

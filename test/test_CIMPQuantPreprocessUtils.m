@@ -1,4 +1,4 @@
-classdef test_CQuantIMPGroupPreprocessUtils < matlab.unittest.TestCase
+classdef test_CIMPQuantPreprocessUtils < matlab.unittest.TestCase
     % Unit tests for preprocess-domain IMP group utils
     methods (Test)
         function testPreparePeakRangesBasic(testCase)
@@ -9,7 +9,7 @@ classdef test_CQuantIMPGroupPreprocessUtils < matlab.unittest.TestCase
             rt_error_tol = 0;
 
             [final_xic_peak_rt_bounds, max_label, is_skip_vec, xic_peak_idx_bounds] = ...
-                CQuantIMPGroupPreprocessUtils.prepare_peak_ranges_from_imp_rt_range(...
+                CIMPQuantPreprocessUtils.prepare_peak_ranges_from_imp_rt_range(...
                     xic_rt, current_imp_rt_range, rt_error_tol);
 
             testCase.verifyEqual(size(final_xic_peak_rt_bounds), [2, 1]);

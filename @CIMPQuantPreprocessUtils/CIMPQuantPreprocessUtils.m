@@ -1,6 +1,6 @@
-classdef CQuantIMPGroupPreprocessUtils
-    % CQuantIMPGroupPreprocessUtils
-    % Preprocessing utilities for IMP group quant workflows.
+classdef CIMPQuantPreprocessUtils
+    % CIMPQuantPreprocessUtils
+    % Preprocessing utilities for IMP quant workflows.
     methods (Static)
         [rt_sorted, ratio_sorted, xic_rt, xic_intensity_smoothed, xic_intensity_raw, is_valid] = ...
             prepare_ms1_xic(cMs12DatasetIO, raw_name, rt_raw, intensity_raw, ratio_raw, ...
