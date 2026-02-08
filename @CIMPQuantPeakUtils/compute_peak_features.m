@@ -33,26 +33,26 @@ imp_max_props = zeros(num_imp, num_peaks);
 single_rt_bounds = repmat(struct('rt_start', 0, 'rt_end', 0), 1, num_peaks);
 
 for i_Xp = 1:num_peaks
-    curr_start = xic_peak_idx_bounds(i_Xp).idx_start;
-    curr_end = xic_peak_idx_bounds(i_Xp).idx_end;
+    curr_idx_start = xic_peak_idx_bounds(i_Xp).idx_start;
+    curr_idx_end = xic_peak_idx_bounds(i_Xp).idx_end;
     
     % 1. XIC-dependent properties (Independent of IMP)
-    peak_rts = xic_rt(curr_start:curr_end);
+    peak_rts = xic_rt(curr_idx_start:curr_idx_end);
     
-    single_rt_bounds(i_Xp).rt_start = xic_rt(curr_start);
-    single_rt_bounds(i_Xp).rt_end = xic_rt(curr_end);
+    single_rt_bounds(i_Xp).rt_start = xic_rt(curr_idx_start);
+    single_rt_bounds(i_Xp).rt_end = xic_rt(curr_idx_end);
     
     % 2. IMP-dependent properties
-    ratio_slice = xic_ratio_estimated(curr_start:curr_end, :);
+    ratio_slice = xic_ratio_estimated(curr_idx_start:curr_idx_end, :);
     imp_max_props(:, i_Xp) = max(ratio_slice, [], 1)';
     
     % Calculate area and FWHM per IMP
     for idx_imp = 1:num_imp
         peak_fwhms(idx_imp, i_Xp) = CChromatogramUtils.get_fwhm( ...
-            peak_rts, intensityMatrix(curr_start:curr_end, idx_imp));
+            peak_rts, intensityMatrix(curr_idx_start:curr_idx_end, idx_imp));
         
         area_imp_by_peak(idx_imp, i_Xp) = CChromatogramUtils.calculate_area(...
-            xic_rt, intensityMatrix(:, idx_imp), curr_start, curr_end);
+            xic_rt, intensityMatrix(:, idx_imp), curr_idx_start, curr_idx_end);
     end
 end
 

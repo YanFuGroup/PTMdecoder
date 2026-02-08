@@ -23,25 +23,25 @@ num_imp = size(xic_ratio_estimated, 2);
 intensityMatrix = xic_ratio_estimated .* xic_intensity_smoothed;
 
 for i_Xp = 1:length(xic_peak_idx_bounds)
-    curr_start = xic_peak_idx_bounds(i_Xp).idx_start;
-    curr_end = xic_peak_idx_bounds(i_Xp).idx_end;
+    curr_idx_start = xic_peak_idx_bounds(i_Xp).idx_start;
+    curr_idx_end = xic_peak_idx_bounds(i_Xp).idx_end;
 
     % Calculate area for each IMP in this peak
     area_filter = zeros(num_imp, 1);
     for idx_imp = 1:num_imp
         area_filter(idx_imp) = CChromatogramUtils.calculate_area(...
                 xic_rt, intensityMatrix(:, idx_imp), ...
-            curr_start, curr_end);
+            curr_idx_start, curr_idx_end);
     end
     
     % Filter: keep only IMPs with area >= max_area * threshold
     max_area = max(area_filter);
     keep_mask = area_filter >= max_area * resFilterThres;
-    xic_ratio_estimated(curr_start:curr_end, ~keep_mask) = 0;
+    xic_ratio_estimated(curr_idx_start:curr_idx_end, ~keep_mask) = 0;
 
     % Normalize rows
-    row_sum = sum(xic_ratio_estimated(curr_start:curr_end, :), 2);
+    row_sum = sum(xic_ratio_estimated(curr_idx_start:curr_idx_end, :), 2);
     row_sum(row_sum == 0) = 1;
-    xic_ratio_estimated(curr_start:curr_end, :) = xic_ratio_estimated(curr_start:curr_end, :) ./ repmat(row_sum, 1, num_imp);
+    xic_ratio_estimated(curr_idx_start:curr_idx_end, :) = xic_ratio_estimated(curr_idx_start:curr_idx_end, :) ./ repmat(row_sum, 1, num_imp);
 end
 end

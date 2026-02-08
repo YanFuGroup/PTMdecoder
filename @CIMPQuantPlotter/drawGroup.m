@@ -22,7 +22,7 @@ function drawGroup(ms12DatasetIO, minMSMSnum, raw_name, ratio_raw, rt_raw, ...
 %   selected_charge (1 x 1 double/int)
 %       current precursor charge
 %   current_imp_rt_range (K x 1 cell)
-%       RT ranges for each IMP (each cell: [] or [start, end] in minutes)
+%       RT ranges for each IMP (each cell: [] or [rt_start, rt_end] in minutes)
 %   current_imp_name (K x 1 cellstr/string)
 %       names of current IMPs
 %   dir_save (1 x 1 char/string)
@@ -105,17 +105,17 @@ if any(cellfun(@(x) isempty(x), ric(:, 1)))
     ric(del_rows, :) = [];
     current_imp_name(del_rows, :) = [];
 end
-start_rt_array = cell2mat(cellfun(@(x) x(1), ric(:, 1), 'UniformOutput', false));
-end_rt_array = cell2mat(cellfun(@(x) x(end), ric(:, 1), 'UniformOutput', false));
-tolerance_rt = (end_rt_array - start_rt_array) ./ 5;
-rt_intervals = [start_rt_array - tolerance_rt, end_rt_array + tolerance_rt];
+rt_start_array = cell2mat(cellfun(@(x) x(1), ric(:, 1), 'UniformOutput', false));
+rt_end_array = cell2mat(cellfun(@(x) x(end), ric(:, 1), 'UniformOutput', false));
+rt_tolerance = (rt_end_array - rt_start_array) ./ 5;
+rt_intervals = [rt_start_array - rt_tolerance, rt_end_array + rt_tolerance];
 [sorted_intervals, sort_idx] = sortrows(rt_intervals);
 [categorized_intervals, categorized_indices] = categorize_intervals(sorted_intervals);
 for idx_cat = 1:max(categorized_indices)
     % Extract the retention times and intensities of each IMP in the current category
     group_current_ric = ric(sort_idx(categorized_indices == idx_cat), :);
     group_current_imp_name = current_imp_name(sort_idx(categorized_indices == idx_cat));
-    plot_each_xic_group(group_current_ric, total_xic, categorized_intervals{idx_cat}, ...
+    plot_each_xic_group(group_current_ric, total_xic, categorized_intervals(idx_cat, :), ...
         group_current_imp_name, fullfile(dir_save, [raw_name, '_', ...
         num2str(low_mz_bound), '-', num2str(high_mz_bound), '_+', ...
         num2str(selected_charge), '_', num2str(idx_cat), '.svg']), ...
@@ -129,13 +129,13 @@ function [categorized_intervals, categorized_indices] = categorize_intervals(int
 %   intervals (M x 2 double) minutes
 %       retention time intervals
 % output:
-%   categorized_intervals (1 x C cell)
-%       categorized retention time intervals; each cell is [start_rt, end_rt] in minutes
+%   categorized_intervals (C x 2 double)
+%       categorized retention time intervals; each row is [start_rt, end_rt] in minutes
 %   categorized_indices (M x 1 double)
 %       indices of the categories
 
-categorized_intervals = {}; % Initialize an empty cell array to store categories
-categorized_indices = zeros(length(intervals), 1); % Initialize an array to store the category index of each interval
+categorized_intervals = zeros(0, 2); % Initialize an empty array to store categories
+categorized_indices = zeros(size(intervals, 1), 1); % Initialize an array to store the category index of each interval
 for i = 1:size(intervals, 1)
     % Extract the current time interval
     currentInterval = intervals(i, :);
@@ -144,12 +144,12 @@ for i = 1:size(intervals, 1)
     categorized = false;
     
     % Iterate over the existing categories
-    for j = 1:length(categorized_intervals)
+    for j = 1:size(categorized_intervals, 1)
         % Check if the current interval intersects with any interval in the category
-        if is_intersecting(currentInterval, categorized_intervals{j})
+        if is_intersecting(currentInterval, categorized_intervals(j, :))
             % If there is an intersection, add the current interval to this category
-            categorized_intervals{j}(1) = min(currentInterval(1), categorized_intervals{j}(1)); %#ok<AGROW> 
-            categorized_intervals{j}(2) = max(currentInterval(2), categorized_intervals{j}(2)); %#ok<AGROW> 
+            categorized_intervals(j, 1) = min(currentInterval(1), categorized_intervals(j, 1));
+            categorized_intervals(j, 2) = max(currentInterval(2), categorized_intervals(j, 2));
             categorized_indices(i) = j;
             categorized = true;
             break;
@@ -158,8 +158,8 @@ for i = 1:size(intervals, 1)
     
     % If the current interval does not intersect with any existing category, create a new category
     if ~categorized
-        categorized_intervals{end+1} = currentInterval; %#ok<AGROW> 
-        categorized_indices(i) = length(categorized_intervals);
+        categorized_intervals(end+1, :) = currentInterval; %#ok<AGROW> 
+        categorized_indices(i) = size(categorized_intervals, 1);
     end
 end
 end

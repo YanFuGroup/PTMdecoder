@@ -5,7 +5,7 @@ function [max_label, is_skip_vec, xic_peak_idx_bounds] = ...
 %   xic_rt (N x 1 double) minutes
 %       retention time grid
 %   current_imp_rt_range (K x 1 cell)
-%       RT ranges for each IMP (each cell: [] or [start, end] in minutes)
+%       RT ranges for each IMP (each cell: [] or [rt_start, rt_end] in minutes)
 %   rt_error_tol (1 x 1 double) minutes
 %       RT tolerance in minutes
 % output:
