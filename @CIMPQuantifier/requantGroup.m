@@ -55,10 +55,10 @@ if ~is_valid
 end
 
 % Filter peaks by manual RT range
-[final_xic_peak_rt_bounds, max_label, is_skip_vec, xic_peak_idx_bounds] = CIMPQuantPreprocessUtils.prepare_peak_ranges_from_imp_rt_range(...
+[max_label, is_skip_vec, xic_peak_idx_bounds] = CIMPQuantPreprocessUtils.prepare_peak_ranges_from_imp_rt_range(...
     xic_rt, current_imp_rt_range, 1);
 
-if isempty(final_xic_peak_rt_bounds)
+if isempty(xic_peak_idx_bounds)
     return;
 end
 
@@ -69,7 +69,7 @@ xic_ratio_estimated = CIMPQuantPeakUtils.calculate_kernel_ratio(xic_rt, rt_sorte
 [area_imp_final, xic_peak_rt_bounds, ratio_each_XIC_peak] = ...
     CIMPQuantAreaUtils.compute_imp_peak_area_and_ratio(...
         xic_rt, xic_intensity_smoothed, xic_ratio_estimated, ...
-        xic_peak_idx_bounds, final_xic_peak_rt_bounds, is_skip_vec);
+        xic_peak_idx_bounds, is_skip_vec);
 
 % Get the non-zero area under XIC, index and xic_peak_rt_bounds
 [imp_idx_nonzero, area_imp_final, xic_peak_rt_bounds, max_label, ratio_each_XIC_peak] = ...

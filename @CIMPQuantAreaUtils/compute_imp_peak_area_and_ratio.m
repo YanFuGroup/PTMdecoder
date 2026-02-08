@@ -1,5 +1,5 @@
 function [area_imp_final, xic_peak_rt_bounds, ratio_each_XIC_peak] = compute_imp_peak_area_and_ratio(...
-    xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds, final_xic_peak_rt_bounds, is_skip_vec)
+    xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds, is_skip_vec)
 % Compute area and ratio for each IMP based on peak ranges.
 % input:
 %   xic_rt (N x 1 double) minutes
@@ -10,8 +10,6 @@ function [area_imp_final, xic_peak_rt_bounds, ratio_each_XIC_peak] = compute_imp
 %       estimated ratio of each IMP across RT grid
 %   xic_peak_idx_bounds (K x 1 struct)
 %       index bounds for each IMP peak; fields: idx_start/idx_end (indices into xic_rt)
-%   final_xic_peak_rt_bounds (K x 1 struct)
-%       RT bounds for each IMP peak; fields: rt_start/rt_end (minutes)
 %   is_skip_vec (K x 1 logical)
 %       vector indicating IMPs to skip
 % output:
@@ -38,9 +36,9 @@ for idx_imp = 1:num_imp
     idx_start = xic_peak_idx_bounds(idx_imp).idx_start;
     idx_end = xic_peak_idx_bounds(idx_imp).idx_end;
 
-    % Assign xic_peak_rt_bounds from input peaks
-    xic_peak_rt_bounds(idx_imp).rt_start = final_xic_peak_rt_bounds(idx_imp).rt_start;
-    xic_peak_rt_bounds(idx_imp).rt_end = final_xic_peak_rt_bounds(idx_imp).rt_end;
+    % Assign xic_peak_rt_bounds from index bounds
+    xic_peak_rt_bounds(idx_imp).rt_start = xic_rt(idx_start);
+    xic_peak_rt_bounds(idx_imp).rt_end = xic_rt(idx_end);
 
     % Calculate area using the closed peak logic
     area_imp_final(idx_imp,1) = CChromatogramUtils.calculate_area(...

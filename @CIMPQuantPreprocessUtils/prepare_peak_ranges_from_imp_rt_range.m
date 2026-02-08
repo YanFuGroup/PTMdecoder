@@ -1,4 +1,4 @@
-function [xic_peak_rt_bounds, max_label, is_skip_vec, xic_peak_idx_bounds] = ...
+function [max_label, is_skip_vec, xic_peak_idx_bounds] = ...
     prepare_peak_ranges_from_imp_rt_range(xic_rt, current_imp_rt_range, rt_error_tol)
 % Prepare peak ranges based on input iso RT ranges.
 % input:
@@ -9,8 +9,6 @@ function [xic_peak_rt_bounds, max_label, is_skip_vec, xic_peak_idx_bounds] = ...
 %   rt_error_tol (1 x 1 double) minutes
 %       RT tolerance in minutes
 % output:
-%   xic_peak_rt_bounds (K x 1 struct)
-%       RT bounds for each IMP peak; fields: rt_start/rt_end (minutes)
 %   max_label (K x 1 double)
 %       max check label for each IMP
 %   is_skip_vec (K x 1 logical)

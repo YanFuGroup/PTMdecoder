@@ -91,18 +91,12 @@ classdef test_CIMPQuantAreaUtils < matlab.unittest.TestCase
             xic_peak_idx_bounds(2).idx_start = 2;
             xic_peak_idx_bounds(2).idx_end = 4;
 
-            final_xic_peak_rt_bounds = repmat(struct('rt_start', 0, 'rt_end', 0), 1, 2);
-            final_xic_peak_rt_bounds(1).rt_start = 2;
-            final_xic_peak_rt_bounds(1).rt_end = 4;
-            final_xic_peak_rt_bounds(2).rt_start = 2;
-            final_xic_peak_rt_bounds(2).rt_end = 4;
-
             is_skip_vec = [false; false];
 
             [area_imp_final, xic_peak_rt_bounds, ratio_each_XIC_peak] = ...
                 CIMPQuantAreaUtils.compute_imp_peak_area_and_ratio(...
                     xic_rt, xic_intensity_smoothed, xic_ratio_estimated, ...
-                    xic_peak_idx_bounds, final_xic_peak_rt_bounds, is_skip_vec);
+                    xic_peak_idx_bounds, is_skip_vec);
 
             testCase.verifyEqual(area_imp_final, [135; 45], 'AbsTol', 1e-10);
             testCase.verifyEqual(ratio_each_XIC_peak, [0.75; 0.25], 'AbsTol', 1e-10);
@@ -128,18 +122,12 @@ classdef test_CIMPQuantAreaUtils < matlab.unittest.TestCase
             xic_peak_idx_bounds(2).idx_start = 2;
             xic_peak_idx_bounds(2).idx_end = 4;
 
-            final_xic_peak_rt_bounds = repmat(struct('rt_start', 0, 'rt_end', 0), 1, 2);
-            final_xic_peak_rt_bounds(1).rt_start = 2;
-            final_xic_peak_rt_bounds(1).rt_end = 4;
-            final_xic_peak_rt_bounds(2).rt_start = 2;
-            final_xic_peak_rt_bounds(2).rt_end = 4;
-
             is_skip_vec = [false; true];
 
             [area_imp_final, xic_peak_rt_bounds, ratio_each_XIC_peak] = ...
                 CIMPQuantAreaUtils.compute_imp_peak_area_and_ratio(...
                     xic_rt, xic_intensity_smoothed, xic_ratio_estimated, ...
-                    xic_peak_idx_bounds, final_xic_peak_rt_bounds, is_skip_vec);
+                    xic_peak_idx_bounds, is_skip_vec);
 
             testCase.verifyEqual(area_imp_final, [135; 0], 'AbsTol', 1e-10);
             testCase.verifyEqual(ratio_each_XIC_peak, [0.75; 0], 'AbsTol', 1e-10);

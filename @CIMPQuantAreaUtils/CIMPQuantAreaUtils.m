@@ -7,7 +7,7 @@ classdef CIMPQuantAreaUtils
         area_imp_final = get_final_area_from_peak_areas(area_imp_by_peak, idx_selected)
 
         [area_imp_final, xic_peak_rt_bounds, ratio_each_XIC_peak] = compute_imp_peak_area_and_ratio(...
-            xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds, final_xic_peak_rt_bounds, is_skip_vec)
+            xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds, is_skip_vec)
 
         ric = build_ric_from_peaks(xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds, is_skip_vec)
 
