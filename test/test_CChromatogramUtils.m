@@ -225,11 +225,11 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             imp_rt_range = {imp1, imp2, imp3, imp4};
             is_skip_vec = [false, false, false, true];
             
-            [final_xic_peak_rt_bounds, max_label, new_skip_vec] = CChromatogramUtils.parse_imp_rt_ranges(imp_rt_range, is_skip_vec);
+            [xic_peak_rt_bounds, max_label, new_skip_vec] = CChromatogramUtils.parse_imp_rt_ranges(imp_rt_range, is_skip_vec);
             
             % Assertions
-            testCase.verifyEqual(final_xic_peak_rt_bounds(1).rt_start, 12.0);
-            testCase.verifyEqual(final_xic_peak_rt_bounds(1).rt_end, 12.5);
+            testCase.verifyEqual(xic_peak_rt_bounds(1).rt_start, 12.0);
+            testCase.verifyEqual(xic_peak_rt_bounds(1).rt_end, 12.5);
             testCase.verifyEqual(max_label(1), 2);
             testCase.verifyFalse(new_skip_vec(1));
             
@@ -248,27 +248,27 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % index 1 -> 10.0, index 21 -> 12.0
             
             num_imp = 2;
-            final_xic_peak_rt_bounds = repmat(struct('rt_start',0,'rt_end',0), num_imp, 1);
-            final_xic_peak_rt_bounds(1).rt_start = 12.0; % Exact match, index 21
-            final_xic_peak_rt_bounds(1).rt_end = 13.0; % Exact match, index 31
+            xic_peak_rt_bounds = repmat(struct('rt_start',0,'rt_end',0), num_imp, 1);
+            xic_peak_rt_bounds(1).rt_start = 12.0; % Exact match, index 21
+            xic_peak_rt_bounds(1).rt_end = 13.0; % Exact match, index 31
             
-            final_xic_peak_rt_bounds(2).rt_start = 999; % Out of bounds
-            final_xic_peak_rt_bounds(2).rt_end = 999; 
+            xic_peak_rt_bounds(2).rt_start = 999; % Out of bounds
+            xic_peak_rt_bounds(2).rt_end = 999; 
             
             skip_vec_map = [false, true];
             rt_tol = 0.001;
             
-            xic_peak_idx_bounds = CChromatogramUtils.map_rt_to_indices(xic_rt, final_xic_peak_rt_bounds, skip_vec_map, rt_tol);
+            xic_peak_idx_bounds = CChromatogramUtils.map_rt_to_indices(xic_rt, xic_peak_rt_bounds, skip_vec_map, rt_tol);
             
             testCase.verifyEqual(xic_peak_idx_bounds(1).idx_start, 21);
             testCase.verifyEqual(xic_peak_idx_bounds(1).idx_end, 31);
             
             % Test Error Case
-            final_xic_peak_rt_bounds_err = final_xic_peak_rt_bounds;
+            xic_peak_rt_bounds_err = xic_peak_rt_bounds;
             skip_vec_err = [false, false]; % Unskip the bad one
             
             try
-                CChromatogramUtils.map_rt_to_indices(xic_rt, final_xic_peak_rt_bounds_err, skip_vec_err, rt_tol);
+                CChromatogramUtils.map_rt_to_indices(xic_rt, xic_peak_rt_bounds_err, skip_vec_err, rt_tol);
                 testCase.verifyFail('Should have thrown error for out of bound RT');
             catch ME
                 testCase.verifyTrue(contains(ME.message, 'Cannot find the spectra'), 'Error message mismatch');
