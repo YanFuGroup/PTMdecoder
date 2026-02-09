@@ -52,7 +52,7 @@ end
 
 % Check and create a new output file
 each_peptide_results_path = fullfile(obj.m_outputDir,'report_peptide_all.txt');
-CIMPGatherWriter.start_new_run(each_peptide_results_path);
+report = CIMPQuantReport();
 
 % Read and process
 msms_reader = CMSMSResReader();
@@ -87,10 +87,13 @@ for idx_psf = 1:length(msms_result.Peptides)
         impGatherIMSLQ.setRawStore(dataset_name, rawStore);
     end
     % Run gather
-    impGatherIMSLQ.quantifyIMPs();
+    block = impGatherIMSLQ.quantifyIMPs();
+    report = report.append_block(block);
 end
 print_progress.last_update();
 fprintf('done.\n');
+
+CIMPQuantResultIO.write(report, each_peptide_results_path);
 
 if need_release_mgf_index
     obj.m_cMgfDatasetIO.CloseAllFile();

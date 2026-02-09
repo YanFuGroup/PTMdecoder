@@ -5,7 +5,7 @@ if fin < 0
     error(['Cannot open the report file "', path, '".']);
 end
 
-blocks = CIMPQuantBlock.empty(0,1);
+report = CIMPQuantReport();
 current_protein_name_pos = {};
 current_records = CIMPQuantRecord.empty(0,1);
 current_record = CIMPQuantRecord.empty(0,1);
@@ -41,7 +41,7 @@ while ~feof(fin)
             has_record = false;
         end
         if has_block
-            blocks(end+1,1) = CIMPQuantBlock(current_protein_name_pos, current_records); %#ok<AGROW>
+            report = report.add_block(current_protein_name_pos, current_records);
         end
         current_protein_name_pos = CIMPQuantResultIO.parse_protein_line(strline);
         current_records = CIMPQuantRecord.empty(0,1);
@@ -53,9 +53,8 @@ if has_record
     current_records(end+1,1) = current_record; %#ok<AGROW>
 end
 if has_block
-    blocks(end+1,1) = CIMPQuantBlock(current_protein_name_pos, current_records); %#ok<AGROW>
+    report = report.add_block(current_protein_name_pos, current_records);
 end
 fclose(fin);
-
-obj = CIMPQuantReport(blocks);
+obj = report;
 end

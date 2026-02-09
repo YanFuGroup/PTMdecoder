@@ -5,6 +5,15 @@ classdef CIMPQuantResultIO
         obj = read(path)
 
         write(report, path)
+
+        % Legacy writer helpers (shared by CIMPGatherWriter)
+        write_header(fid)
+
+        write_imp_group_block(output_path, protein_name_pos, imp_records)
+
+        write_imp_records(fid, imp_records)
+
+        write_protein_start_position_line(fid, prot_names_pos)
     end
 
     methods (Static, Access=private)

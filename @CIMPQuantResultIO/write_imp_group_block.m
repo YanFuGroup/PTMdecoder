@@ -16,7 +16,7 @@ fid = fopen(output_path, 'a');
 if fid == -1
     error(['Cannot open the the report file ', output_path]);
 end
-CIMPGatherWriter.write_protein_start_position_line(fid, protein_name_pos);
-CIMPGatherWriter.write_imp_records(fid, imp_records);
+CIMPQuantResultIO.write_protein_start_position_line(fid, protein_name_pos);
+CIMPQuantResultIO.write_imp_records(fid, imp_records);
 fclose(fid);
 end

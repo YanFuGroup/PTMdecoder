@@ -1,12 +1,15 @@
-function quantifyIMPs(obj)
+function block = quantifyIMPs(obj)
 % Main entry point for summarizing the quantification of various IMPs of a peptide
-% Output to a file
+% Output to a CIMPQuantBlock
 % Below each peptide, there are several lines starting with '*', representing the overall information of IMP.
 % Each line starting with '*' (IMP line) is followed by several retention time lines ('@' starting lines).
-%
+% 
 % Input:
 %   obj (CIMPGatherQuant)
 %       Quantification aggregator instance
+% Output:
+%   block (CIMPQuantBlock or empty)
+%       Protein block with IMP records, empty if no records
 
 imp_records = CIMPQuantRecord.empty(0,1);
 
@@ -16,7 +19,11 @@ for idx_raw = 1:numel(raw_names)
     imp_records = obj.m_groupAggregator.aggregate(raw_names{idx_raw}, raw_ident_stores{idx_raw}, [], ...
         @(state, group) handle_group_charge(state, obj, group), imp_records);
 end
-CIMPGatherWriter.write_imp_group_block(obj.m_outputPath, obj.m_prot_names_pos, imp_records);
+if isempty(imp_records)
+    block = CIMPQuantBlock.empty(0,1);
+else
+    block = CIMPQuantBlock(obj.m_prot_names_pos, imp_records);
+end
 end
 
 

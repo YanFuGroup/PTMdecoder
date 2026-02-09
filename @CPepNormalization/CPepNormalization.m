@@ -97,9 +97,6 @@ classdef CPepNormalization < handle
         % Process one experiment for normalization peptide calculation
         processOneExperiment(obj, experimentName)
         
-        % Create and initialize the output file
-        createOutputFile(obj, outputPath);
-        
         % Initialize quantification objects for each peptide
         pep_quant = initializeQuantificationObjects(obj, outputPath, ms12DatasetIO);
         

@@ -57,10 +57,10 @@ classdef CIMPGatherQuant < handle
         end
         
         % Main entry point for summarizing the quantification of various modified form of a peptide
-        quantifyIMPs(obj);
+        block = quantifyIMPs(obj);
 
         % Re-quantification for gathered peptides using manually-checked rt range
-        requantifyIMPsWithRTRanges(obj,pep_rtrange_map);
+        block = requantifyIMPsWithRTRanges(obj,pep_rtrange_map);
 
         % Draw the XIC for gathered peptides using manually-checked rt range to dir_save
         % The color_map and legend_map are optional

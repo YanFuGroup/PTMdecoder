@@ -1,10 +1,13 @@
-function requantifyIMPsWithRTRanges(obj,pep_rtrange_map)
+function block = requantifyIMPsWithRTRanges(obj,pep_rtrange_map)
 % Re-quantification for gathered peptides using manually-checked rt range
 % Input:
 %   obj (CIMPGatherQuant)
 %       Quantification aggregator instance
 %   pep_rtrange_map (containers.Map)
 %       map of [modified peptide _ charge _ raw file name] -> [rt_start, rt_end, check_label]
+% Output:
+%   block (CIMPQuantBlock or empty)
+%       Protein block with IMP records, empty if no records
 
 imp_records = CIMPQuantRecord.empty(0,1);
 
@@ -14,7 +17,11 @@ for idx_raw = 1:numel(raw_names)
     imp_records = obj.m_groupAggregator.aggregate(raw_names{idx_raw}, raw_ident_stores{idx_raw}, pep_rtrange_map, ...
         @(state, group) handle_group_charge(state, obj, group), imp_records);
 end
-CIMPGatherWriter.write_imp_group_block(obj.m_outputPath, obj.m_prot_names_pos, imp_records);
+if isempty(imp_records)
+    block = CIMPQuantBlock.empty(0,1);
+else
+    block = CIMPQuantBlock(obj.m_prot_names_pos, imp_records);
+end
 end
 
 

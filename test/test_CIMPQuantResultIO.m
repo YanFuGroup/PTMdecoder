@@ -13,8 +13,9 @@ classdef test_CIMPQuantResultIO < matlab.unittest.TestCase
             ];
             imp_records = CIMPQuantRecord('IMP_A', 2, 'RAW1', 500.1234, 499.5, 500.8, 123.4, rt_peaks);
 
-            CIMPGatherWriter.start_new_run(tmp_in);
-            CIMPGatherWriter.write_imp_group_block(tmp_in, protein_name_pos, imp_records);
+            report = CIMPQuantReport();
+            report = report.add_block(protein_name_pos, imp_records);
+            CIMPQuantResultIO.write(report, tmp_in);
 
             report = CIMPQuantResultIO.read(tmp_in);
             CIMPQuantResultIO.write(report, tmp_out);

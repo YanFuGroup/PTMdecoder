@@ -27,7 +27,7 @@ end
 
 %% Requantify the normalization peptides
 output_path = fullfile(obj.m_outputDir, 'peptide4normalization_requant.txt');
-CIMPGatherWriter.start_new_run(output_path);
+report_requant = CIMPQuantReport();
 
 % Indexing the dataset IO
 obj.m_cMs12DatasetIO = CMS12DatasetIO(obj.m_specPath,obj.m_ms1_tolerance);
@@ -80,13 +80,15 @@ for idx_block = 1:numel(report.blocks)
             impGatherIMSLQ.setRawStore(mgf_name, rawStore);
         end
 
-        impGatherIMSLQ.requantifyIMPsWithRTRanges(pep_rtrange_map);
+        block = impGatherIMSLQ.requantifyIMPsWithRTRanges(pep_rtrange_map);
+        report_requant = report_requant.append_block(block);
     end
 end
 
 print_progress.last_update();
 fprintf('done.\n');
 
+CIMPQuantResultIO.write(report_requant, output_path);
 obj.m_cMgfDatasetIO.CloseAllFile();
 end
 

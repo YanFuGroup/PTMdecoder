@@ -36,7 +36,7 @@ end
 %     error(['Cannot open the msms level result:"',each_PSM_results_path,'"!']);
 % end
 output_path = fullfile(obj.m_outputDir, 'report_peptide_all_requant.txt');
-CIMPGatherWriter.start_new_run(output_path);
+report = CIMPQuantReport();
 % file_total_length = dir(each_PSM_results_path).bytes;
 % if file_total_length == 0
 %     fprintf(['Warning: The file "', each_PSM_results_path, '" is empty']);
@@ -88,12 +88,14 @@ for idx_psf = 1:length(msms_result.Peptides)
         impGatherIMSLQ.setRawStore(dataset_name, rawStore);
     end
     % Run gather
-    impGatherIMSLQ.requantifyIMPsWithRTRanges(pep_rtrange_map);
+    block = impGatherIMSLQ.requantifyIMPsWithRTRanges(pep_rtrange_map);
+    report = report.append_block(block);
 
 end
 
 print_progress.last_update();
 fprintf('done.\n');
+CIMPQuantResultIO.write(report, output_path);
 % fclose(fin);
 obj.m_cMgfDatasetIO.CloseAllFile();
 end

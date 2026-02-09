@@ -4,7 +4,7 @@ fid = fopen(path, 'w');
 if fid < 0
     error(['Cannot open the report file "', path, '".']);
 end
-CIMPGatherWriter.write_header(fid);
+CIMPQuantResultIO.write_header(fid);
 fclose(fid);
 
 if isempty(report.blocks)
@@ -12,6 +12,6 @@ if isempty(report.blocks)
 end
 for idx_block = 1:numel(report.blocks)
     block = report.blocks(idx_block);
-    CIMPGatherWriter.write_imp_group_block(path, block.protein_name_pos, block.records);
+    CIMPQuantResultIO.write_imp_group_block(path, block.protein_name_pos, block.records);
 end
 end

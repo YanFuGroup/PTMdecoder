@@ -27,7 +27,10 @@ function runQuant(obj)
 
         % Check and create a new output file
         outputPath = fullfile(obj.result_dir, experimentName);
-        obj.createOutputFile(outputPath);
+        if ~exist(outputPath, 'dir')
+            mkdir(outputPath);
+        end
+        report = CIMPQuantReport();
 
         % Initialize quantification objects
         pep_quant = obj.initializeQuantificationObjects(outputPath, ms12DatasetIO);
@@ -40,9 +43,13 @@ function runQuant(obj)
         % Run quantification
         fprintf('Quantifying %s...', experimentName);
         for i_list = 1:length(obj.peptide_list)
-            pep_quant{i_list}.quantifyIMPs();
+            block = pep_quant{i_list}.quantifyIMPs();
+            report = report.append_block(block);
         end
         fprintf('done.\n');
+
+        % Write report once
+        CIMPQuantResultIO.write(report, fullfile(outputPath, obj.output_file_name));
 
         % Close files
         fclose(fin);
