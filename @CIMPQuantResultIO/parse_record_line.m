@@ -3,6 +3,13 @@ function rec = parse_record_line(strline)
 % Line format: *\tIMP_name\t+charge\tdataset_name\tmass_center\tlow_mz_bound\thigh_mz_bound\tarea
 % Exactly 8 tab-separated fields, starting with '*'
 segment = regexp(strline, '\t', 'split');
+if isempty(segment) || ~strcmp(segment{1}, '*')
+	error('parse_record_line:InvalidFormat', "Record line must start with '*'.");
+end
+if numel(segment) ~= 8
+	error('parse_record_line:InvalidFormat', 'Record line must have exactly 8 tab-separated fields.');
+end
+
 imp_name = segment{2};
 charge = str2double(strrep(segment{3}, '+', ''));
 raw_name = segment{4};
@@ -10,6 +17,10 @@ mass_center = str2double(segment{5});
 low_mz_bound = str2double(segment{6});
 high_mz_bound = str2double(segment{7});
 area = str2double(segment{8});
+if any(isnan([charge, mass_center, low_mz_bound, high_mz_bound, area]))
+	error('parse_record_line:InvalidNumber', 'Record line has invalid numeric field(s).');
+end
+
 rt_peaks = repmat(struct('rt_start',0,'rt_end',0,'ratio',0,'check_label',0), 0, 1);
 rec = CIMPQuantRecord(imp_name, charge, raw_name, mass_center, low_mz_bound, high_mz_bound, area, rt_peaks);
 end
