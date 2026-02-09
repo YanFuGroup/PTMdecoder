@@ -57,8 +57,8 @@ function pep_quant = readSearchResult(obj, fin, input_file_path, ms12DatasetIO, 
                 MS1Scan = MS2_index(tmp_idx, 1);
                 
                 % Get MS1 data
-                MS1_index = ms12DatasetIO.m_mapNameMS1Index(ms1_name);
-                MS1_peaks = ms12DatasetIO.m_mapNameMS1Peaks(ms1_name);
+                MS1_index = ms12DatasetIO.m_mapNameMS1Index(ms2_name);
+                MS1_peaks = ms12DatasetIO.m_mapNameMS1Peaks(ms2_name);
                 
                 ino = find(MS1_index(:,1) == MS1Scan);
                 if isempty(ino)

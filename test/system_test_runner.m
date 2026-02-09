@@ -1,5 +1,5 @@
 function system_test_runner()
-% SYSTEM_TEST_RUNNER Run end-to-end system tests and compare with golden outputs
+    % SYSTEM_TEST_RUNNER Run end-to-end system tests and compare with golden outputs
     fclose all;
 
     % Set path
@@ -42,6 +42,9 @@ function system_test_runner()
     
     fprintf('Running drawXIC test...\n');
     helper_test_draw_xic(projectDir, testDataDir, outputDir);
+    
+    fprintf('Running normalization peptide quantification test...\n');
+    helper_test_quant_norm_pep(projectDir, testDataDir, outputDir);
 
     fprintf('Run completed, start comparing results...\n');
     

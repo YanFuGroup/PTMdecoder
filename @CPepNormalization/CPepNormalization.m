@@ -15,14 +15,14 @@ classdef CPepNormalization < handle
         ms1_tolerance      % MS1 mass accuracy tolerance
         resFilterThres     % Threshold for filtering results by relative intensity
         alpha              % Threshold for filtering noise peaks
-        input_file_name    % Name of the input file (optional)
+        filtered_res_file_path    % Path of the FDR filtered result (optional)
         output_file_name   % Name of the output file (optional)
     end
     
     methods
         function obj = CPepNormalization(peptide_list, prot_list, result_dir, ...
                 spectra_dir, experimentNames, ms1_tolerance, resFilterThres, alpha, ...
-                input_file_name, output_file_name)
+                filtered_res_file_path, output_file_name)
             % Constructor
             % Input:
             %   peptide_list (K x 1 cellstr/string)
@@ -41,8 +41,8 @@ classdef CPepNormalization < handle
             %       Threshold for filtering results
             %   alpha (1 x 1 double)
             %       Threshold for filtering noise peaks
-            %   input_file_name (1 x 1 char/string, optional)
-            %       Name of the input file
+            %   filtered_res_file_path (1 x 1 char/string, optional)
+            %       Path of the FDR filtered result file (default: 'filtered_result_mascot.txt' in the result directory)
             %   output_file_name (1 x 1 char/string, optional)
             %       Name of the output file
             
@@ -55,9 +55,9 @@ classdef CPepNormalization < handle
             obj.resFilterThres = resFilterThres;
             obj.alpha = alpha;
             if nargin >= 9
-                obj.input_file_name = input_file_name;
+                obj.filtered_res_file_path = filtered_res_file_path;
             else
-                obj.input_file_name = 'filtered_result_mascot.txt';
+                obj.filtered_res_file_path = fullfile(result_dir, 'filtered_result_mascot.txt');
             end
             if nargin >= 10
                 obj.output_file_name = output_file_name;
@@ -82,7 +82,7 @@ classdef CPepNormalization < handle
             end
             
             if ~exist(obj.result_dir, 'dir')
-                error('Result directory does not exist: %s', obj.result_dir);
+                mkdir(obj.result_dir);
             end
             
             if ~exist(obj.spectra_dir, 'dir')
@@ -104,7 +104,7 @@ classdef CPepNormalization < handle
         pep_quant = initializeQuantificationObjects(obj, outputPath, ms12DatasetIO);
         
         % Process the filtered results file and extract peptide information
-        pep_quant = readSearchResult(obj, fin, input_file_path, ms12DatasetIO, pep_quant);
+        pep_quant = readSearchResult(obj, fin, filtered_res_file_path, ms12DatasetIO, pep_quant);
         
         % Calculate the mass of a peptide sequence
         lfMass = getPeptideMass(obj, pep_seq);

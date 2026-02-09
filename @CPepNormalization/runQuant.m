@@ -19,7 +19,7 @@ function runQuant(obj)
         ms12DatasetIO.SetMap();
 
         % Open the FDR filtered result
-        filtered_res_file_path = fullfile(obj.result_dir, experimentName, obj.input_file_name);
+        filtered_res_file_path = fullfile(obj.filtered_res_file_path);
         fin = fopen(filtered_res_file_path, 'r');
         if fin == -1
             error('Cannot open the FDR filtered result file: "%s"!', filtered_res_file_path);

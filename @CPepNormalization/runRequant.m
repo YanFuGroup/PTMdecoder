@@ -1,14 +1,10 @@
-function runRequant(obj, checked_pep_file_name)
+function runRequant(obj, checked_pep_file_path)
 % Execute the normalization peptide calculation for all experiments
 % Input:
 %   obj (CPepNormalization)
 %       Normalization processor instance
-%   checked_pep_file_name (1 x 1 char/string, optional)
-%       Name of the file containing checked peptides
-
-if nargin < 2 || isempty(checked_pep_file_name)
-    checked_pep_file_name = 'peptide4normalization_checked.txt';
-end
+%   checked_pep_file_path (1 x 1 char/string)
+%       Path of the file containing checked peptides
 
 fprintf('Starting requantifying normalization peptides...\n');
 
@@ -31,7 +27,7 @@ for i_exp = 1:length(obj.experimentNames)
         {}, ...         % enzyme
         fullfile(obj.result_dir, experimentName), ...
         [1,2], ...      % ionTypes
-        fullfile(obj.result_dir, experimentName, checked_pep_file_name) ...
+        checked_pep_file_path ...
         );
     requant_processor.requant_norm_pep();
 end
