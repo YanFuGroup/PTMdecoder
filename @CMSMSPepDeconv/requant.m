@@ -14,9 +14,8 @@ else
     checked_pep_path = obj.m_checked_peptides_res_path;
 end
 
-pep_res_reader = CPepResReader();
-pep_res_reader = pep_res_reader.read_from_pep_res_file(checked_pep_path);
-pep_rtrange_map = pep_res_reader.get_pep_rtrange_map();
+report = CIMPQuantResultIO.read(checked_pep_path);
+pep_rtrange_map = report.build_pep_rtrange_map();
 if isempty(pep_rtrange_map)
     error(['The checked peptide result file "', checked_pep_path, '" is empty!']);
 end

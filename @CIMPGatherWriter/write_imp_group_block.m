@@ -6,7 +6,7 @@ function write_imp_group_block(output_path, protein_name_pos, imp_records)
 %       the path to the output file
 %   protein_name_pos (N x 2 cell)
 %       cell array containing protein names and their start positions
-%   imp_records (struct array or CIMPQuantResult array)
+%   imp_records (struct array or CIMPQuantRecord array)
 %       array of structures containing IMP record data
 
 if isempty(imp_records)

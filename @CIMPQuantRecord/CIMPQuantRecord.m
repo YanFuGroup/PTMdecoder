@@ -1,5 +1,5 @@
-classdef CIMPQuantResult
-    % Data model for quantification result of an IMP
+classdef CIMPQuantRecord
+    % Data model for a single IMP quantification record
 
     properties
         imp_name
@@ -13,8 +13,8 @@ classdef CIMPQuantResult
     end
 
     methods
-        function obj = CIMPQuantResult(imp_name, charge, raw_name, mass_center, low_mz_bound, high_mz_bound, area, rt_peaks)
-            % Constructor for CIMPQuantResult
+        function obj = CIMPQuantRecord(imp_name, charge, raw_name, mass_center, low_mz_bound, high_mz_bound, area, rt_peaks)
+            % Constructor for CIMPQuantRecord
             % input:
             %   imp_name (1 x 1 char/string)
             %       the name of the IMP
@@ -30,12 +30,12 @@ classdef CIMPQuantResult
             %       high precursor m/z bound
             %   area (1 x 1 double) area
             %       quantified area
-            %   rt_peaks (struct array) 
+            %   rt_peaks (struct array)
             %       array of structs, each with fields:
             %       - rt_start (double) minutes: start retention time of the peak
             %       - rt_end (double) minutes: end retention time of the peak
             %       - ratio (double): ratio contribution of the peak
-            %       - check_label (int): 1 if selected peak, 0 otherwise,and 2 for checked selected peak
+            %       - check_label (int): 1 if selected peak, 0 otherwise, and 2 for checked selected peak
             if nargin == 0
                 return;
             end
@@ -51,8 +51,13 @@ classdef CIMPQuantResult
     end
 
     methods (Static)
+        function key = build_id(imp_name, charge, raw_name)
+            % Build the canonical string key for IMP records
+            key = [imp_name, '_+', num2str(charge), '_', raw_name];
+        end
+
         function obj = empty(varargin)
-            obj = CIMPQuantResult;
+            obj = CIMPQuantRecord;
             obj = obj([]);
         end
     end

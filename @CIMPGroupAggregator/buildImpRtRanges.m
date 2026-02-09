@@ -21,8 +21,7 @@ function current_imp_rt_range = buildImpRtRanges(~, group_imp_name, selected_cha
 
     current_imp_rt_range = cell(length(group_imp_name), 1);
     for idx_imp = 1:length(group_imp_name)
-        generated_key = [group_imp_name{idx_imp}, '_+', ...
-            num2str(selected_charge), '_', raw_name];
+        generated_key = CIMPQuantRecord.build_id(group_imp_name{idx_imp}, selected_charge, raw_name);
         if pep_rtrange_map.isKey(generated_key)
             current_imp_rt_range{idx_imp} = pep_rtrange_map(generated_key);
         end

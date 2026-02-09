@@ -124,7 +124,7 @@ while ~feof(fin)
             get_information_from_peptide_line(strline);
         lfMass = get_mass_peptide(current_peptide);
         lfMz = (lfMass+current_charge*CConstant.pmass)/current_charge;
-        current_key = [current_peptide,'_+',num2str(current_charge),'_',mgf_name];
+        current_key = CIMPQuantRecord.build_id(current_peptide, current_charge, mgf_name);
         impGatherIMSLQ = CIMPGatherQuant({pep_prot_map(current_key),-1}, ...
             obj.m_cMs12DatasetIO,obj.m_resFilterThres,obj.m_ms1_tolerance, ...
             obj.m_alpha,output_path);
@@ -240,7 +240,8 @@ function key_mod_pep = get_mod_pep_from_string(strline)
 
 segment = regexp(strline,'\t','split');
 % Need the modified peptide (2), charge (3) and dataset name (4)
-key_mod_pep = [segment{2},'_',segment{3},'_',segment{4}];
+    charge = str2double(strrep(segment{3}, '+', ''));
+    key_mod_pep = CIMPQuantRecord.build_id(segment{2}, charge, segment{4});
 end
 
 
