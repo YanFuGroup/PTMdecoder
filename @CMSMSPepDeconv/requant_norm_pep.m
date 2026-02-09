@@ -14,58 +14,12 @@ else
     checked_pep_path = obj.m_checked_peptides_res_path;
 end
 
-fin = fopen(checked_pep_path, 'r');
-if fin < 0
-    error(['Cannot open the checked normalization peptides result:"',checked_pep_path,'"!']);
+report = CIMPQuantResultIO.read(checked_pep_path);
+pep_rtrange_map = report.build_pep_rtrange_map();
+pep_prot_map = report.build_pep_prot_map();
+if isempty(pep_rtrange_map)
+    error(['The checked normalization peptide result file "', checked_pep_path, '" is empty!']);
 end
-
-file_total_length = dir(checked_pep_path).bytes;
-if file_total_length == 0
-    fprintf(['Warning: The file "', checked_pep_path, '" is empty\n']);
-end
-print_progress = CPrintProgress(file_total_length);
-fprintf('Reading the checked peptide results...');
-
-% Initial the [mod_pep -> rt_range] data structure
-pep_rtrange_map = containers.Map();
-pep_prot_map = containers.Map();
-
-% Read the file and construct the [mod_pep -> rt_range] data structure
-% Skip the first three lines (Header lines)
-% TODO: Use CPepResReader
-fgetl(fin);
-fgetl(fin);
-fgetl(fin);
-prot_name = '';
-while ~feof(fin)
-    strline = fgetl(fin);
-    % Show progress
-    print_progress = print_progress.update_show(ftell(fin));
-    if isempty(strline)
-        continue;
-    elseif strline(1) == '@'
-        % Record one retention time range line
-        [rt_left, rt_right, check_label] = get_rt_range_check_label(strline);
-        pep_rtrange_map(key_mod_pep) = [pep_rtrange_map(key_mod_pep); struct('rt_start',rt_left,'rt_end',rt_right,'check_label',check_label)];
-    elseif strline(1) == '*'
-        % Record one IMP line
-        key_mod_pep = get_mod_pep_from_string(strline);
-        pep_prot_map(key_mod_pep) = prot_name;
-        if ~isempty(key_mod_pep)
-            pep_rtrange_map(key_mod_pep) = struct('rt_start',{},'rt_end',{},'check_label',{});
-        end
-    else
-        % Record one protein-site line
-        % Only retain the name of first protein
-        segment = regexp(strline,',','split');
-        prot_name = segment{1};
-        continue;
-    end
-end
-% Record once more at the end of the file
-fclose(fin);
-print_progress.last_update();
-fprintf('done.\n');
 
 if ~isfolder(obj.m_outputDir)
     mkdir(obj.m_outputDir);
@@ -84,62 +38,52 @@ obj.m_cMgfDatasetIO.SetMap();
 obj.m_cMgfDatasetIO.SetFidmap();
 
 % Read and process
-fin = fopen(checked_pep_path, 'r');
-if fin < 0
-    error(['Cannot open the checked normalization peptides result:"',checked_pep_path,'"!']);
+total_records = 0;
+for idx_block = 1:numel(report.blocks)
+    total_records = total_records + numel(report.blocks(idx_block).records);
 end
-
-file_total_length = dir(checked_pep_path).bytes;
-if file_total_length == 0
+if total_records == 0
     fprintf(['Warning: The file "', checked_pep_path, '" is empty\n']);
 end
-print_progress = CPrintProgress(file_total_length);
+print_progress = CPrintProgress(max(total_records, 1));
 fprintf('Re-quantifying at peptide level...')
 
-% Read the file and construct the [mod_pep -> rt_range] data structure
-% Skip the first three lines (Header lines)
-% TODO: Use CPepResReader
-fgetl(fin);
-fgetl(fin);
-fgetl(fin);
-is_ready = false;
-while ~feof(fin)
-    strline = fgetl(fin);
-    % Show progress
-    print_progress = print_progress.update_show(ftell(fin));
-    if isempty(strline)
-        continue;
-    elseif strline(1) == '@'
-        % Record one retention time line, complete a psm result
-        rt_median = get_median_rt(strline);
-        rawStore = impGatherIMSLQ.getRawStore(mgf_name);
-        rawStore = rawStore.appendSpecQuant(rt_median, 1, lfMz, current_charge, {current_peptide}, lfMass, 1);
-        impGatherIMSLQ.setRawStore(mgf_name, rawStore);
-    elseif strline(1) == '*'
-        % Record one peptide line
-        if is_ready
-            impGatherIMSLQ.requantifyIMPsWithRTRanges(pep_rtrange_map);
-        end
-        [mgf_name, current_charge, current_peptide] = ...
-            get_information_from_peptide_line(strline);
+rec_counter = 0;
+for idx_block = 1:numel(report.blocks)
+    prot_name = '';
+    if ~isempty(report.blocks(idx_block).protein_name_pos)
+        prot_name = report.blocks(idx_block).protein_name_pos{1,1};
+    end
+    records = report.blocks(idx_block).records;
+    for idx_rec = 1:numel(records)
+        rec_counter = rec_counter + 1;
+        print_progress = print_progress.update_show(rec_counter);
+
+        mgf_name = records(idx_rec).raw_name;
+        current_charge = records(idx_rec).charge;
+        current_peptide = records(idx_rec).imp_name;
         lfMass = get_mass_peptide(current_peptide);
-        lfMz = (lfMass+current_charge*CConstant.pmass)/current_charge;
+        lfMz = (lfMass + current_charge * CConstant.pmass) / current_charge;
         current_key = CIMPQuantRecord.build_id(current_peptide, current_charge, mgf_name);
-        impGatherIMSLQ = CIMPGatherQuant({pep_prot_map(current_key),-1}, ...
-            obj.m_cMs12DatasetIO,obj.m_resFilterThres,obj.m_ms1_tolerance, ...
-            obj.m_alpha,output_path);
-        is_ready = true;
-    else
-        % Record one protein-site line
-        if is_ready
-            impGatherIMSLQ.requantifyIMPsWithRTRanges(pep_rtrange_map);
-            is_ready = false;
+        if pep_prot_map.isKey(current_key)
+            prot_name = pep_prot_map(current_key);
         end
+        impGatherIMSLQ = CIMPGatherQuant({prot_name, -1}, ...
+            obj.m_cMs12DatasetIO, obj.m_resFilterThres, obj.m_ms1_tolerance, ...
+            obj.m_alpha, output_path);
+
+        rt_peaks = records(idx_rec).rt_peaks;
+        for idx_peak = 1:numel(rt_peaks)
+            rt_median = (rt_peaks(idx_peak).rt_start + rt_peaks(idx_peak).rt_end) / 2;
+            rawStore = impGatherIMSLQ.getRawStore(mgf_name);
+            rawStore = rawStore.appendSpecQuant(rt_median, 1, lfMz, current_charge, {current_peptide}, lfMass, 1);
+            impGatherIMSLQ.setRawStore(mgf_name, rawStore);
+        end
+
+        impGatherIMSLQ.requantifyIMPsWithRTRanges(pep_rtrange_map);
     end
 end
-% Record once more at the end of the file
-impGatherIMSLQ.requantifyIMPsWithRTRanges(pep_rtrange_map);
-fclose(fin);
+
 print_progress.last_update();
 fprintf('done.\n');
 
@@ -149,102 +93,6 @@ end
 
 
 %% Other functions
-
-% Get the median of rt bound
-function rt = get_median_rt(strline)
-% Input:
-%   strline (1 x 1 char/string)
-%       current line
-% Output:
-%   rt (1 x 1 double) minutes
-%       median RT
-
-reg_exp_pat = '\d*\.?\d+';
-% Use regexp to find all matches
-matches = regexp(strline, reg_exp_pat, 'match');
-numbers = str2double(matches);
-
-% Check the size of the input numbers
-if length(numbers) < 4
-    error(['The line: "',strline,'" representing the RT ranges are in an unexpected format!']);
-end
-
-% Add one rt to identification result
-rt = (numbers(1) + numbers(2)) / 2;
-end
-
-
-
-% Get some information for this peptide
-function [mgf_name, current_charge, current_peptide] = ...
-    get_information_from_peptide_line(strline)
-% Input:
-%   strline (1 x 1 char/string)
-%       one peptide line
-% Output:
-%   mgf_name (1 x 1 char/string)
-%       mgf name
-%   current_charge (1 x 1 double/int)
-%       charge of this PSM
-%   current_peptide (1 x 1 char/string)
-%       peptide sequence of this PSM
-
-segment = regexp(strline,'\t','split');
-% Need the modified peptide (2), charge (3) and dataset name (4)
-mgf_name = segment{4};
-current_charge = str2double(segment{3}(2:end)); % only use the number
-current_peptide = segment{2};
-end
-
-
-
-% Get the rt range and check label
-function [rt_left, rt_right, check_label] = get_rt_range_check_label(strline)
-% Input:
-%   strline (1 x 1 char/string)
-%       current line
-% Output:
-%   rt_left (1 x 1 double) minutes
-%       left bound of RT range
-%   rt_right (1 x 1 double) minutes
-%       right bound of RT range
-%   check_label (1 x 1 double/int)
-%       check label
-
-reg_exp_pat = '\d*\.?\d+';
-% Use regexp to find all matches
-matches = regexp(strline, reg_exp_pat, 'match');
-numbers = str2double(matches);
-
-% Check the size of the input numbers
-if length(numbers) < 4
-    error(['The line: "',strline,'" representing the RT ranges are in an unexpected format!']);
-end
-
-% Get the rt range and check label
-rt_left = numbers(1);
-rt_right = numbers(2);
-check_label = numbers(4);
-end
-
-
-
-% Get the key of mod peptide with a string
-function key_mod_pep = get_mod_pep_from_string(strline)
-% Input:
-%   strline (1 x 1 char/string)
-%       input string from report file
-% Output:
-%   key_mod_pep (1 x 1 char/string)
-%       modified peptide key
-
-segment = regexp(strline,'\t','split');
-% Need the modified peptide (2), charge (3) and dataset name (4)
-    charge = str2double(strrep(segment{3}, '+', ''));
-    key_mod_pep = CIMPQuantRecord.build_id(segment{2}, charge, segment{4});
-end
-
-
 
 % Get the mass of each IMPs
 function lfMass = get_mass_peptide(pep_seq)
