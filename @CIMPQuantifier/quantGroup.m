@@ -56,6 +56,9 @@ if ~is_valid
     return;
 end
 
+% Record rt_sorted length for offline analysis
+CIMPQuantifier.rt_sorted_stats('record', numel(rt_sorted));
+
 % Extract the XIC peaks around the identified MSMS precursor
 xic_peak_idx_bounds = CChromatogramUtils.detect_xic_peaks(xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, alpha);
 

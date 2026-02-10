@@ -47,6 +47,7 @@ fprintf('done.\n');
 
 % Run quantification
 pipeline = CIMPProcessingPipeline(ms12DatasetIO, obj.m_ms1_tolerance, 1, obj.m_alpha, obj.m_resFilterThres);
+stats_cleanup = onCleanup(@() CIMPQuantifier.rt_sorted_stats('flush', fullfile(obj.m_outputDir, 'rt_sorted_stats.mat')));
 report = CIMPQuantReport();
 fprintf('Quantifying %s...', obj.m_specPath);
 for i_list = 1:length(peptide_list)

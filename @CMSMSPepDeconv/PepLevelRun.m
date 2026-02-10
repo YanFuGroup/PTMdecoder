@@ -59,6 +59,7 @@ msms_reader = CMSMSResReader();
 msms_result = msms_reader.read_from_msms_res_file(each_PSM_results_path);
 print_progress = CPrintProgress(length(msms_result.Peptides));
 pipeline = CIMPProcessingPipeline(obj.m_cMs12DatasetIO, obj.m_ms1_tolerance, obj.m_min_MSMS_num, obj.m_alpha, obj.m_resFilterThres);
+stats_cleanup = onCleanup(@() CIMPQuantifier.rt_sorted_stats('flush', fullfile(obj.m_outputDir, 'rt_sorted_stats.mat')));
 
 fprintf('Quantifying at peptide level...')
 for idx_psf = 1:length(msms_result.Peptides)
