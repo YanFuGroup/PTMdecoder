@@ -13,7 +13,7 @@ function pep_quant = readSearchResult(obj, fin, input_file_path, ms12DatasetIO, 
 %       Per-peptide raw identification store managers
 % Output:
 %   pep_quant (1 x K cell)
-%       Updated quantification objects
+%       updated raw identification managers
     
     progress_printer = CPrintProgress(dir(input_file_path).bytes);
     fgetl(fin); % skip the first line

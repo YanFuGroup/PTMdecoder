@@ -32,7 +32,7 @@ function runQuant(obj)
         end
         report = CIMPQuantReport();
 
-        % Initialize quantification objects
+        % Initialize raw managers
         pep_quant = cell(length(obj.peptide_list), 1);
         for i_list = 1:length(obj.peptide_list)
             pep_quant{i_list} = CIMPRawIdentManager();

@@ -176,4 +176,9 @@ classdef CMSMSPepDeconv
         drawXIC(obj, dir_save, color_map, legend_map);
     end
 
+    methods (Access = private)
+        % Build a raw identification manager for a peptide from its spectrum list
+        rawIdentManager = buildRawIdentManagerFromSpectrumList(obj, spectrum_list);
+    end
+
 end

@@ -1,5 +1,5 @@
 function runRequant(obj, checked_pep_file_path)
-% Execute the normalization peptide calculation for all experiments
+% Re-quantify normalization peptides using checked XIC peaks
 % Input:
 %   obj (CPepNormalization)
 %       Normalization processor instance
