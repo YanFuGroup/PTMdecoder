@@ -97,13 +97,16 @@ classdef CPepNormalization < handle
         % Process one experiment for normalization peptide calculation
         processOneExperiment(obj, experimentName)
         
-        % Initialize quantification objects for each peptide
-        pep_quant = initializeQuantificationObjects(obj, outputPath, ms12DatasetIO);
-        
         % Process the filtered results file and extract peptide information
         pep_quant = readSearchResult(obj, fin, filtered_res_file_path, ms12DatasetIO, pep_quant);
         
         % Calculate the mass of a peptide sequence
         lfMass = getPeptideMass(obj, pep_seq);
+
+        % Build quantification block for one peptide
+        block = buildQuantBlock(obj, prot_names_pos, rawManager, ms12DatasetIO);
+
+        % Append quantification records for a group
+        imp_records = appendQuantGroupRecord(obj, imp_records, group, ms12DatasetIO, minMSMSnum);
     end
 end

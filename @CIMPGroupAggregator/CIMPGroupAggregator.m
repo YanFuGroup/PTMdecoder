@@ -11,8 +11,8 @@ classdef CIMPGroupAggregator < handle
             obj.m_ms1_tolerance = ms1_tolerance;
         end
 
-        % Aggregate IMP groups for a single raw file and invoke callback
-        state = aggregate(obj, raw_name, raw, pep_rtrange_map, handle_group_charge, state);
+        % Aggregate IMP groups across raw files and invoke callback
+        state = aggregate(obj, raw_names, raw_ident_stores, pep_rtrange_map, handle_group_charge, state);
     end
 
     methods (Access=private)

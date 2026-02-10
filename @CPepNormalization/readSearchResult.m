@@ -10,7 +10,7 @@ function pep_quant = readSearchResult(obj, fin, input_file_path, ms12DatasetIO, 
 %   ms12DatasetIO (object)
 %       MS1/MS2 dataset IO instance
 %   pep_quant (1 x K cell)
-%       Quantification objects per target peptide
+%       Per-peptide raw identification store managers
 % Output:
 %   pep_quant (1 x K cell)
 %       Updated quantification objects
@@ -90,9 +90,9 @@ function pep_quant = readSearchResult(obj, fin, input_file_path, ms12DatasetIO, 
                 lfMass = obj.getPeptideMass(obj.peptide_list{i_list});
                 
                 % Add to quantification
-                rawStore = pep_quant{i_list}.getRawStore(segment{2});
+                rawStore = pep_quant{i_list}.getOrCreate(segment{2});
                 rawStore = rawStore.appendSpecQuant(cur_rt, cur_inten, cur_mz, cur_ch, {segment{10}}, lfMass, 1);   %#ok<CCAT1>
-                pep_quant{i_list}.setRawStore(segment{2}, rawStore);
+                pep_quant{i_list}.setStore(segment{2}, rawStore);
                 break;
             end
         end

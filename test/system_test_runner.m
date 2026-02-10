@@ -2,6 +2,8 @@ function system_test_runner()
     % SYSTEM_TEST_RUNNER Run end-to-end system tests and compare with golden outputs
     fclose all;
 
+    tic
+
     % Set path
     currentDir = fileparts(mfilename('fullpath'));
     projectDir = fileparts(currentDir); % Go back one level to the code root directory
@@ -56,6 +58,8 @@ function system_test_runner()
     else
         fprintf('\n=== Test failed: Please check code changes ===\n');
     end
+
+    toc
 end
 
 function isMatch = compare_binary_files(file1, file2)

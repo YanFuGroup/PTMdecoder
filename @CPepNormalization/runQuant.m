@@ -33,7 +33,10 @@ function runQuant(obj)
         report = CIMPQuantReport();
 
         % Initialize quantification objects
-        pep_quant = obj.initializeQuantificationObjects(outputPath, ms12DatasetIO);
+        pep_quant = cell(length(obj.peptide_list), 1);
+        for i_list = 1:length(obj.peptide_list)
+            pep_quant{i_list} = CIMPRawIdentManager();
+        end
 
         % Process the filtered result file
         fprintf('Reading %s...', experimentName);
@@ -43,7 +46,7 @@ function runQuant(obj)
         % Run quantification
         fprintf('Quantifying %s...', experimentName);
         for i_list = 1:length(obj.peptide_list)
-            block = pep_quant{i_list}.quantifyIMPs();
+            block = obj.buildQuantBlock({obj.prot_list{i_list}, -1}, pep_quant{i_list}, ms12DatasetIO);
             report = report.append_block(block);
         end
         fprintf('done.\n');
