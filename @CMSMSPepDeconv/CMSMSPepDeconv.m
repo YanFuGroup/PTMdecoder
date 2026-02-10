@@ -166,7 +166,7 @@ classdef CMSMSPepDeconv
         [modNameMass] = getModMassName(obj,modificationTypes,mapModification)
 
         % Re-quantify the IMPs using checked XIC peaks
-        obj = requant(obj)
+        obj = requant_IMP(obj)
 
         % Re-quantify the normalization peptides using checked XIC peaks
         obj = requant_norm_pep(obj)

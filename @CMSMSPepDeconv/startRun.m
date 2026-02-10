@@ -28,7 +28,7 @@ obj.m_cMgfDatasetIO.SetFidmap();
 obj = obj.MSMSLevelRun(is_record_fragment_information);
 
 % Quantification each modified peptide according to each PSMs
-obj = obj.PepLevelRun();
+obj = obj.quant_IMP();
 
 obj.m_cMgfDatasetIO.CloseAllFile();
 

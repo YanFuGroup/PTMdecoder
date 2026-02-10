@@ -1,4 +1,4 @@
-function obj = PepLevelRun(obj)
+function obj = quant_IMP(obj)
 % Run the quantification at peptide level
 % Read the results of PSM level and quantify at peptide level
 % Input:

@@ -1,4 +1,4 @@
-function obj = requant(obj)
+function obj = requant_IMP(obj)
 % Re-quantify the IMPs using checked XIC peaks
 % Input:
 %   obj (CMSMSPepDeconv)

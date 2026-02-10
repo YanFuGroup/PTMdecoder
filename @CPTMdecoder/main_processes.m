@@ -15,11 +15,11 @@ for i = 1:length(varargin)
 
     elseif taskParam.m_peptide_requant_on
         requant_process = CMSMSPepDeconv(taskParam);
-        requant_process.requant();
+        requant_process.requant_IMP();
 
     elseif taskParam.m_peptide_only_on
         peptide_only_process = CMSMSPepDeconv(taskParam);
-        peptide_only_process.PepLevelRun();
+        peptide_only_process.quant_IMP();
     end
 
     % The following processes can be run independently
