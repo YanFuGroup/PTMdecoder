@@ -46,8 +46,9 @@ if total_records == 0
     fprintf(['Warning: The file "', checked_pep_path, '" is empty\n']);
 end
 print_progress = CPrintProgress(max(total_records, 1));
-fprintf('Re-quantifying at peptide level...')
+pipeline = CIMPProcessingPipeline(obj.m_cMs12DatasetIO, obj.m_ms1_tolerance, obj.m_min_MSMS_num, obj.m_alpha, obj.m_resFilterThres);
 
+fprintf('Re-quantifying at peptide level...')
 rec_counter = 0;
 for idx_block = 1:numel(report.blocks)
     prot_name = '';
@@ -78,7 +79,7 @@ for idx_block = 1:numel(report.blocks)
             rawManager.setStore(mgf_name, rawStore);
         end
 
-        block = obj.buildRequantBlock({prot_name, -1}, rawManager, pep_rtrange_map);
+        block = pipeline.buildRequantBlock({prot_name, -1}, rawManager, pep_rtrange_map);
         report_requant = report_requant.append_block(block);
     end
 end

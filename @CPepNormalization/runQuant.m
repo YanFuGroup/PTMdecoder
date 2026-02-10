@@ -44,9 +44,10 @@ function runQuant(obj)
         fprintf('done.\n');
 
         % Run quantification
+        pipeline = CIMPProcessingPipeline(ms12DatasetIO, obj.ms1_tolerance, 1, obj.alpha, obj.resFilterThres);
         fprintf('Quantifying %s...', experimentName);
         for i_list = 1:length(obj.peptide_list)
-            block = obj.buildQuantBlock({obj.prot_list{i_list}, -1}, pep_quant{i_list}, ms12DatasetIO);
+            block = pipeline.buildQuantBlock({obj.prot_list{i_list}, -1}, pep_quant{i_list});
             report = report.append_block(block);
         end
         fprintf('done.\n');

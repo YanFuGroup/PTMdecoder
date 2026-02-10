@@ -1,27 +1,23 @@
-function imp_records = appendQuantGroupRecord(obj, imp_records, group, ms12DatasetIO, minMSMSnum)
+function imp_records = appendQuantGroupRecord(obj, imp_records, group)
 % Append quantification records for a single group
 % Input:
-%   obj (CPepNormalization)
-%       Normalization processor instance
+%   obj (CIMPProcessingPipeline)
+%       processing pipeline instance
 %   imp_records (CIMPQuantRecord array)
 %       accumulator for IMP records
 %   group (CIMPGroup)
 %       group payload for one raw and charge
-%   ms12DatasetIO (object)
-%       MS1/MS2 dataset IO instance
-%   minMSMSnum (1 x 1 double/int)
-%       minimum number of MSMS spectra for a peptide to be considered
 % Output:
 %   imp_records (CIMPQuantRecord array)
 %       updated accumulator
 
 [has_nonzero_imp, imp_idx_nonzero, area_imp_final, xic_peak_rt_bounds, idx_selected, ratio_each_XIC_peak] = ...
-    CIMPQuantifier.quantGroup(ms12DatasetIO, group.rawName,...
+    CIMPQuantifier.quantGroup(obj.m_ms12DatasetIO, group.rawName,...
     group.ratio(group.chargeGroupIdxs,:),...
     group.rts(group.chargeGroupIdxs,:),...
     group.intensity(group.chargeGroupIdxs,:),...
     group.lowMzBound, group.highMzBound, group.selectedCharge,...
-    minMSMSnum, obj.alpha, obj.resFilterThres);
+    obj.m_minMSMSnum, obj.m_alpha, obj.m_resFilterThres);
 
 if ~has_nonzero_imp
     return;

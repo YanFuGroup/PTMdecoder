@@ -67,6 +67,7 @@ obj.CPepProtService = CPepProtService(obj.m_fastaFile, obj.m_regular_express, ob
 msms_reader = CMSMSResReader();
 msms_result = msms_reader.read_from_msms_res_file(each_PSM_results_path);
 print_progress = CPrintProgress(length(msms_result.Peptides));
+pipeline = CIMPProcessingPipeline(obj.m_cMs12DatasetIO, obj.m_ms1_tolerance, obj.m_min_MSMS_num, obj.m_alpha, obj.m_resFilterThres);
 
 fprintf('Drawing XIC...');
 for idx_psf = 1:length(msms_result.Peptides)
@@ -91,7 +92,7 @@ for idx_psf = 1:length(msms_result.Peptides)
         rawManager.setStore(dataset_name, rawStore);
     end
     % Run gather
-    obj.drawImpXic(rawManager, pep_rtrange_map, dir_save, color_map, legend_map);
+    pipeline.drawImpXic(rawManager, pep_rtrange_map, dir_save, color_map, legend_map);
 end
 
 print_progress.last_update();

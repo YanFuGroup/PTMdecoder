@@ -60,6 +60,8 @@ obj.CPepProtService = CPepProtService(obj.m_fastaFile, obj.m_regular_express, ob
 msms_reader = CMSMSResReader();
 msms_result = msms_reader.read_from_msms_res_file(each_PSM_results_path);
 print_progress = CPrintProgress(length(msms_result.Peptides));
+pipeline = CIMPProcessingPipeline(obj.m_cMs12DatasetIO, obj.m_ms1_tolerance, obj.m_min_MSMS_num, obj.m_alpha, obj.m_resFilterThres);
+
 fprintf('Re-quantifying at peptide level...')
 for idx_psf = 1:length(msms_result.Peptides)
     % Show progress
@@ -87,7 +89,7 @@ for idx_psf = 1:length(msms_result.Peptides)
         rawManager.setStore(dataset_name, rawStore);
     end
     % Run gather
-    block = obj.buildRequantBlock(cell_prot_name_pos, rawManager, pep_rtrange_map);
+    block = pipeline.buildRequantBlock(cell_prot_name_pos, rawManager, pep_rtrange_map);
     report = report.append_block(block);
 
 end

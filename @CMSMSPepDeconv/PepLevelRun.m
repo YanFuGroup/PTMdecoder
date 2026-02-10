@@ -58,6 +58,7 @@ report = CIMPQuantReport();
 msms_reader = CMSMSResReader();
 msms_result = msms_reader.read_from_msms_res_file(each_PSM_results_path);
 print_progress = CPrintProgress(length(msms_result.Peptides));
+pipeline = CIMPProcessingPipeline(obj.m_cMs12DatasetIO, obj.m_ms1_tolerance, obj.m_min_MSMS_num, obj.m_alpha, obj.m_resFilterThres);
 
 fprintf('Quantifying at peptide level...')
 for idx_psf = 1:length(msms_result.Peptides)
@@ -86,7 +87,7 @@ for idx_psf = 1:length(msms_result.Peptides)
         rawManager.setStore(dataset_name, rawStore);
     end
     % Run gather
-    block = obj.buildQuantBlock(cell_prot_name_pos, rawManager);
+    block = pipeline.buildQuantBlock(cell_prot_name_pos, rawManager);
     report = report.append_block(block);
 end
 print_progress.last_update();
