@@ -171,6 +171,9 @@ classdef CMSMSPepDeconv
         % Re-quantify the normalization peptides using checked XIC peaks
         obj = requant_norm_pep(obj)
 
+        % Quantify normalization peptides from FDR results (single experiment)
+        obj = quant_norm_pep_from_fdr(obj, peptide_list, prot_list, filtered_res_file_path, output_file_name)
+
         % Draw the XIC for gathered peptides using manually-checked rt range, to dir_save
         % The color_map and legend_map are optional
         drawXIC(obj, dir_save, color_map, legend_map);
@@ -179,6 +182,9 @@ classdef CMSMSPepDeconv
     methods (Access = private)
         % Build a raw identification manager for a peptide from its spectrum list
         rawIdentManager = buildRawIdentManagerFromSpectrumList(obj, spectrum_list);
+
+        % Parse filtered PSM results and build raw managers for target peptides
+        pep_quant = readFdrPeptides(obj, fin, input_file_path, ms12DatasetIO, peptide_list, pep_quant);
     end
 
 end

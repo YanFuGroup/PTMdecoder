@@ -69,17 +69,17 @@ for idx_block = 1:numel(report.blocks)
         if pep_prot_map.isKey(current_key)
             prot_name = pep_prot_map(current_key);
         end
-        rawManager = CIMPRawIdentManager();
+        rawIdentManager = CIMPRawIdentManager();
 
         rt_peaks = records(idx_rec).rt_peaks;
         for idx_peak = 1:numel(rt_peaks)
             rt_median = (rt_peaks(idx_peak).rt_start + rt_peaks(idx_peak).rt_end) / 2;
-            rawStore = rawManager.getOrCreate(mgf_name);
+            rawStore = rawIdentManager.getOrCreate(mgf_name);
             rawStore = rawStore.appendSpecQuant(rt_median, 1, lfMz, current_charge, {current_peptide}, lfMass, 1);
-            rawManager.setStore(mgf_name, rawStore);
+            rawIdentManager.setStore(mgf_name, rawStore);
         end
 
-        block = pipeline.buildRequantBlock({prot_name, -1}, rawManager, pep_rtrange_map);
+        block = pipeline.requantifyPeptideBlock({prot_name, -1}, rawIdentManager, pep_rtrange_map);
         report_requant = report_requant.append_block(block);
     end
 end

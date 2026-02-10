@@ -19,4 +19,18 @@ classdef CIMPProcessingPipeline < handle
             obj.m_resFilterThres = resFilterThres;
         end
     end
+
+    methods (Access=public)
+        % Main quantification/re-quantification/drawing methods
+        block = quantifyPeptideBlock(obj, prot_names_pos, rawIdentManager)
+        block = requantifyPeptideBlock(obj, prot_names_pos, rawIdentManager, pep_rtrange_map)
+        drawImpXicForBlock(obj, rawIdentManager, pep_rtrange_map, dir_save, color_map, legend_map)
+    end
+
+    methods (Access=private)
+        % Group processing callbacks for quantification, re-quantification, and drawing
+        imp_records = onGroupQuant(obj, imp_records, group)
+        imp_records = onGroupRequant(obj, imp_records, group)
+        state = onGroupDrawXic(obj, state, group)
+    end
 end

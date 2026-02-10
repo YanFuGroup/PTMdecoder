@@ -70,9 +70,9 @@ for idx_psf = 1:length(msms_result.Peptides)
     peptide_sequence = msms_result.Peptides(idx_psf).peptide_sequence;
     % Get the protein name and position
     cell_prot_name_pos = obj.CPepProtService.get_protein_name_pos(peptide_sequence);
-    rawManager = obj.buildRawIdentManagerFromSpectrumList(msms_result.Peptides(idx_psf).spectrum_list);
+    rawIdentManager = obj.buildRawIdentManagerFromSpectrumList(msms_result.Peptides(idx_psf).spectrum_list);
     % Run gather
-    block = pipeline.buildRequantBlock(cell_prot_name_pos, rawManager, pep_rtrange_map);
+    block = pipeline.requantifyPeptideBlock(cell_prot_name_pos, rawIdentManager, pep_rtrange_map);
     report = report.append_block(block);
 
 end

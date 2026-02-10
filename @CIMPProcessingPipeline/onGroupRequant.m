@@ -1,4 +1,4 @@
-function imp_records = appendRequantGroupRecord(obj, imp_records, group)
+function imp_records = onGroupRequant(obj, imp_records, group)
 % Append re-quantification records for a single group
 % Input:
 %   obj (CIMPProcessingPipeline)

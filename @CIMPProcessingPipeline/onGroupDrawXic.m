@@ -1,4 +1,4 @@
-function state = drawGroupXic(obj, state, group)
+function state = onGroupDrawXic(obj, state, group)
 % Draw XICs for a single group if RT ranges are available
 % Input:
 %   obj (CIMPProcessingPipeline)

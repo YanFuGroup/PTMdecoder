@@ -73,9 +73,9 @@ fprintf('Drawing XIC...');
 for idx_psf = 1:length(msms_result.Peptides)
     % Show progress
     print_progress = print_progress.update_show(idx_psf);
-    rawManager = obj.buildRawIdentManagerFromSpectrumList(msms_result.Peptides(idx_psf).spectrum_list);
+    rawIdentManager = obj.buildRawIdentManagerFromSpectrumList(msms_result.Peptides(idx_psf).spectrum_list);
     % Run gather
-    pipeline.drawImpXic(rawManager, pep_rtrange_map, dir_save, color_map, legend_map);
+    pipeline.drawImpXicForBlock(rawIdentManager, pep_rtrange_map, dir_save, color_map, legend_map);
 end
 
 print_progress.last_update();
