@@ -28,12 +28,6 @@ end
 ms12DatasetIO = CMS12DatasetIO(obj.m_specPath, obj.m_ms1_tolerance);
 ms12DatasetIO.SetMap();
 
-% Open the FDR filtered result
-fin = fopen(filtered_res_file_path, 'r');
-if fin == -1
-    error('Cannot open the FDR filtered result file: "%s"!', filtered_res_file_path);
-end
-
 % Initialize raw managers
 pep_quant = cell(length(peptide_list), 1);
 for i_list = 1:length(peptide_list)
@@ -42,7 +36,7 @@ end
 
 % Process the filtered result file
 fprintf('Reading %s...', obj.m_specPath);
-pep_quant = obj.readFdrPeptides(fin, filtered_res_file_path, ms12DatasetIO, peptide_list, pep_quant);
+pep_quant = obj.readFdrPeptides(filtered_res_file_path, ms12DatasetIO, peptide_list, pep_quant);
 fprintf('done.\n');
 
 % Run quantification
@@ -57,6 +51,4 @@ end
 fprintf('done.\n');
 
 CIMPQuantResultIO.write(report, fullfile(obj.m_outputDir, output_file_name));
-
-fclose(fin);
 end

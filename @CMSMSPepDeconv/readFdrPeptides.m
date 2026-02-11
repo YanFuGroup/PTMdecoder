@@ -1,9 +1,8 @@
-function pep_quant = readFdrPeptides(obj, fin, input_file_path, ms12DatasetIO, peptide_list, pep_quant)
+function pep_quant = readFdrPeptides(obj, input_file_path, ms12DatasetIO, peptide_list, pep_quant)
 % Parse filtered PSM results and build raw managers for target peptides
 % Input:
 %   obj (CMSMSPepDeconv)
 %       Processor instance
-%   fin (1 x 1 double/int)
 %       File identifier of the filtered result file
 %   input_file_path (1 x 1 char/string)
 %       Path to the filtered result file
@@ -16,6 +15,12 @@ function pep_quant = readFdrPeptides(obj, fin, input_file_path, ms12DatasetIO, p
 % Output:
 %   pep_quant (1 x K cell)
 %       Updated raw identification managers
+
+% Open the FDR filtered result
+fin = fopen(input_file_path, 'r');
+if fin == -1
+    error('Cannot open the FDR filtered result file: "%s"!', input_file_path);
+end
 
 progress_printer = CPrintProgress(dir(input_file_path).bytes);
 fgetl(fin); % skip the first line
@@ -101,7 +106,11 @@ while ~feof(fin)
 end
 
 progress_printer.last_update();
+
+fclose(fin);
 end
+
+
 
 function lfMass = get_mass_peptide(pep_seq)
 % Get the mass of each peptide

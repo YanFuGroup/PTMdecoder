@@ -184,7 +184,7 @@ classdef CMSMSPepDeconv
         rawIdentManager = buildRawIdentManagerFromSpectrumList(obj, spectrum_list);
 
         % Parse filtered PSM results and build raw managers for target peptides
-        pep_quant = readFdrPeptides(obj, fin, input_file_path, ms12DatasetIO, peptide_list, pep_quant);
+        pep_quant = readFdrPeptides(obj, input_file_path, ms12DatasetIO, peptide_list, pep_quant);
     end
 
 end
