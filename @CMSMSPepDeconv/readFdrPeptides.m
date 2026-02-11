@@ -16,41 +16,27 @@ function pep_quant = readFdrPeptides(obj, input_file_path, ms12DatasetIO, peptid
 %   pep_quant (1 x K cell)
 %       Updated raw identification managers
 
-% Open the FDR filtered result
-fin = fopen(input_file_path, 'r');
-if fin == -1
-    error('Cannot open the FDR filtered result file: "%s"!', input_file_path);
-end
+FDRfilteredResults = CFdrFilteredResultIO.read(input_file_path);
+entries = FDRfilteredResults.entries;
 
-progress_printer = CPrintProgress(dir(input_file_path).bytes);
-fgetl(fin); % skip the first line
-
-while ~feof(fin)
-    strline = fgetl(fin);
-    progress_printer = progress_printer.update_show(ftell(fin));
-
-    if isempty(strline)
-        continue;
-    end
-
-    % Parse the line
-    segment = split(strline);
+for i_entry = 1:length(entries)
+    entry = entries(i_entry);
 
     % Only process peptides without modifications (12th column is '-')
-    if ~isequal(segment{12}, '-')
+    if ~isequal(entry.modification, '-')
         continue;
     end
 
     % Check if this peptide is in our target list
     for i_list = 1:length(peptide_list)
-        if isequal(segment{10}, peptide_list{i_list})
+        if isequal(entry.peptide, peptide_list{i_list})
             % Extract information from the segment
-            curr_change = str2double(segment{5});
-            curr_mz = str2double(segment{7}) / curr_change + CConstant.pmass;
-            curr_MS2_scan = str2double(segment{3});
+            curr_change = str2double(entry.Charge);
+            curr_mz = str2double(entry.precursor_neutral_mass) / curr_change + CConstant.pmass;
+            curr_MS2_scan = str2double(entry.Scan);
 
             % Find MS2 index
-            mgf_name = erase(segment{2}, '.mgf');
+            mgf_name = erase(entry.DatasetName, '.mgf');
             ms2_name = ms12DatasetIO.m_cMsFileMapper.get_ms2_stem(mgf_name);
             MS2_index = ms12DatasetIO.m_mapNameMS2Index(ms2_name);
 
@@ -97,17 +83,13 @@ while ~feof(fin)
             lfMass = get_mass_peptide(peptide_list{i_list});
 
             % Add to quantification
-            rawStore = pep_quant{i_list}.getOrCreate(segment{2});
-            rawStore = rawStore.appendSpecQuant(curr_rt, cur_inten, curr_mz, curr_change, {segment{10}}, lfMass, 1);
-            pep_quant{i_list}.setStore(segment{2}, rawStore);
+            rawStore = pep_quant{i_list}.getOrCreate(entry.DatasetName);
+            rawStore = rawStore.appendSpecQuant(curr_rt, cur_inten, curr_mz, curr_change, {entry.peptide}, lfMass, 1);
+            pep_quant{i_list}.setStore(entry.DatasetName, rawStore);
             break;
         end
     end
 end
-
-progress_printer.last_update();
-
-fclose(fin);
 end
 
 
