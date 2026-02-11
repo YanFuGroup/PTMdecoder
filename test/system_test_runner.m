@@ -48,6 +48,9 @@ function system_test_runner()
     fprintf('Running normalization peptide quantification test...\n');
     helper_test_quant_norm_pep(projectDir, testDataDir, outputDir);
 
+    fprintf('Running FDR filtering test...\n');
+    helper_test_FDR_filtering(projectDir, testDataDir, outputDir);
+
     fprintf('Run completed, start comparing results...\n');
     
     % Comparison section
