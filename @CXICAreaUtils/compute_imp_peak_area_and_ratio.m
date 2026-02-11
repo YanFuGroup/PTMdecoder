@@ -41,14 +41,14 @@ for idx_imp = 1:num_imp
     xic_peak_rt_bounds(idx_imp).rt_end = xic_rt(idx_end);
 
     % Calculate area using the closed peak logic
-    area_imp_final(idx_imp,1) = CChromatogramUtils.calculate_area(...
+    area_imp_final(idx_imp,1) = CXICSignalUtils.calculate_area(...
         xic_rt, intensityMatrix(:,idx_imp), idx_start, idx_end);
 
     % Calculate total area for ratio
     % NOTE: Potential optimization if xic_peak_idx_bounds have many repeats:
     % cache total_temp for unique (idx_start, idx_end) pairs to reduce
     % repeated calculate_area calls on xic_intensity_smoothed.
-    total_temp = CChromatogramUtils.calculate_area(...
+    total_temp = CXICSignalUtils.calculate_area(...
         xic_rt, xic_intensity_smoothed, idx_start, idx_end);
 
     if total_temp > 0

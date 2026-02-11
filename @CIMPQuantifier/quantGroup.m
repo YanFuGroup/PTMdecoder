@@ -48,7 +48,7 @@ ratio_each_XIC_peak = [];
 
 % Preprocess inputs (Sort, Smooth, Denoise)
 [rt_sorted, ratio_sorted, xic_rt, xic_intensity_smoothed, xic_intensity_raw, is_valid] = ...
-    CIMPQuantPreprocessUtils.prepare_ms1_xic(...
+    CXICPreprocessUtils.prepare_ms1_xic(...
         cMs12DatasetIO, raw_name, rt_raw, intensity_raw, ratio_raw, ...
         minMSMSnum, low_mz_bound, high_mz_bound, selected_charge);
 
@@ -60,17 +60,17 @@ end
 CIMPQuantifier.rt_sorted_stats('record', numel(rt_sorted));
 
 % Extract the XIC peaks around the identified MSMS precursor
-xic_peak_idx_bounds = CChromatogramUtils.detect_xic_peaks(xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, alpha);
+xic_peak_idx_bounds = CXICSignalUtils.detect_xic_peaks(xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, alpha);
 
 if isempty(xic_peak_idx_bounds)
     return;
 end
 
 % Calculate the ratio on each XIC point using kernel method
-xic_ratio_estimated = CIMPQuantPeakUtils.calculate_kernel_ratio(xic_rt, rt_sorted, ratio_sorted, xic_peak_idx_bounds, true);
+xic_ratio_estimated = CXICPeakUtils.calculate_kernel_ratio(xic_rt, rt_sorted, ratio_sorted, xic_peak_idx_bounds, true);
 
 % Peak-wise filtering and normalization
-xic_ratio_estimated = CIMPQuantPeakUtils.filter_and_normalize_peak_ratios(...
+xic_ratio_estimated = CXICPeakUtils.filter_and_normalize_peak_ratios(...
     xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds, resFilterThres);
 
 % For each IMP, evaluate all candidate XIC peaks by computing:
@@ -79,21 +79,21 @@ xic_ratio_estimated = CIMPQuantPeakUtils.filter_and_normalize_peak_ratios(...
 %   - area_imp_by_peak: area contribution in each peak
 % [imp_max_props, peak_fwhms, area_imp_by_peak, xic_peak_rt_bounds] = ...
 [imp_max_props, ~, area_imp_by_peak, xic_peak_rt_bounds] = ...
-    CIMPQuantPeakUtils.compute_peak_features(xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds);
+    CXICPeakUtils.compute_peak_features(xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds);
 
 % Peak Selection (Per IMP)
-idx_selected = CIMPQuantPeakUtils.select_best_peak_per_imp(imp_max_props, area_imp_by_peak);
+idx_selected = CXICPeakUtils.select_best_peak_per_imp(imp_max_props, area_imp_by_peak);
 
 % Global Refinement (Re-distribution based on Selection)
-% xic_ratio_estimated = CIMPQuantPeakUtils.refine_ratios_by_selection(xic_ratio_estimated, xic_peak_idx_bounds, idx_selected);
+% xic_ratio_estimated = CXICPeakUtils.refine_ratios_by_selection(xic_ratio_estimated, xic_peak_idx_bounds, idx_selected);
 
 % Final Area Calculation (reuse cached peak areas)
-area_imp_final = CIMPQuantAreaUtils.get_final_area_from_peak_areas(...
+area_imp_final = CXICAreaUtils.get_final_area_from_peak_areas(...
     area_imp_by_peak, idx_selected);
 
 % Get the non-zero area under XIC, index and xic_peak_rt_bounds
 [imp_idx_nonzero, area_imp_final, xic_peak_rt_bounds, idx_selected, area_imp_by_peak] = ...
-    CIMPQuantAreaUtils.filter_nonzero_xic(area_imp_final, xic_peak_rt_bounds, ...
+    CXICAreaUtils.filter_nonzero_xic(area_imp_final, xic_peak_rt_bounds, ...
     idx_selected, area_imp_by_peak);
 sums = sum(area_imp_by_peak, 1);
 ratio_each_XIC_peak = zeros(size(area_imp_by_peak));

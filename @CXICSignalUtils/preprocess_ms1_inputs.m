@@ -39,7 +39,7 @@ function [rt_sorted, ratio_sorted, is_valid] = preprocess_ms1_inputs(rt_raw, int
     ratio_sorted(tmp,:) = [];
 
     % Check if there are enough rows left
-    if ~CIMPQuantPeakUtils.hasMinRows(ratio_sorted, minMSMSnum)
+    if ~CXICPeakUtils.hasMinRows(ratio_sorted, minMSMSnum)
         % If the ratio matrix has less than min rows, skip this group
         is_valid = false;
         ratio_sorted = [];

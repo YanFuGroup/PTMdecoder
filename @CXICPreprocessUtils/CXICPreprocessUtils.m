@@ -1,5 +1,5 @@
-classdef CIMPQuantPreprocessUtils
-    % CIMPQuantPreprocessUtils
+classdef CXICPreprocessUtils
+    % CXICPreprocessUtils
     % Preprocessing utilities for IMP quant workflows.
     methods (Static)
         [rt_sorted, ratio_sorted, xic_rt, xic_intensity_smoothed, xic_intensity_raw, is_valid] = ...

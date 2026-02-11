@@ -1,5 +1,5 @@
-classdef CChromatogramUtils
-    % CChromatogramUtils
+classdef CXICSignalUtils
+    % CXICSignalUtils
     % A utility class for chromatogram signal processing, including
     % smoothing, peak detection, and data preprocessing.
     

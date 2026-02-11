@@ -24,7 +24,7 @@ function area = calculate_area(xic_rt, xic_intensity_full, idx_start, idx_end)
 %   aligned with the xic_rt.
 
     % Get closed peak data (handling boundary expansion and zero-padding)
-    [rec_rt, rec_inten] = CChromatogramUtils.get_closed_peak_data(...
+    [rec_rt, rec_inten] = CXICSignalUtils.get_closed_peak_data(...
         xic_rt, xic_intensity_full, idx_start, idx_end);
     
     % Calculate area using trapezoidal integration

@@ -1,4 +1,4 @@
-classdef test_CIMPQuantPeakUtils < matlab.unittest.TestCase
+classdef test_CXICPeakUtils < matlab.unittest.TestCase
     % Unit tests for peak-domain IMP group utils
     methods (Test)
         function testCalculateKernelRatio(testCase)
@@ -19,7 +19,7 @@ classdef test_CIMPQuantPeakUtils < matlab.unittest.TestCase
 
             % SCENARIO 1: is_broadcast = true (Same peak logic for all IMPs)
             % Should produce ratios approx 0.5 and 0.8 in the peak region
-            xic_ratio_estimated = CIMPQuantPeakUtils.calculate_kernel_ratio(...
+            xic_ratio_estimated = CXICPeakUtils.calculate_kernel_ratio(...
                 xic_rt, rt_sorted, ratio_sorted, peak_range, true);
 
             % Check dimensions
@@ -42,7 +42,7 @@ classdef test_CIMPQuantPeakUtils < matlab.unittest.TestCase
             xic_peak_idx_bounds(1) = peak_range; % IMP 1 has peak
             % IMP 2 is empty/default
 
-            xic_ratio_estimated_multi = CIMPQuantPeakUtils.calculate_kernel_ratio(...
+            xic_ratio_estimated_multi = CXICPeakUtils.calculate_kernel_ratio(...
                 xic_rt, rt_sorted, ratio_sorted, xic_peak_idx_bounds, false);
 
             % IMP 1 should be populated
@@ -64,7 +64,7 @@ classdef test_CIMPQuantPeakUtils < matlab.unittest.TestCase
             xic_peak_idx_bounds = struct('idx_start', 2, 'idx_end', 4);
             resFilterThres = 0.2; % imp2 should be removed (0.1/0.9 < 0.2)
 
-            ratio_estimated_out = CIMPQuantPeakUtils.filter_and_normalize_peak_ratios(...
+            ratio_estimated_out = CXICPeakUtils.filter_and_normalize_peak_ratios(...
                 xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds, resFilterThres);
 
             % Within peak range, imp2 should be zeroed and rows normalized to [1,0]
@@ -101,7 +101,7 @@ classdef test_CIMPQuantPeakUtils < matlab.unittest.TestCase
             xic_peak_idx_bounds(2).idx_end = 8;
 
             [imp_max_props, peak_fwhms, area_imp_by_peak, xic_peak_rt_bounds] = ...
-                CIMPQuantPeakUtils.compute_peak_features(xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds);
+                CXICPeakUtils.compute_peak_features(xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds);
 
             testCase.verifyEqual(size(imp_max_props), [2, 2]);
             testCase.verifyEqual(size(peak_fwhms), [2, 2]);
@@ -136,7 +136,7 @@ classdef test_CIMPQuantPeakUtils < matlab.unittest.TestCase
             % Scores:
             % imp1 -> [90, 2] -> pick 1
             % imp2 -> [0.5, 48] -> pick 2
-            idx_selected = CIMPQuantPeakUtils.select_best_peak_per_imp(...
+            idx_selected = CXICPeakUtils.select_best_peak_per_imp(...
                 imp_max_props, area_imp_by_peak);
 
             testCase.verifyEqual(idx_selected, [1; 2]);
@@ -156,7 +156,7 @@ classdef test_CIMPQuantPeakUtils < matlab.unittest.TestCase
             xic_peak_idx_bounds(2).idx_end = 5;
             idx_selected = [1; 2];
 
-            ratio_estimated_out = CIMPQuantPeakUtils.refine_ratios_by_selection(...
+            ratio_estimated_out = CXICPeakUtils.refine_ratios_by_selection(...
                 xic_ratio_estimated, xic_peak_idx_bounds, idx_selected);
 
             % IMP1 keeps peak1 only (rows 2-3)
@@ -170,19 +170,19 @@ classdef test_CIMPQuantPeakUtils < matlab.unittest.TestCase
 
             % Test with default min_rows = 1
             ratio_matrix_empty = zeros(0, 2);
-            testCase.verifyFalse(CIMPQuantPeakUtils.hasMinRows(ratio_matrix_empty));
+            testCase.verifyFalse(CXICPeakUtils.hasMinRows(ratio_matrix_empty));
 
             ratio_matrix_one_row = ones(1, 2);
-            testCase.verifyTrue(CIMPQuantPeakUtils.hasMinRows(ratio_matrix_one_row));
+            testCase.verifyTrue(CXICPeakUtils.hasMinRows(ratio_matrix_one_row));
 
             ratio_matrix_multi_row = ones(5, 2);
-            testCase.verifyTrue(CIMPQuantPeakUtils.hasMinRows(ratio_matrix_multi_row));
+            testCase.verifyTrue(CXICPeakUtils.hasMinRows(ratio_matrix_multi_row));
 
             % Test with specified min_rows
-            testCase.verifyTrue(CIMPQuantPeakUtils.hasMinRows(ratio_matrix_multi_row, 3));
-            testCase.verifyFalse(CIMPQuantPeakUtils.hasMinRows(ratio_matrix_one_row, 3));
-            testCase.verifyTrue(CIMPQuantPeakUtils.hasMinRows(ratio_matrix_multi_row, 5));
-            testCase.verifyFalse(CIMPQuantPeakUtils.hasMinRows(ratio_matrix_multi_row, 6));
+            testCase.verifyTrue(CXICPeakUtils.hasMinRows(ratio_matrix_multi_row, 3));
+            testCase.verifyFalse(CXICPeakUtils.hasMinRows(ratio_matrix_one_row, 3));
+            testCase.verifyTrue(CXICPeakUtils.hasMinRows(ratio_matrix_multi_row, 5));
+            testCase.verifyFalse(CXICPeakUtils.hasMinRows(ratio_matrix_multi_row, 6));
         end
     end
 end

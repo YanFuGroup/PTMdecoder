@@ -27,7 +27,7 @@ for idx_imp = 1:num_imp
     sel_peak_idx = idx_selected(idx_imp);
     idx_start = xic_peak_idx_bounds(sel_peak_idx).idx_start;
     idx_end = xic_peak_idx_bounds(sel_peak_idx).idx_end;
-    area_imp_final(idx_imp, 1) = CChromatogramUtils.calculate_area(...
+    area_imp_final(idx_imp, 1) = CXICSignalUtils.calculate_area(...
         xic_rt, intensityMatrix(:, idx_imp), idx_start, idx_end);
 end
 end

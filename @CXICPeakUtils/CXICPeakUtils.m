@@ -1,5 +1,5 @@
-classdef CIMPQuantPeakUtils
-    % CIMPQuantPeakUtils
+classdef CXICPeakUtils
+    % CXICPeakUtils
     % Peak detection/selection utilities for IMP quant workflows.
     methods (Static)
         is_reserved = hasMinRows(ratio_matrix, min_rows)

@@ -1,5 +1,5 @@
-classdef test_CChromatogramUtils < matlab.unittest.TestCase
-    % Unit tests for CChromatogramUtils
+classdef test_CXICSignalUtils < matlab.unittest.TestCase
+    % Unit tests for CXICSignalUtils
     
     methods (Test)
         function testPreprocessMs1InputsBasicPreprocess(testCase)
@@ -19,7 +19,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % Nothing should be removed here since all > 40.
             
             [rt_sorted, ratio_sorted, is_valid] = ...
-                CChromatogramUtils.preprocess_ms1_inputs(rts, inten, ratioMatrix, minMSMSnum);
+                CXICSignalUtils.preprocess_ms1_inputs(rts, inten, ratioMatrix, minMSMSnum);
             
             % Assertions
             testCase.verifyTrue(is_valid);
@@ -40,7 +40,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             
             % 10 is 0.01 * 1000, should be removed (< 0.05 threshold)
             [rt_sorted, ~, is_valid] = ...
-                CChromatogramUtils.preprocess_ms1_inputs(rts, inten, ratioMatrix, minMSMSnum);
+                CXICSignalUtils.preprocess_ms1_inputs(rts, inten, ratioMatrix, minMSMSnum);
                 
             testCase.verifyTrue(is_valid);
             testCase.verifyEqual(length(rt_sorted), 5, 'Should filter out 5 low intensity points');
@@ -54,7 +54,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             minMSMSnum = 5; % Requirement higher than available points
             
             [~, ~, is_valid] = ...
-                CChromatogramUtils.preprocess_ms1_inputs(rts, inten, ratioMatrix, minMSMSnum);
+                CXICSignalUtils.preprocess_ms1_inputs(rts, inten, ratioMatrix, minMSMSnum);
             
             testCase.verifyFalse(is_valid, 'Should be invalid due to insufficient rows');
         end
@@ -109,7 +109,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % Important: CConstant must be accessible.
             % If CConstant is missing, test will error.
             
-            [xic_rt, xic_intensity_smoothed, ~] = CChromatogramUtils.get_smoothed_xic(...
+            [xic_rt, xic_intensity_smoothed, ~] = CXICSignalUtils.get_smoothed_xic(...
                 datasetIO, 'test_raw.mgf', low_mz, high_mz, charge);
             
             testCase.verifyEqual(length(xic_rt), 3);
@@ -132,7 +132,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % Gaussian with sigma=1. FWHM = 2.355 * sigma
             y = exp(-0.5 * x.^2);
             
-            fwhm = CChromatogramUtils.get_fwhm(x, y);
+            fwhm = CXICSignalUtils.get_fwhm(x, y);
             
             % Tolerance because of discrete sampling and linear interpolation
             testCase.verifyEqual(fwhm, 2.3548, 'AbsTol', 0.02);
@@ -140,7 +140,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % Test border cases
             % Flat line
             y_flat = zeros(size(x));
-            fwhm_flat = CChromatogramUtils.get_fwhm(x, y_flat);
+            fwhm_flat = CXICSignalUtils.get_fwhm(x, y_flat);
             testCase.verifyEqual(fwhm_flat, 0);
             
             % Half max outside range? Logic says: use end points.
@@ -164,7 +164,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             rt_sorted = [5.1; 14.9];
             alpha = 0.1; % Stop at 10% max height
             
-            xic_peak_idx_bounds = CChromatogramUtils.detect_xic_peaks(...
+            xic_peak_idx_bounds = CXICSignalUtils.detect_xic_peaks(...
                 xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, alpha);
             
             testCase.verifyEqual(length(xic_peak_idx_bounds), 2);
@@ -190,7 +190,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             
             % Case 2: Only one peak identified by PSMs
             rt_sorted_single = 5.1;
-            xic_peak_idx_bounds_single = CChromatogramUtils.detect_xic_peaks(...
+            xic_peak_idx_bounds_single = CXICSignalUtils.detect_xic_peaks(...
                 xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted_single, alpha);
              
             testCase.verifyEqual(length(xic_peak_idx_bounds_single), 1);
@@ -199,7 +199,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % Case 3: Filtering small peaks (raw intensity check)
             % If raw intensity is zero in the range, it should be removed.
             xic_intensity_raw_zero = zeros(size(xic_intensity_raw)); 
-            xic_peak_idx_bounds_filtered = CChromatogramUtils.detect_xic_peaks(...
+            xic_peak_idx_bounds_filtered = CXICSignalUtils.detect_xic_peaks(...
                 xic_rt, xic_intensity_smoothed, xic_intensity_raw_zero, rt_sorted, alpha);
             testCase.verifyEmpty(xic_peak_idx_bounds_filtered);
         end
@@ -225,7 +225,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             imp_rt_range = {imp1, imp2, imp3, imp4};
             is_skip_vec = [false, false, false, true];
             
-            [xic_peak_rt_bounds, max_label, new_skip_vec] = CChromatogramUtils.parse_imp_rt_ranges(imp_rt_range, is_skip_vec);
+            [xic_peak_rt_bounds, max_label, new_skip_vec] = CXICSignalUtils.parse_imp_rt_ranges(imp_rt_range, is_skip_vec);
             
             % Assertions
             testCase.verifyEqual(xic_peak_rt_bounds(1).rt_start, 12.0);
@@ -258,7 +258,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             skip_vec_map = [false, true];
             rt_tol = 0.001;
             
-            xic_peak_idx_bounds = CChromatogramUtils.map_rt_to_indices(xic_rt, xic_peak_rt_bounds, skip_vec_map, rt_tol);
+            xic_peak_idx_bounds = CXICSignalUtils.map_rt_to_indices(xic_rt, xic_peak_rt_bounds, skip_vec_map, rt_tol);
             
             testCase.verifyEqual(xic_peak_idx_bounds(1).idx_start, 21);
             testCase.verifyEqual(xic_peak_idx_bounds(1).idx_end, 31);
@@ -268,7 +268,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             skip_vec_err = [false, false]; % Unskip the bad one
             
             try
-                CChromatogramUtils.map_rt_to_indices(xic_rt, xic_peak_rt_bounds_err, skip_vec_err, rt_tol);
+                CXICSignalUtils.map_rt_to_indices(xic_rt, xic_peak_rt_bounds_err, skip_vec_err, rt_tol);
                 testCase.verifyFail('Should have thrown error for out of bound RT');
             catch ME
                 testCase.verifyTrue(contains(ME.message, 'Cannot find the spectra'), 'Error message mismatch');
@@ -294,7 +294,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             orig_start = 3;
             orig_end = 5;
             
-            [rec_rt, rec_inten] = CChromatogramUtils.get_closed_peak_data(...
+            [rec_rt, rec_inten] = CXICSignalUtils.get_closed_peak_data(...
                 xic_rt, xic_intensity_full, orig_start, orig_end);
             
             testCase.verifyEqual(rec_rt, xic_rt(2:6));
@@ -310,7 +310,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
               xic_intensity_nonzero = xic_intensity_full;
               xic_intensity_nonzero(1) = 999; 
             
-            [rec_rt_l, rec_inten_l] = CChromatogramUtils.get_closed_peak_data(...
+            [rec_rt_l, rec_inten_l] = CXICSignalUtils.get_closed_peak_data(...
                   xic_rt, xic_intensity_nonzero, 1, 2);
             
               testCase.verifyEqual(rec_rt_l, xic_rt(1:3));
@@ -318,7 +318,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             testCase.verifyEqual(rec_inten_l, [999; 10; 0]);
             
              % Case 3: Right Boundary (idx_end=11)
-             [rec_rt_r, rec_inten_r] = CChromatogramUtils.get_closed_peak_data(...
+             [rec_rt_r, rec_inten_r] = CXICSignalUtils.get_closed_peak_data(...
                  xic_rt, xic_intensity_full, 10, 11);
              
              testCase.verifyEqual(rec_rt_r, xic_rt(9:11));
@@ -337,7 +337,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % Trapezoidal area of [0, 10, 20, 10, 0] with dx=1 is 40.
             % calculate_area multiplies by 60 -> 2400.
             
-            area = CChromatogramUtils.calculate_area(xic_rt, xic_intensity_full, 2, 4);
+            area = CXICSignalUtils.calculate_area(xic_rt, xic_intensity_full, 2, 4);
             testCase.verifyEqual(area, 2400, 'Area calculation incorrect');
             
             % Case 2: Verify it handles boundary behavior implicitly
@@ -347,7 +347,7 @@ classdef test_CChromatogramUtils < matlab.unittest.TestCase
             % Area trapz: (0+10)/2 + (10+0)/2 = 5 + 5 = 10.
             % Result * 60 = 600.
             
-            area_boundary = CChromatogramUtils.calculate_area(xic_rt, xic_intensity_full, 1, 2);
+            area_boundary = CXICSignalUtils.calculate_area(xic_rt, xic_intensity_full, 1, 2);
             testCase.verifyEqual(area_boundary, 600, 'Boundary area calculation incorrect');
         end
     end
