@@ -19,6 +19,10 @@ function [rt_peak_a, rt_peak_b, stats] = alignImpPair(obj, ms12DatasetIO, raw_na
 %   options (struct, optional)
 %       - rt_sigma (1 x 1 double)
 %           RT Gaussian sigma (minutes) for peak selection. Default: 0.5.
+%       - max_rt_residual (1 x 1 double)
+%           Max allowed RT residual (minutes) for peak pairing.
+%       - dead_time_min (1 x 1 double)
+%           Min allowed RT (minutes) for peak start; earlier peaks are ignored.
 %   minMSMSnum (1 x 1 double/int, optional)
 %       Minimum MSMS count for XIC preprocessing
 %   alpha (1 x 1 double, optional)
@@ -58,6 +62,8 @@ if ~ok_a || ~ok_b
 end
 
 sigma = COptionUtils.get(options, 'rt_sigma', 0.5);
+max_rt_residual = COptionUtils.get(options, 'max_rt_residual', []);
+dead_time_min = COptionUtils.get(options, 'dead_time_min', []);
 
 scores_a = data_a.area_imp_by_peak .* data_a.imp_max_props;
 scores_b = data_b.area_imp_by_peak .* data_b.imp_max_props;
@@ -72,8 +78,11 @@ for idx_a = 1:numel(scores_a)
     if scores_a(idx_a) <= 0
         continue;
     end
-    a_center = mean([data_a.xic_peak_rt_bounds(idx_a).rt_start, ...
-        data_a.xic_peak_rt_bounds(idx_a).rt_end]);
+    a_peak = data_a.xic_peak_rt_bounds(idx_a);
+    if ~isempty(dead_time_min) && a_peak.rt_start < dead_time_min
+        continue;
+    end
+    a_center = mean([a_peak.rt_start, a_peak.rt_end]);
     if model.has_model
         pred_b = CXICAlignTransform.apply(model, a_center);
     else
@@ -85,9 +94,18 @@ for idx_a = 1:numel(scores_a)
         if scores_b(idx_b) <= 0
             continue;
         end
-        b_center = mean([data_b.xic_peak_rt_bounds(idx_b).rt_start, ...
-            data_b.xic_peak_rt_bounds(idx_b).rt_end]);
+        b_peak = data_b.xic_peak_rt_bounds(idx_b);
+        if ~isempty(dead_time_min) && b_peak.rt_start < dead_time_min
+            continue;
+        end
+        b_center = mean([b_peak.rt_start, b_peak.rt_end]);
         residual = abs(b_center - pred_b);
+        if isempty(max_rt_residual) && isfield(model, 'rt_residual_threshold')
+            max_rt_residual = model.rt_residual_threshold;
+        end
+        if ~isempty(max_rt_residual) && residual > max_rt_residual
+            continue;
+        end
         weight = exp(-residual / sigma);
         score = scores_a(idx_a) * scores_b(idx_b) * weight;
         if score > best_score

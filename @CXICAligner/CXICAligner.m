@@ -13,7 +13,12 @@ classdef CXICAligner < handle
             %   anchor_selector (CXICAlignAnchorSelector, optional)
             %       Selector used to build anchors from FDR results
             %   options (struct, optional)
-            %       Default alignment options
+            %       Default alignment options:
+            %       - rt_sigma: RT Gaussian sigma (minutes) for peak pairing
+            %       - max_rt_residual: max RT residual (minutes) for peak pairing
+            %       - dead_time_min: min allowed RT start (minutes) for peaks
+            %       - outlier_k: k for outlier removal when fitting models
+            %       - outlier_method: outlier method ('mad' or 'std')
             % Output:
             %   obj (CXICAligner)
             %       Aligner instance

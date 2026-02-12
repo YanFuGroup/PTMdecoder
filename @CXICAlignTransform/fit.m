@@ -20,7 +20,8 @@ if nargin < 3
 end
 
 model = struct('slope', 1, 'intercept', 0, 'bin_centers', [], ...
-    'bin_offsets', [], 'bin_min', [], 'bin_max', [], 'has_model', false);
+    'bin_offsets', [], 'bin_min', [], 'bin_max', [], 'has_model', false, ...
+    'rt_residual_threshold', []);
 
 if numel(ref_rts) < 2 || numel(target_rts) < 2
     return;
@@ -39,14 +40,16 @@ if outlier_k > 0
     if strcmpi(outlier_method, 'mad')
         mad_res = median(abs(residuals - median(residuals)));
         if mad_res > 0
-            keep = abs(residuals - median(residuals)) <= outlier_k * mad_res;
+            model.rt_residual_threshold = outlier_k * mad_res;
+            keep = abs(residuals - median(residuals)) <= model.rt_residual_threshold;
         else
             keep = true(size(residuals));
         end
     else
         sigma = std(residuals);
         if sigma > 0
-            keep = abs(residuals) <= outlier_k * sigma;
+            model.rt_residual_threshold = outlier_k * sigma;
+            keep = abs(residuals) <= model.rt_residual_threshold;
         else
             keep = true(size(residuals));
         end
