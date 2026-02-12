@@ -1,7 +1,7 @@
-function anchors = selectAnchors(~, fdr_file_path, ms12DatasetIO, options)
+function anchors = selectAnchors(~, fdr_filtered_result_path, ms12DatasetIO, options)
 % Select unmodified peptide anchors from FDR filtered results.
 % Input:
-%   fdr_file_path (1 x 1 char/string)
+%   fdr_filtered_result_path (1 x 1 char/string)
 %       FDR filtered result file path
 %   ms12DatasetIO (CMS12DatasetIO)
 %       MS1/MS2 dataset IO for RT lookup
@@ -9,14 +9,18 @@ function anchors = selectAnchors(~, fdr_file_path, ms12DatasetIO, options)
 %       Selector options (min_psm)
 % Output:
 %   anchors (struct array)
-%       Fields: peptide, raw_name, rt, count
+%       Fields:
+%         - peptide: unmodified peptide sequence (key used for matching)
+%         - raw_name: raw/MS2 dataset name that the peptide comes from
+%         - rt: median retention time (minutes) across matching PSMs
+%         - count: number of PSMs contributing to this anchor
 
 if nargin < 4
     options = struct();
 end
 min_psm = COptionUtils.get(options, 'min_psm', 3);
 
-fdr_results = CFdrFilteredResultIO.read(fdr_file_path);
+fdr_results = CFdrFilteredResultIO.read(fdr_filtered_result_path);
 entries = fdr_results.entries;
 
 anchor_map = containers.Map('KeyType', 'char', 'ValueType', 'any');
@@ -52,7 +56,7 @@ for idx = 1:numel(keys)
     anchors(end+1) = struct( ...
         'peptide', peptide, ...
         'raw_name', raw_name, ...
-        'rt', median(rts), ...
+        'rt', median(rts), ...  % TODO: consider weighted median by PSM score
         'count', numel(rts)); %#ok<AGROW>
 end
 end

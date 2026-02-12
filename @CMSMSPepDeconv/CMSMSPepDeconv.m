@@ -168,6 +168,9 @@ classdef CMSMSPepDeconv
         % Re-quantify the IMPs using checked XIC peaks
         obj = requant_IMP(obj)
 
+        % Quantify -> align XIC -> requantify IMPs
+        obj = quant_align_requant_IMP(obj, align_strategy, align_options)
+
         % Re-quantify the normalization peptides using checked XIC peaks
         obj = requant_norm_pep(obj)
 

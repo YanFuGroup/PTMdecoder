@@ -1,0 +1,74 @@
+classdef CIMPRequantAlignmentPipeline < handle
+    % Pipeline for quant -> align -> requant workflow
+
+    properties (Access=private)
+        m_ms12DatasetIO
+        m_ms1_tolerance
+        m_minMSMSnum
+        m_alpha
+        m_resFilterThres
+        m_aligner
+        m_align_strategy
+        m_align_options
+
+        m_pair_models
+    end
+
+    methods
+        function obj = CIMPRequantAlignmentPipeline(ms12DatasetIO, ms1_tolerance, minMSMSnum, ...
+                alpha, resFilterThres, aligner, align_strategy, align_options)
+            % Construct a quant-align-requant pipeline.
+            % Input:
+            %   ms12DatasetIO (CMS12DatasetIO)
+            %       MS1/MS2 dataset IO
+            %   ms1_tolerance (struct)
+            %       MS1 tolerance settings
+            %   minMSMSnum (1 x 1 double/int)
+            %       Minimum MSMS count for XIC preprocessing
+            %   alpha (1 x 1 double)
+            %       Peak detection threshold factor
+            %   resFilterThres (1 x 1 double)
+            %       Ratio filter threshold
+            %   aligner (CXICAligner)
+            %       Aligner instance
+            %   align_strategy (CRunAlignStrategy)
+            %       Alignment strategy
+            %   align_options (struct, optional)
+            %       Alignment options (paths and parameters):
+            %         - min_psm (1 x 1 double)
+            %             Minimum PSM count per peptide to form anchors. Default: 3.
+            %         - num_bins (1 x 1 double)
+            %             Number of bins for local alignment offsets. Default: 5.
+            %         - min_per_bin (1 x 1 double)
+            %             Minimum anchors per bin for local offset. Default: 5.
+            %         - rt_sigma (1 x 1 double)
+            %             RT Gaussian sigma (minutes) for peak selection. Default: 0.5.
+            % Output:
+            %   obj (CIMPRequantAlignmentPipeline)
+            %       Pipeline instance
+            obj.m_ms12DatasetIO = ms12DatasetIO;
+            obj.m_ms1_tolerance = ms1_tolerance;
+            obj.m_minMSMSnum = minMSMSnum;
+            obj.m_alpha = alpha;
+            obj.m_resFilterThres = resFilterThres;
+            obj.m_aligner = aligner;
+            obj.m_align_strategy = align_strategy;
+            if nargin < 8
+                align_options = struct();
+            end
+            obj.m_align_options = align_options;
+        end
+    end
+
+    methods (Access=public)
+        [pep_rtrange_map, report] = buildAlignedRtrangeMap(obj, msms_result, fdr_filtered_result_path, buildRawIdentManagerFn)
+
+        writeAlignmentReport(obj, report, output_path)
+    end
+
+    methods (Access=private)
+        raw_imps_map = buildRawImpsMap(obj, rawIdentManager)
+
+        raw_names = getRawNamesFromMsmsResult(obj, msms_result)
+    end
+end
