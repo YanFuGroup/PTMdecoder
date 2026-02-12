@@ -16,7 +16,7 @@ function [pep_rtrange_map, report] = buildAlignedRtrangeMap(obj, ...
 %   report (struct)
 %       Alignment stats and pair model info
 
-if nargin < 5 || isempty(buildRawIdentManagerFn)
+if nargin < 4 || isempty(buildRawIdentManagerFn)
     error('buildAlignedRtrangeMap requires a raw identification builder function.');
 end
 
@@ -35,6 +35,7 @@ if isempty(align_pairs)
     return;
 end
 
+fprintf('Aligning RT ranges for %d run pairs...\n', size(align_pairs, 1));
 print_progress = CPrintProgress(length(msms_result.Peptides));
 for idx_psf = 1:length(msms_result.Peptides)
     print_progress = print_progress.update_show(idx_psf);

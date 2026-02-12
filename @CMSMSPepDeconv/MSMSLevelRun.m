@@ -14,6 +14,11 @@ if isempty(obj.CPepProtService)
     obj.CPepProtService = CPepProtService(obj.m_fastaFile, obj.m_regular_express, obj.m_filtered_res_file_path);
 end
 
+% Initialize the file mapper
+if isempty(obj.m_cMsFileMapper)
+    obj.m_cMsFileMapper = CMsFileMapper(obj.m_specPath);
+end
+
 % Indexing the mgf
 if isempty(obj.m_cMgfDatasetIO)
     obj.m_cMgfDatasetIO = CMgfDatasetIO;

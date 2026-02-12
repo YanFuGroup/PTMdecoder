@@ -41,8 +41,16 @@ classdef CIMPRequantAlignmentPipeline < handle
             %             Number of bins for local alignment offsets. Default: 5.
             %         - min_per_bin (1 x 1 double)
             %             Minimum anchors per bin for local offset. Default: 5.
+            %         - outlier_k (1 x 1 double)
+            %             Outlier removal k (MAD/STD) for transform fitting. Default: 3.
+            %         - outlier_method (char/string)
+            %             Outlier method ('mad' or 'std'). Default: 'mad'.
             %         - rt_sigma (1 x 1 double)
             %             RT Gaussian sigma (minutes) for peak selection. Default: 0.5.
+            %         - max_rt_residual (1 x 1 double)
+            %             Max allowed RT residual (minutes) for peak pairing. Default: model.rt_residual_threshold.
+            %         - dead_time_min (1 x 1 double)
+            %             Min allowed RT start (minutes) for peaks. Default: [] (disabled).
             % Output:
             %   obj (CIMPRequantAlignmentPipeline)
             %       Pipeline instance
