@@ -26,17 +26,26 @@ while(~feof(fin))
     if isempty(strline)
         continue;
     end
-    if strline(1) == 'P'
-        % Record one peptide line
-        resultObj.addPeptide(strline(3:end));
-    elseif strline(1) == 'S'
+    tokens = strsplit(strline, '\t');
+    tag = tokens{1};
+    if strcmp(tag, 'P')
+        % Record one peptide line (allow repeated P lines for the same sequence)
+        if numel(tokens) < 2
+            error('CMSMSResReader:InvalidPeptideLine', 'Invalid peptide line: %s', strline);
+        end
+        resultObj.addOrSelectPeptide(tokens{2});
+    elseif strcmp(tag, 'S')
         % Record one spectrum line
-        strline = strsplit(strline, '\t');
-        resultObj.addSpectrum(strline{2}, strline{3});
+        if numel(tokens) < 3
+            error('CMSMSResReader:InvalidSpectrumLine', 'Invalid spectrum line: %s', strline);
+        end
+        resultObj.addSpectrum(tokens{2}, tokens{3});
     else
         % Record one peptidoform line
-        strline = strsplit(strline, '\t');
-        resultObj.addPeptidoform(strline{1}, str2double(strline{2}));
+        if numel(tokens) < 2
+            error('CMSMSResReader:InvalidPeptidoformLine', 'Invalid peptidoform line: %s', strline);
+        end
+        resultObj.addPeptidoform(tokens{1}, str2double(tokens{2}));
     end
 end
 

@@ -29,6 +29,7 @@ classdef CMSMSResult < handle
         end
         
         addPeptide(obj, sequence)
+        addOrSelectPeptide(obj, sequence)
         addSpectrum(obj, datasetName, spectrumName)
         addPeptidoform(obj, peptidoform_str, relative_abundance)
         compress(obj)

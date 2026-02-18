@@ -2,7 +2,7 @@ function addPeptide(obj, sequence)
     % Input:
     %   sequence (1 x 1 char/string)
     %       peptide sequence
-    obj.CurrentPeptideIdx = obj.CurrentPeptideIdx + 1;
+    obj.CurrentPeptideIdx = length(obj.Peptides) + 1;
     obj.CurrentSpectrumIdx = 0;
     
     % Expand structure
