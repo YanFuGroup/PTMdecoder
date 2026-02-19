@@ -16,7 +16,7 @@ classdef CIMPRequantAlignmentPipeline < handle
 
     methods
         function obj = CIMPRequantAlignmentPipeline(ms12DatasetIO, ms1_tolerance, minMSMSnum, ...
-                alpha, resFilterThres, aligner, align_strategy, align_options)
+            alpha, resFilterThres, aligner, align_strategy, align_options)
             % Construct a quant-align-requant pipeline.
             % Input:
             %   ms12DatasetIO (CMS12DatasetIO)
@@ -54,6 +54,19 @@ classdef CIMPRequantAlignmentPipeline < handle
             % Output:
             %   obj (CIMPRequantAlignmentPipeline)
             %       Pipeline instance
+            if nargin == 1 && isa(ms12DatasetIO, 'CIMPRequantAlignmentPipelineConfig')
+                cfg = ms12DatasetIO;
+                obj.m_ms12DatasetIO = cfg.ms12DatasetIO;
+                obj.m_ms1_tolerance = cfg.ms1_tolerance;
+                obj.m_minMSMSnum = cfg.minMSMSnum;
+                obj.m_alpha = cfg.alpha;
+                obj.m_resFilterThres = cfg.resFilterThres;
+                obj.m_aligner = cfg.aligner;
+                obj.m_align_strategy = cfg.align_strategy;
+                obj.m_align_options = cfg.align_options;
+                return;
+            end
+
             obj.m_ms12DatasetIO = ms12DatasetIO;
             obj.m_ms1_tolerance = ms1_tolerance;
             obj.m_minMSMSnum = minMSMSnum;

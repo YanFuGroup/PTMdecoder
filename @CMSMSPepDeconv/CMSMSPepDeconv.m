@@ -35,6 +35,8 @@ classdef CMSMSPepDeconv
         m_matFragInfo;      % Information of ions, three columns represent [b/y type, position, charge], each row is a fragment ion
         m_matFragEff;       % Fragmentation efficiency matrix of ions, each row corresponds to m_matFragInfo, each column is a solvable MS2 spectrum
         m_matFragIntens;    % Sum of experimental peak intensities of ions, each row corresponds to m_matFragInfo, each column is a solvable MS2 spectrum
+
+        m_taskParam;        % Optional cached CTaskParam for factory-based config creation
     end
 
     methods
@@ -86,9 +88,11 @@ classdef CMSMSPepDeconv
             %       MSMS results path
             %   filtered_res_file_path (1 x 1 char/string, optional)
             %       filtered PSM results path
+            obj.m_taskParam = [];
             if nargin == 1
                 % This is a method to read parameters from a .param file
                 taskParam = modFile_or_taskparamobj;
+                obj.m_taskParam = taskParam;
                 obj.m_specPath = taskParam.m_spec_dir_path;
                 obj.m_modFile = taskParam.m_mod_file_path;
                 obj.m_fastaFile = taskParam.m_fasta_file_path;

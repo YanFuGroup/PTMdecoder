@@ -12,6 +12,16 @@ classdef CIMPProcessingPipeline < handle
     methods
         function obj = CIMPProcessingPipeline(ms12DatasetIO, ms1_tolerance, minMSMSnum, alpha, resFilterThres)
             % Construct a pipeline with shared processing parameters
+            if nargin == 1 && isa(ms12DatasetIO, 'CIMPProcessingPipelineConfig')
+                cfg = ms12DatasetIO;
+                obj.m_ms12DatasetIO = cfg.ms12DatasetIO;
+                obj.m_ms1_tolerance = cfg.ms1_tolerance;
+                obj.m_minMSMSnum = cfg.minMSMSnum;
+                obj.m_alpha = cfg.alpha;
+                obj.m_resFilterThres = cfg.resFilterThres;
+                return;
+            end
+
             obj.m_ms12DatasetIO = ms12DatasetIO;
             obj.m_ms1_tolerance = ms1_tolerance;
             obj.m_minMSMSnum = minMSMSnum;
