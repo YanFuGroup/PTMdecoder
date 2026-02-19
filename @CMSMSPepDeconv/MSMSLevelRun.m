@@ -9,25 +9,14 @@ function obj = MSMSLevelRun(obj, is_record_fragment_information)
 %   obj (CMSMSPepDeconv)
 %       Updated instance
 
-% Load protein sequences from fasta file
-if isempty(obj.CPepProtService)
-    obj.CPepProtService = CPepProtService(obj.m_fastaFile, obj.m_regular_express, obj.m_filtered_res_file_path);
-end
+% Load shared services lazily
+[obj, ~] = obj.ensurePepProtService();
 
-% Initialize the file mapper
-if isempty(obj.m_cMsFileMapper)
-    obj.m_cMsFileMapper = CMsFileMapper(obj.m_specPath);
-end
+[obj, ~] = obj.ensureMsFileMapper();
 
-% Indexing the mgf
-if isempty(obj.m_cMgfDatasetIO)
-    obj.m_cMgfDatasetIO = CMgfDatasetIO;
-    obj.m_cMgfDatasetIO.Init(obj.m_specPath);
-    obj.m_cMgfDatasetIO.SetMap();
-    obj.m_cMgfDatasetIO.SetFidmap();
-    need_release_mgf_index = true;
-else
-    need_release_mgf_index = false;
+[obj, need_release_mgf_index] = obj.ensureMgfDatasetIO();
+if need_release_mgf_index
+    cleanup_mgf = onCleanup(@() obj.m_cMgfDatasetIO.CloseAllFile()); %#ok<NASGU>
 end
 
 
@@ -139,9 +128,6 @@ end
 fclose(fout);
 fclose(fo_may_FP);
 fclose(fin);
-if need_release_mgf_index
-    obj.m_cMgfDatasetIO.CloseAllFile();
-end
 print_progress.last_update();
 fprintf('done.\n');
 if warning_message

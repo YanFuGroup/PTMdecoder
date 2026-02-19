@@ -66,17 +66,16 @@ end
 msms_reader = CMSMSResReader();
 msms_result = msms_reader.read_from_msms_res_file(msms_res_path);
 
-% Initialize dataset IOs
-obj.m_cMs12DatasetIO = CMS12DatasetIO(obj.m_specPath, obj.m_ms1_tolerance);
-obj.m_cMs12DatasetIO.SetMap();
-obj.m_cMgfDatasetIO = CMgfDatasetIO;
-obj.m_cMgfDatasetIO.Init(obj.m_specPath);
-obj.m_cMgfDatasetIO.SetMap();
-obj.m_cMgfDatasetIO.SetFidmap();
+% Initialize dataset IOs lazily
+[obj, ~] = obj.ensureMs12DatasetIO();
+[obj, mgf_created_here] = obj.ensureMgfDatasetIO();
+if mgf_created_here
+    cleanup_mgf = onCleanup(@() obj.m_cMgfDatasetIO.CloseAllFile()); %#ok<NASGU>
+end
 
-% Initialize protein service
-obj.CPepProtService = CPepProtService(obj.m_fastaFile, ...
-    obj.m_regular_express, obj.m_filtered_res_file_path);
+% Initialize shared services lazily
+[obj, ~] = obj.ensurePepProtService();
+[obj, ~] = obj.ensureMsFileMapper();
 
 % Build aligned RT range map
 anchor_selector = CXICAlignAnchorSelector();
@@ -116,6 +115,5 @@ print_progress.last_update();
 fprintf('done.\n');
 
 CIMPQuantResultIO.write(report, output_path);
-obj.m_cMgfDatasetIO.CloseAllFile();
 end
 

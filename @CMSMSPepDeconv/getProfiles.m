@@ -24,7 +24,12 @@ MS2ScanI = str2double(spec_name{2});
 
 % Use mapper to get correct MS1 stem
 mgf_stem = erase(mgf_name,'.mgf');
-ms12_stem = obj.m_cMsFileMapper.get_ms1_stem(mgf_stem);
+if isempty(obj.m_cMsFileMapper)
+    mapper = CMsFileMapper(obj.m_specPath);
+else
+    mapper = obj.m_cMsFileMapper;
+end
+ms12_stem = mapper.get_ms1_stem(mgf_stem);
 
 MS2_index = obj.m_cMs12DatasetIO.m_mapNameMS2Index(ms12_stem);
 idx_cur_scan = MS2_index(:,2)==MS2ScanI; % Find the corresponding scan

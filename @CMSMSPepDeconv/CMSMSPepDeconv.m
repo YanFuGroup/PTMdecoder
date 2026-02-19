@@ -188,6 +188,12 @@ classdef CMSMSPepDeconv
 
         % Parse filtered PSM results and build raw managers for target peptides
         pep_quant = readFdrPeptides(obj, input_file_path, ms12DatasetIO, peptide_list, pep_quant);
+
+        % Ensure shared services/resources are initialized lazily
+        [obj, created] = ensureMgfDatasetIO(obj);
+        [obj, created] = ensureMs12DatasetIO(obj);
+        [obj, created] = ensureMsFileMapper(obj);
+        [obj, created] = ensurePepProtService(obj);
     end
 
 end

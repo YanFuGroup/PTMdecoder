@@ -8,27 +8,14 @@ function obj = quant_IMP(obj)
 %   obj (CMSMSPepDeconv)
 %       Updated instance
 
-% Load protein sequences from fasta file
-if isempty(obj.CPepProtService)
-    obj.CPepProtService = CPepProtService(obj.m_fastaFile, obj.m_regular_express, obj.m_filtered_res_file_path);
+[obj, ~] = obj.ensurePepProtService();
+
+[obj, need_release_mgf_index] = obj.ensureMgfDatasetIO();
+if need_release_mgf_index
+    cleanup_mgf = onCleanup(@() obj.m_cMgfDatasetIO.CloseAllFile());
 end
 
-% Indexing the mgf
-if isempty(obj.m_cMgfDatasetIO)
-    obj.m_cMgfDatasetIO = CMgfDatasetIO;
-    obj.m_cMgfDatasetIO.Init(obj.m_specPath);
-    obj.m_cMgfDatasetIO.SetMap();
-    obj.m_cMgfDatasetIO.SetFidmap();
-    need_release_mgf_index = true;
-else
-    need_release_mgf_index = false;
-end
-
-% Indexing the ms1/ms2
-if isempty(obj.m_cMs12DatasetIO)
-    obj.m_cMs12DatasetIO = CMS12DatasetIO(obj.m_specPath,obj.m_ms1_tolerance);
-    obj.m_cMs12DatasetIO.SetMap();
-end
+[obj, ~] = obj.ensureMs12DatasetIO();
 
 if ~isfolder(obj.m_outputDir)
     mkdir(obj.m_outputDir);
@@ -40,15 +27,6 @@ if isempty(obj.m_msms_res_path)
 else
     each_PSM_results_path = obj.m_msms_res_path;
 end
-% fin=fopen(each_PSM_results_path,'r');
-% if 0 >= fin
-%     error(['Can not open file: ',each_PSM_results_path]);
-% end
-file_total_length = dir(each_PSM_results_path).bytes;
-if file_total_length <= 0
-    error(['The file "', each_PSM_results_path,'" is empty.'])
-end
-% print_progress = CPrintProgress(file_total_length);
 
 % Check and create a new output file
 each_peptide_results_path = fullfile(obj.m_outputDir,'report_peptide_all.txt');
@@ -79,7 +57,4 @@ fprintf('done.\n');
 
 CIMPQuantResultIO.write(report, each_peptide_results_path);
 
-if need_release_mgf_index
-    obj.m_cMgfDatasetIO.CloseAllFile();
-end
 end
