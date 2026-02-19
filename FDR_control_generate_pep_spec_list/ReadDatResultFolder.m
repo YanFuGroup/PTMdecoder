@@ -12,9 +12,8 @@ datafiles = dir(fullfile(path,'*.dat'));
 nfiles = length(datafiles);
 for i=1:nfiles
     plfilepath = fullfile(path,datafiles(i).name);
-    fprintf('Reading %s...',plfilepath);
     [resulti] = ReadDatResult(plfilepath);   
-    result = [result resulti];
+    result = [result resulti]; %#ok<AGROW>
     fprintf('\n')   
 end
 

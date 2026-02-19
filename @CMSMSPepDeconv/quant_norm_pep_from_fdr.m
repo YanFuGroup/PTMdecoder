@@ -24,9 +24,8 @@ if ~exist(obj.m_outputDir, 'dir')
     mkdir(obj.m_outputDir);
 end
 
-% Indexing the ms1 and ms2
-ms12DatasetIO = CMS12DatasetIO(obj.m_specPath, obj.m_ms1_tolerance);
-ms12DatasetIO.SetMap();
+% Indexing resources lazily
+[obj, ~] = obj.ensureMs12DatasetIO();
 
 % Initialize raw managers
 pep_quant = cell(length(peptide_list), 1);
@@ -36,11 +35,11 @@ end
 
 % Process the filtered result file
 fprintf('Reading %s...', obj.m_specPath);
-pep_quant = obj.readFdrPeptides(filtered_res_file_path, ms12DatasetIO, peptide_list, pep_quant);
+pep_quant = obj.readFdrPeptides(filtered_res_file_path, obj.m_cMs12DatasetIO, peptide_list, pep_quant);
 fprintf('done.\n');
 
 % Run quantification
-pipeline = CIMPProcessingPipeline(ms12DatasetIO, obj.m_ms1_tolerance, 1, obj.m_alpha, obj.m_resFilterThres);
+pipeline = CIMPProcessingPipeline(obj.m_cMs12DatasetIO, obj.m_ms1_tolerance, 1, obj.m_alpha, obj.m_resFilterThres);
 stats_cleanup = onCleanup(@() CIMPQuantifier.rt_sorted_stats('flush', fullfile(obj.m_outputDir, 'rt_sorted_stats.mat')));
 report = CIMPQuantReport();
 fprintf('Quantifying %s...', obj.m_specPath);

@@ -29,13 +29,8 @@ end
 output_path = fullfile(obj.m_outputDir, 'peptide4normalization_requant.txt');
 report_requant = CIMPQuantReport();
 
-% Indexing the dataset IO
-obj.m_cMs12DatasetIO = CMS12DatasetIO(obj.m_specPath,obj.m_ms1_tolerance);
-obj.m_cMs12DatasetIO.SetMap();
-obj.m_cMgfDatasetIO = CMgfDatasetIO;
-obj.m_cMgfDatasetIO.Init(obj.m_specPath);
-obj.m_cMgfDatasetIO.SetMap();
-obj.m_cMgfDatasetIO.SetFidmap();
+% Indexing resources lazily
+[obj, ~] = obj.ensureMs12DatasetIO();
 
 % Read and process
 total_records = 0;
@@ -88,7 +83,6 @@ print_progress.last_update();
 fprintf('done.\n');
 
 CIMPQuantResultIO.write(report_requant, output_path);
-obj.m_cMgfDatasetIO.CloseAllFile();
 end
 
 

@@ -16,6 +16,11 @@ function pep_quant = readFdrPeptides(obj, input_file_path, ms12DatasetIO, peptid
 %   pep_quant (1 x K cell)
 %       Updated raw identification managers
 
+if nargin < 3 || isempty(ms12DatasetIO)
+    [obj, ~] = obj.ensureMs12DatasetIO();
+    ms12DatasetIO = obj.m_cMs12DatasetIO;
+end
+
 FDRfilteredResults = CFdrFilteredResultIO.read(input_file_path);
 entries = FDRfilteredResults.entries;
 

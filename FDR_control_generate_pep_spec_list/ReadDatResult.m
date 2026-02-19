@@ -22,6 +22,7 @@ result1(bufnum) = struct('DatasetName','','Index1',0,'Calc_neutral_pepmass',0,'m
     'modification','','modificationlocation','','ionscore',0,'protein','');
 numrlt = 0;
 ct_prt = 0;
+progress_prefix = sprintf('Reading %s...',char(pathin));
 s = fgetl(fidin);
 head1 = 'IT_MODS=';
 % head2 = 'queries=';
@@ -231,10 +232,11 @@ while ~strncmp(s,head8,length(head8))
     result1(numrlt).protein = protein;
     
     if rem(numrlt,200)==0
-        for j=1:ct_prt
-            fprintf('\b');
-        end
-        ct_prt = fprintf('%i..',numrlt);
+        msg = sprintf('%s%i..',progress_prefix,numrlt);
+        pad = repmat(' ',1,max(0,ct_prt-length(msg)));
+        fprintf('\r%s%s',msg,pad);
+        ct_prt = length(msg);
+        drawnow limitrate;
     end
     
     
@@ -308,10 +310,11 @@ for i = 1:length(result1)
     
     
     if rem(i,200)==0
-        for j=1:ct_prt
-            fprintf('\b');
-        end
-        ct_prt = fprintf('%i..',i);
+        msg = sprintf('%s%i..',progress_prefix,i);
+        pad = repmat(' ',1,max(0,ct_prt-length(msg)));
+        fprintf('\r%s%s',msg,pad);
+        ct_prt = length(msg);
+        drawnow limitrate;
     end
 end
 % toc;
