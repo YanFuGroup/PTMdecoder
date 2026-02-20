@@ -41,13 +41,7 @@ if total_records == 0
     fprintf(['Warning: The file "', checked_pep_path, '" is empty\n']);
 end
 print_progress = CPrintProgress(max(total_records, 1));
-if ~isempty(obj.m_taskParam)
-    overrides = struct('ms1_tolerance', obj.m_ms1_tolerance, 'minMSMSnum', obj.m_min_MSMS_num, ...
-        'alpha', obj.m_alpha, 'resFilterThres', obj.m_resFilterThres);
-    pipeline_cfg = CIMPProcessingPipelineConfig.fromTaskParam(obj.m_taskParam, obj.m_cMs12DatasetIO, overrides);
-else
-    pipeline_cfg = CIMPProcessingPipelineConfig(obj.m_cMs12DatasetIO, obj.m_ms1_tolerance, obj.m_min_MSMS_num, obj.m_alpha, obj.m_resFilterThres);
-end
+pipeline_cfg = CIMPProcessingPipelineConfig.fromTaskParam(obj.m_taskParam, obj.m_cMs12DatasetIO);
 pipeline = CIMPProcessingPipeline(pipeline_cfg);
 
 fprintf('Re-quantifying at peptide level...')

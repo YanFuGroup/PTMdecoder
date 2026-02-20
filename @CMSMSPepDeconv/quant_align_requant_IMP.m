@@ -70,7 +70,7 @@ msms_result = msms_reader.read_from_msms_res_file(msms_res_path);
 [obj, ~] = obj.ensureMs12DatasetIO();
 [obj, mgf_created_here] = obj.ensureMgfDatasetIO();
 if mgf_created_here
-    cleanup_mgf = onCleanup(@() obj.m_cMgfDatasetIO.CloseAllFile()); %#ok<NASGU>
+    cleanup_mgf = onCleanup(@() obj.m_cMgfDatasetIO.CloseAllFile());
 end
 
 % Initialize shared services lazily
@@ -80,16 +80,8 @@ end
 % Build aligned RT range map
 anchor_selector = CXICAlignAnchorSelector();
 aligner = CXICAligner(anchor_selector, align_options);
-if ~isempty(obj.m_taskParam)
-    align_overrides = struct('ms1_tolerance', obj.m_ms1_tolerance, 'minMSMSnum', obj.m_min_MSMS_num, ...
-        'alpha', obj.m_alpha, 'resFilterThres', obj.m_resFilterThres);
-    align_cfg = CIMPRequantAlignmentPipelineConfig.fromTaskParam( ...
-        obj.m_taskParam, obj.m_cMs12DatasetIO, aligner, align_strategy, align_options, align_overrides);
-else
-    align_cfg = CIMPRequantAlignmentPipelineConfig(...
-        obj.m_cMs12DatasetIO, obj.m_ms1_tolerance, obj.m_min_MSMS_num, ...
-        obj.m_alpha, obj.m_resFilterThres, aligner, align_strategy, align_options);
-end
+align_cfg = CIMPRequantAlignmentPipelineConfig.fromTaskParam( ...
+    obj.m_taskParam, obj.m_cMs12DatasetIO, aligner, align_strategy, align_options);
 pipeline = CIMPRequantAlignmentPipeline(align_cfg);
 
 [pep_rtrange_map, align_report] = pipeline.buildAlignedRtrangeMap(...
@@ -105,14 +97,7 @@ output_path = COptionUtils.get(align_options, 'requant_output_path', ...
     fullfile(obj.m_outputDir, 'report_peptide_all_requant_aligned.txt'));
 report = CIMPQuantReport();
 print_progress = CPrintProgress(length(msms_result.Peptides));
-if ~isempty(obj.m_taskParam)
-    proc_overrides = struct('ms1_tolerance', obj.m_ms1_tolerance, 'minMSMSnum', obj.m_min_MSMS_num, ...
-        'alpha', obj.m_alpha, 'resFilterThres', obj.m_resFilterThres);
-    proc_cfg = CIMPProcessingPipelineConfig.fromTaskParam(obj.m_taskParam, obj.m_cMs12DatasetIO, proc_overrides);
-else
-    proc_cfg = CIMPProcessingPipelineConfig(obj.m_cMs12DatasetIO, obj.m_ms1_tolerance, ...
-        obj.m_min_MSMS_num, obj.m_alpha, obj.m_resFilterThres);
-end
+proc_cfg = CIMPProcessingPipelineConfig.fromTaskParam(obj.m_taskParam, obj.m_cMs12DatasetIO);
 proc_pipeline = CIMPProcessingPipeline(proc_cfg);
 
 fprintf('Re-quantifying at peptide level (aligned)...')

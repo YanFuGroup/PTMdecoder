@@ -150,6 +150,13 @@ classdef CMSMSPepDeconv
                 if nargin >= 20
                     obj.m_filtered_res_file_path = filtered_res_file_path;
                 end
+
+                % Build a taskParam-like struct for factory-based config creation
+                obj.m_taskParam = struct();
+                obj.m_taskParam.m_ms1_tolerance = obj.m_ms1_tolerance;
+                obj.m_taskParam.m_min_MSMS_num = obj.m_min_MSMS_num;
+                obj.m_taskParam.m_alpha = obj.m_alpha;
+                obj.m_taskParam.m_result_filter_threshold = obj.m_resFilterThres;
             end
 
             % Generate variable modification "name-mass" dictionary using user-specified target modification strings and modification library
