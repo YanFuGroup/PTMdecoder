@@ -1,6 +1,6 @@
 function Y=calculateY_Guan(vNonRedunTheoryIonMz,matchedExpPeaks)
 % calculateY_Guan - Build Y for Guan model using within-ion-group normalization.
-% Input:
+% Inputs:
 %   vNonRedunTheoryIonMz (L x T double)
 %      Non-redundant ion table with columns:
 %      [m/z, type (1 is b ion, 2 is y ion), ion number (position), charge, 
@@ -8,7 +8,7 @@ function Y=calculateY_Guan(vNonRedunTheoryIonMz,matchedExpPeaks)
 %   matchedExpPeaks (K x 3 double)
 %       Experimental spectrum peaks, each row is a matched peak:
 %       [ion_index, normalized_intensity, raw_intensity].
-% Output:
+% Outputs:
 %   Y (L x 1 double)
 
 Y=zeros(size(vNonRedunTheoryIonMz,1),1);

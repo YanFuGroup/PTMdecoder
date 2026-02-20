@@ -1,11 +1,11 @@
 function matchedExpPeaks = match(expPeaks, vNonRedunTheoryIonMz, ms2_tolerance)
 % Iterate through various modifications to find the union of experimental spectrum peak sets that can match the mass-to-charge ratio
-% Input: 
+% Inputs:
 %   expPeaks (N x 2 double)
 %       experimental spectrum peaks [m/z, intensity]
 %   vNonRedunTheoryIonMz (L x 1 double or L x M double)
 %       ion info matrix, first column is m/z
-% Output: 
+% Outputs:
 %   vMatchedExpPeaks (K x 2 double)
 %       matched [ion_index, intensity]
 %       ion_index is the row index in vNonRedunTheoryIonMz

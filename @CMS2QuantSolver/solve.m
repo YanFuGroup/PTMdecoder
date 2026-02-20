@@ -1,6 +1,6 @@
 function [abundance, frageff, ionTypePosCharge, ionIntens, is_X_not_full_column_rank] = solve(vNonRedunTheoryIonMz, matchedExpPeaks, massArrangement, solver_cfg)
 % solve - Model/method dispatch for MS2 quantification
-% Input:
+% Inputs:
 %   vNonRedunTheoryIonMz (L x T double)
 %       Non-redundant ion table.
 %   matchedExpPeaks (K x 3 double)
@@ -10,11 +10,11 @@ function [abundance, frageff, ionTypePosCharge, ionIntens, is_X_not_full_column_
 %   solver_cfg (struct)
 %       Required fields: model, method, lambda, case_penalty_intens,
 %       grid_penalty_intens, case_OLS_intens_weight.
-% Output:
+% Outputs:
 %   abundance (M x 1 double)
 %       Relative abundance for each peptidoform.
 %   frageff (Q x 1 double)
-%       Fragmentation efficiency (FEV family only; empty for Guan family).
+%       Fragmentation efficiency coefficients (FEV only; empty for FEC/FEE).
 %   ionTypePosCharge (U x 3 double)
 %       Ion tuple [type, position, charge] participating in X matrix.
 %   ionIntens (U x 1 double)
@@ -35,7 +35,7 @@ end
 
 switch solver_cfg.model
     case 1
-        % Variable FE: estimate abundance together with fragment-efficiency variables.
+        % FEV model: variable fragmentation efficiency.
         [X,ionTypePosCharge,ionIntens] = CMS2QuantSolver.calculateX_FEV(vNonRedunTheoryIonMz, matchedExpPeaks, ...
             solver_cfg.case_OLS_intens_weight);
         switch solver_cfg.method
@@ -47,7 +47,7 @@ switch solver_cfg.model
                 [abundance,frageff] = CMS2QuantSolver.coreFEV_penalty(X, massArrangement, penalty_factor);
         end
     case 2
-        % Constant FE (constant-but-unequal FE): solve abundance from X/Y.
+        % FEC model: constant-but-unequal fragmentation efficiency.
         X = CMS2QuantSolver.calculateX_Guan(vNonRedunTheoryIonMz);
         Y = CMS2QuantSolver.calculateY_Guan(vNonRedunTheoryIonMz, matchedExpPeaks);
         switch solver_cfg.method
@@ -59,7 +59,7 @@ switch solver_cfg.model
                 abundance = CMS2QuantSolver.coreGuan_penalty(X, Y, penalty_factor);
         end
     case 3
-        % Equal FE: use Y_1 construction.
+        % FEE model: equal fragmentation efficiency.
         X = CMS2QuantSolver.calculateX_Guan(vNonRedunTheoryIonMz);
         Y = CMS2QuantSolver.calculateY_1(vNonRedunTheoryIonMz, matchedExpPeaks);
         switch solver_cfg.method

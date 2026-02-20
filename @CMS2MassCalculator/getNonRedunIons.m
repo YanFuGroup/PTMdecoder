@@ -1,6 +1,6 @@
 function [vNonRedunTheoryIonMz] = getNonRedunIons(ctx,modSites,massArrangement,fixedPosMod)
 % Generate non-redundant ions for all IMPs
-% Input:
+% Inputs:
 %   ctx (struct)
 %       Required fields: m_pepSeq, m_ionTypes, m_iCharge.
 %       m_ionTypes is a vector of user-configured ion types, such as [1,2,3,11,12,...], where 
@@ -13,7 +13,7 @@ function [vNonRedunTheoryIonMz] = getNonRedunIons(ctx,modSites,massArrangement,f
 %       Candidate mass arrangements for each peptidoform.
 %   fixedPosMod (K x 3 cell)
 %       Fixed modification list [position, mod_name, mod_mass].
-% Output:
+% Outputs:
 %   vNonRedunTheoryIonMz (L x T double)
 %       Non-redundant ion table. Columns:
 %       [m/z, ion_type, ion_pos, charge, mod_count_side, ion_group_idx, IMP-membership(0-1 variable indicating whether the ion belongs to the IMP)].

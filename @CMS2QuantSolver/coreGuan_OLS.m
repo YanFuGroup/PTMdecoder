@@ -1,11 +1,11 @@
 function [abundance]=coreGuan_OLS(X,Y)
 % coreGuan_OLS - Guan model solved by constrained OLS.
-% Input: 
+% Inputs:
 %   X (N x P double)
 %       X matrix in $Y=X\alpha+\epsilon$
 %   Y (N x 1 double)
 %       Y vector in $Y=X\alpha+\epsilon$
-% Output: 
+% Outputs:
 %   abundance (P x 1 double)
 %       \alpha vector in $Y=X\alpha+\epsilon$, representing the relative abundance of each IMP
 H=X'*X;

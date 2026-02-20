@@ -1,13 +1,13 @@
 function [abundance]=coreGuan_lasso(X,Y,lambda)
 % coreGuan_lasso - Guan model solved with lasso-style linear penalty.
-% Input: 
+% Inputs:
 %   X (N x P double)
 %       X matrix in $Y=X\alpha+\epsilon$
 %   Y (N x 1 double)
 %       Y vector in $Y=X\alpha+\epsilon$
 %   lambda (1 x 1 double)
 %       lasso penalty factor
-% Output: 
+% Outputs:
 %   abundance (P x 1 double)
 %       \alpha vector in $Y=X\alpha+\epsilon$, representing the relative abundance of each IMP
 H=X'*X;

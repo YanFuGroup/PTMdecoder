@@ -1,6 +1,6 @@
 function penalty_factor = calculatePenaltyFactor(NonRedunTheoryIonMz, matchedExpPeaks, lambda, case_penalty_intens, grid_penalty_intens)
 % Calculate the penalty factor for the core model according to theoretical ions and matched peaks.
-% Input:
+% Inputs:
 %   vNonRedunTheoryIonMz (L x M double):
 %       Site-discrimining ions, each row is a fragment ion:
 %       [m/z, type (1 is b ion, 2 is y ion), ion number (position), charge, 
@@ -14,7 +14,7 @@ function penalty_factor = calculatePenaltyFactor(NonRedunTheoryIonMz, matchedExp
 %       Mode for scoring/penalty (e.g., 'intens_sum', 'log_intens_sum', 'sqrt_intens_sum', 'exp_intens_sum', 'log_intens_ksdp', 'sqrt_intens_ksdp', 'exp_intens_ksdp', 'sqrt_intens_ksdp_sqrt', 'intens_hyperscore').
 %   grid_penalty_intens (1 x 1 char/string):
 %       Mode for intensity aggregation inside KSDP (e.g., 'intens_sum', 'log_intens_sum', 'sqrt_intens_sum', 'exp_intens_sum').
-% Output:
+% Outputs:
 %   penalty_factor (P x 1 double):
 %       Penalty factor for the core model.
 
@@ -68,14 +68,14 @@ end
 function form_score = sdp_score(ionIndices, matchedExpPeaks, case_penalty_intens)
 % Calculate the score for the given ionIndices according to the matched
 %   experimental peaks.
-% Input:
+% Inputs:
 %   ionIndices (Q x 1 double/int):
 %       Indices of the ions to be calculated.
 %   matchedExpPeaks (K x 3 double):
 %       List of matched experimental peaks.
 %   case_penalty_intens (1 x 1 char/string):
 %       Mode for intensity aggregation.
-% Output:
+% Outputs:
 %   form_score (1 x 1 double):
 %       Score for the given ions.
 
@@ -107,14 +107,14 @@ end
 
 function [ion_tag, matched_peaks_intensity] = get_ion_tag_intensity(NonRedunTheoryIonMz, matchedExpPeaks, ionIndices)
 % Get the ion tag and matched peaks intensity for the given ionIndices.
-% Input:
+% Inputs:
 %   NonRedunTheoryIonMz (L x M double):
 %       Theoretical non-redundant ions.
 %   matchedExpPeaks (K x 3 double):
 %       List of matched experimental peaks.
 %   ionIndices (Q x 1 double/int):
 %       Indices of the ions to be calculated.
-% Output:
+% Outputs:
 %   ion_tag (T x P double):
 %       Ion tag for the given ions. [by&charge type] * [position]. 
 %       Matched ions are marked as 1, otherwise 0.
@@ -143,7 +143,7 @@ end
 function form_score = ksdp_score(ion_tag, matched_peaks_intensity, grid_penalty_intens)
 % Calculate the score for the given ionIndices according to the matched
 %   experimental peaks.
-% Input:
+% Inputs:
 %   ion_tag (T x P double):
 %       Ion tag for the given ions. [by&charge type] * [position]. 
 %       Matched ions are marked as 1, otherwise 0.
@@ -151,7 +151,7 @@ function form_score = ksdp_score(ion_tag, matched_peaks_intensity, grid_penalty_
 %       Intensity of the matched peaks for the given ions.
 %   grid_penalty_intens (1 x 1 char/string):
 %       Mode for intensity aggregation.
-% Output:
+% Outputs:
 %   form_score (1 x 1 double):
 %       Score for the given ions.
 
@@ -190,7 +190,7 @@ end
 function form_score = hyperscore_score(NonRedunTheoryIonMz, matchedExpPeaks, ionIndices)
 % Calculate the score for the given peptidoforms according to the matched
 %   experimental peaks.
-% Input:
+% Inputs:
 %   NonRedunTheoryIonMz (L x M double):
 %       Theoretical non-redundant ions.
 %   matchedExpPeaks (K x 3 double):
@@ -198,7 +198,7 @@ function form_score = hyperscore_score(NonRedunTheoryIonMz, matchedExpPeaks, ion
 %   ionIndices (Q x 1 double/int):
 %       Indices of the ions to be calculated.
 %       According to the row numbers of NonRedunTheoryIonMz.
-% Output:
+% Outputs:
 %   form_score (1 x 1 double):
 %       Score for the given peptidoforms.
 % Attention:

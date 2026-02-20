@@ -1,9 +1,9 @@
 function [fixedPosMod]=getFixedPosMod(ctx)
 % According to the user-specified fixed modification, find their positions on the peptide sequence and record the information
-% Input:
+% Inputs:
 %   ctx (struct)
 %       Required fields: m_pepSeq, m_fixedModNameMass, m_isProtN, m_isProtC.
-% Output:
+% Outputs:
 %   fixedPosMod (K x 3 cell)
 %       Each row: [position, mod_name, mod_mass], such as: [2, 'Acetyl[K]', 42.0106]. Empty if no fixed mods.
 

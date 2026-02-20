@@ -1,6 +1,6 @@
 function [X,ionTypePosCharge,ionIntens]=calculateX_FEV(vNonRedunTheoryIonMz,Peaks,case_OLS_intens_weight)
 % Build design matrix X for FEV model.
-% Input:
+% Inputs:
 %   vNonRedunTheoryIonMz (L x T double)
 %       Non-redundant ion table, each row is a fragment ion:
 %       [m/z, type (1 is b ion, 2 is y ion), ion number (position), charge, 
@@ -15,7 +15,7 @@ function [X,ionTypePosCharge,ionIntens]=calculateX_FEV(vNonRedunTheoryIonMz,Peak
 %           'multi_average_self': weight by the average of matched ion intensities per ion type (average across ions of the same type that are present in the spectrum)
 %           'multi_average_log': weight by the average of log-transformed matched ion intensities per ion type (average across all ions of the same type)
 %           'multi_average_sqrt': weight by the average of sqrt-transformed matched ion intensities per ion type (average across all ions of the same type)
-% Output:
+% Outputs:
 %   X (N x P double)
 %       Linear-system matrix for quantification.
 %   ionTypePosCharge (U x 3 double)

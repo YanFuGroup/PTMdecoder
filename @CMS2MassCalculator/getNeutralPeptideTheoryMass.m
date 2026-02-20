@@ -1,11 +1,11 @@
 function [theoryMass]=getNeutralPeptideTheoryMass(ctx,nonTargetMod)
 % Calculate the theoretical mass of a neutral peptide with fixed modifications
-% Input:
+% Inputs:
 %   ctx (struct)
 %       Required field: m_pepSeq.
 %   nonTargetMod (K x 3 cell)
 %       Fixed modification list [position, mod_name, mod_mass].
-% Output:
+% Outputs:
 %   theoryMass (1 x 1 double)
 %       Neutral peptide theoretical mass including fixed modifications.
 

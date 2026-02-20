@@ -1,13 +1,13 @@
 function [abundance]=coreGuan_penalty(X,Y,penalty_factor)
 % coreGuan_penalty - Guan model solved with peptidoform-dependent penalty.
-% Input: 
+% Inputs:
 %   X (N x P double)
 %       X matrix in $Y=X\alpha+\epsilon$
 %   Y (N x 1 double)
 %       Y vector in $Y=X\alpha+\epsilon$
 %   penalty_factor (P x 1 double)
 %       penalty factor
-% Output: 
+% Outputs:
 %   abundance (P x 1 double)
 %       \alpha vector in $Y=X\alpha+\epsilon$ in the paper, representing the relative abundance of each IMP
 H=X'*X;

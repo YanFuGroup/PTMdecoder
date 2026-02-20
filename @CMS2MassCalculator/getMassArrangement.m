@@ -1,12 +1,12 @@
 function [ bSuccess,inxSites,massArrangement,warning_msg ] = getMassArrangement(ctx,fixedPosMod)
 % Calculate all possible arrangements of multiple modifications and return an ordered mass matrix
-% Input:
+% Inputs:
 %   ctx (struct)
 %       Required fields: m_pepSeq, m_isProtN, m_isProtC, m_variableModNameMass,
 %       m_ms1_tolerance, m_dPrecursorMass, m_enzyme, m_strSpecName.
 %   fixedPosMod (K x 3 cell)
 %       Fixed modification list [position, mod_name, mod_mass].
-% Output:
+% Outputs:
 %   bSuccess (1 x 1 logical)
 %       True when feasible arrangements are found and candidate count is acceptable.
 %   inxSites (1 x S double/int)
@@ -219,12 +219,12 @@ function [massArrangement, is_too_many_candidate]=getMassArrangementUsingComb(mo
     eachSpecfinVariList,maxNumEachAA)
 % Expand each combination into site-level permutations of mass assignments.
 % Calculate all combinations of modification mass + modification sites (just the order of potential modifications on the sequence, not the actual positions)
-% Input: 
+% Inputs:
 %   modComb (C x R double) - All possible modification combinations. Each row is one combination, the column order is consistent with the user-specified modification list
 %   variModNameMass (R x 3 cell) - a matrix of modification types and modification masses, consistent with the order of all modifications specified by the user
 %   eachSpecfinVariList (A x 3 cell) - a table of [amino acid, number of modification types with this specificity site, positions of this amino acid modification in the user-specified list]
 %   maxNumEachAA (A x 1 double/int) - the number of positions where various amino acids may be modified on the peptide sequence
-% Output: 
+% Outputs:
 %   massArrangement (M x S double) - a matrix of various combinations of modification masses, each row is a case, each column is the mass shift at several possible modification sites, the columns are organized by amino acids (block matrix) and cannot be used directly, some processing is needed.
 %   is_too_many_candidate (1 x 1 logical) - whether there are too many candidate peptidoforms
 
@@ -283,12 +283,12 @@ end
 function [eachSpecfinVariList]=findVariableInSeq(variableModNameMass,pepSeq,isProtN,isProtC)
 % Group variable modifications by specificity (N-term, A..Z, C-term).
 % Extract various modification types from a long string of input modifications
-% Input: 
+% Inputs:
 %    variableModNameMass - the modification type
 %    pepSeq - the peptide sequence
 %    isProtN - whether the peptide sequence is a protein N-terminal
 %    isProtC - whether the peptide sequence is a protein C-terminal
-% Output: 
+% Outputs:
 %    eachSpecfinVariList - a table of various amino acids and modifications, specifically a 3-column matrix. Each row is an amino acid, 
 %        the first column is the amino acid type,
 %        the second column is the number of modification types for the same amino acid, 

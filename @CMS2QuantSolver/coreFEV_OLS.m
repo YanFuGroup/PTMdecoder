@@ -1,11 +1,11 @@
 function [abundance]=coreFEV_OLS(X,massArrangement)
 % coreFEV_OLS - FEV model solved by constrained OLS (quadprog form).
-% Input:
+% Inputs:
 %   X (N x P double)
 %       The A matrix in $A\beta$, where the first M columns correspond to the M peptidoforms, and the remaining columns correspond to the fragment-efficiency variables.
 %   massArrangement (M x S double)
 %       Matrix of all possible mod mass combinations. Each row is a case, each column is the mass shift at each possible modification site.
-% Output:
+% Outputs:
 %   abundance (M x 1 double)
 %       Normalized IMP abundance.
 

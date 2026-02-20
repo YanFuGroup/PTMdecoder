@@ -1,11 +1,11 @@
 function theoryMz=calculateIonMz(ctx,fixedPosMod)
 % Calculate the m/z of b and y ions with only fixed modifications
-% Input:
+% Inputs:
 %   ctx (struct)
 %       Required fields: m_pepSeq, m_iCharge.
 %   fixedPosMod (K x 3 cell)
 %       Fixed modification list [position, mod_name, mod_mass].
-% Output:
+% Outputs:
 %   theoryMz (L x C double)
 %       Theoretical fragment m/z matrix. Rows are positions, columns are b/y charge channels.
 
