@@ -22,7 +22,8 @@ result1(bufnum) = struct('DatasetName','','Index1',0,'Calc_neutral_pepmass',0,'m
     'modification','','modificationlocation','','ionscore',0,'protein','');
 numrlt = 0;
 ct_prt = 0;
-progress_prefix = sprintf('Reading %s...',char(pathin));
+[~, progress_name, progress_ext] = fileparts(char(pathin));
+progress_prefix = sprintf('Reading %s%s ... ',progress_name,progress_ext);
 s = fgetl(fidin);
 head1 = 'IT_MODS=';
 % head2 = 'queries=';
@@ -233,9 +234,8 @@ while ~strncmp(s,head8,length(head8))
     
     if rem(numrlt,200)==0
         msg = sprintf('%s%i..',progress_prefix,numrlt);
-        pad = repmat(' ',1,max(0,ct_prt-length(msg)));
-        fprintf('\r%s%s',msg,pad);
-        ct_prt = length(msg);
+        ct_prt = max(ct_prt,length(msg));
+        fprintf('\r%-*s',ct_prt,msg);
         drawnow limitrate;
     end
     
@@ -311,14 +311,17 @@ for i = 1:length(result1)
     
     if rem(i,200)==0
         msg = sprintf('%s%i..',progress_prefix,i);
-        pad = repmat(' ',1,max(0,ct_prt-length(msg)));
-        fprintf('\r%s%s',msg,pad);
-        ct_prt = length(msg);
+        ct_prt = max(ct_prt,length(msg));
+        fprintf('\r%-*s',ct_prt,msg);
         drawnow limitrate;
     end
 end
 % toc;
 
+
+if ct_prt > 0
+    fprintf('\n');
+end
 
 
 fclose(fidin);

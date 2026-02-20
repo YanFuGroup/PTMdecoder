@@ -111,7 +111,7 @@ classdef CEachSpectrumLocQuant
         end
         
         % Main entry
-        [bSuccess,str,strRatio,ionTypePosCharge,ionIntens,frageff,warning_msg,is_X_full_column_rank] = runEach(obj);
+        [bSuccess,str,strRatio,ionTypePosCharge,ionIntens,frageff,warning_msg,is_X_not_full_column_rank] = runEach(obj);
 
         % Calculate all possible modification configurations, given as mass arrangements
         [bSuccess,inxSites,massArrangement,warning_msg] = getMassArrangement(obj,fixedPosMod);

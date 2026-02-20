@@ -35,7 +35,7 @@ if isempty(align_pairs)
     return;
 end
 
-fprintf('Aligning RT ranges for %d run pairs...\n', size(align_pairs, 1));
+fprintf('Aligning RT ranges for %d run pairs...', size(align_pairs, 1));
 print_progress = CPrintProgress(length(msms_result.Peptides));
 for idx_psf = 1:length(msms_result.Peptides)
     print_progress = print_progress.update_show(idx_psf);

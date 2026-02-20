@@ -1,4 +1,4 @@
-function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,warning_msg,is_X_full_column_rank]=runEach(obj)
+function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,warning_msg,is_X_not_full_column_rank]=runEach(obj)
 % Main entry point for discrimination and quantification of an IMP in a single spectrum
 % Output: 
 %   bSuccess (1 x 1 logical)
@@ -16,13 +16,13 @@ function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,warning_
 %       ionIntens and frageff are used to organize the fragmentation efficiency of ions involved in the model
 %   warning_msg (1 x 1 char/string)
 %       warning message
-%   is_X_full_column_rank (1 x 1 logical)
-%       true if X is full column rank, false otherwise
+%   is_X_not_full_column_rank (1 x 1 logical)
+%       true if X is not full column rank, false otherwise
 
 ionTypePosCharge=[];
 ionIntens=[];
 frageff=[];
-is_X_full_column_rank=false;
+is_X_not_full_column_rank=false;
 
 %% Read required information from the spectrum
 %   expPeaks - each row is an experimental spectral peak, left is m/z, right is intensity; 
@@ -121,7 +121,7 @@ else
 
     % Determine if X is a singular matrix
     if rank(X)~=size(X,2)
-        is_X_full_column_rank=true;
+        is_X_not_full_column_rank=true;
     end
 
     % Remove values less than the 1e-2 threshold, considered non-existent if smaller.
