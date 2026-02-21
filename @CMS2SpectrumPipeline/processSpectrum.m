@@ -1,5 +1,5 @@
 function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,warning_msg,is_X_not_full_column_rank] = processSpectrum(obj)
-% processSpectrum - Layered orchestration with rollback to legacy path
+% processSpectrum - Layered orchestration for MS2 spectrum quantification
 % Outputs:
 %   bSuccess (1 x 1 logical)
 %       Whether processing succeeded.
@@ -102,15 +102,13 @@ try
     cstrIMP = CMS2ResultIO.formatImpStrings(massArrangement,fixedPosMod,obj.m_variableModNameMass,inxSites,obj.m_pepSeq);
     bSuccess = true;
 catch ME
-    % Rollback path: fallback to legacy one-shot implementation
-    legacy = CEachSpectrumLocQuant(obj.m_pepSeq,obj.m_isProtN,obj.m_isProtC, ...
-        obj.m_cMgfDatasetIO,obj.m_strDatasetName,obj.m_strSpecName,obj.m_fixedModNameMass, ...
-        obj.m_variableModNameMass,obj.m_model,obj.m_method,obj.m_lambda, ...
-        obj.m_ms1_tolerance,obj.m_ms2_tolerance,obj.m_alpha,obj.m_resFilterThres,...
-        obj.m_ionTypes,obj.m_enzyme,obj.m_case_penalty_intens,obj.m_grid_penalty_intens, ...
-        obj.m_case_OLS_intens_weight);
-    [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,warning_msg,is_X_not_full_column_rank] = legacy.runEach();
-    rollback_msg = ['[CMS2 rollback] ', ME.identifier, ': ', ME.message, '\n'];
-    warning_msg = [warning_msg, rollback_msg];
+    bSuccess = false;
+    cstrIMP = [];
+    abundance = [];
+    ionTypePosCharge = [];
+    ionIntens = [];
+    frageff = [];
+    is_X_not_full_column_rank = false;
+    warning_msg = ['[CMS2] ', ME.identifier, ': ', ME.message, '\n'];
 end
 end
