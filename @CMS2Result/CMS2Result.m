@@ -1,9 +1,9 @@
-classdef CMSMSResult < handle
-    % CMSMSResult: Data Object for MSMS level results
+classdef CMS2Result < handle
+    % CMS2Result: Data Object for MS/MS level results
     % Hierarchical structure: Peptide -> Spectrum -> Peptidoform
-    
+
     properties
-        % The hierarchical structure of the overall MSMS results: 
+        % The hierarchical structure of the overall MS/MS results:
         % struct array with fields:
         %   - peptide_sequence: char/string
         %   - spectrum_list: struct array
@@ -14,20 +14,20 @@ classdef CMSMSResult < handle
         %       - peptidoform_num: int
         Peptides
     end
-    
+
     properties(Access = private)
         CurrentPeptideIdx = 0;
         % TODO: Current spectrum index within the current peptide, not global
         CurrentSpectrumIdx = 0;
     end
-    
+
     methods
-        function obj = CMSMSResult()
+        function obj = CMS2Result()
             % Constructor
             obj.Peptides = struct('peptide_sequence', {}, 'spectrum_list', {});
             obj.CurrentPeptideIdx = 0;
         end
-        
+
         addPeptide(obj, sequence)
         addOrSelectPeptide(obj, sequence)
         addSpectrum(obj, datasetName, spectrumName)

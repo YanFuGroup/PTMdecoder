@@ -1,7 +1,7 @@
 function raw_names = getRawNamesFromMsmsResult(~, msms_result)
 % Collect raw names from MSMS results.
 % Input:
-%   msms_result (CMSMSResult)
+%   msms_result (CMS2Result)
 %       MSMS results from report_msms.txt
 % Output:
 %   raw_names (1 x N cell)

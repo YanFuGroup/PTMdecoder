@@ -1,14 +1,15 @@
-function tests = test_CMSMSResReader
-% TEST_CMSMSRESREADER Test script for CMSMSResReader IO
+function tests = test_CMS2ResultIO
+% TEST_CMS2RESULTIO Test script for CMS2ResultIO read logic
 % Input:
 %   (none)
-% Output:
+% Outputs:
 %   tests (matlab.unittest.Test)
-    tests = functiontests(localfunctions);
+
+tests = functiontests(localfunctions);
 end
 
-function testIO(testCase)
-% TESTIO Validate CMSMSResReader read logic
+function testRead(testCase)
+% TESTREAD Validate CMS2ResultIO.read logic
 % Input:
 %   testCase (matlab.unittest.TestCase)
 % Output:
@@ -45,14 +46,10 @@ fprintf(fid, 'FormB1\t300\n');
 fprintf(fid, 'P\tPEPTIDE_C_Empty\n'); % Empty Peptide, should be removed
 fclose(fid);
 
-reader = CMSMSResReader();
-resultObj = reader.read_from_msms_res_file(testFile);
+resultObj = CMS2ResultIO.read(testFile);
 
 % --- VERIFICATION ---
-
 % 1. Global Structure
-% PEPTIDE_C_Empty should be removed because it has no Valid Spectra
-% PEPTIDE_B has SpecB1_Empty removed, but SpecB2_Valid remains, so Peptide B remains.
 testCase.verifyEqual(length(resultObj.Peptides), 2, ...
     ['Should have 2 peptides (A and B). C should be removed. Got: ' num2str(length(resultObj.Peptides))]);
 
@@ -77,7 +74,7 @@ function deleteTestFile(testFile)
 %   testFile (1 x N char/string)
 % Output:
 %   (none)
-    if exist(testFile, 'file')
-        delete(testFile);
-    end
+if exist(testFile, 'file')
+    delete(testFile);
+end
 end

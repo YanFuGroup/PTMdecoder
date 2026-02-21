@@ -63,8 +63,7 @@ if isempty(msms_res_path)
 end
 
 % Read MSMS results
-msms_reader = CMSMSResReader();
-msms_result = msms_reader.read_from_msms_res_file(msms_res_path);
+msms_result = CMS2ResultIO.read(msms_res_path);
 
 % Initialize dataset IOs lazily
 [obj, ~] = obj.ensureMs12DatasetIO();

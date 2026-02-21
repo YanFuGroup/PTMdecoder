@@ -52,8 +52,7 @@ end
 [obj, ~] = obj.ensurePepProtService();
 
 % Read and process
-msms_reader = CMSMSResReader();
-msms_result = msms_reader.read_from_msms_res_file(each_PSM_results_path);
+msms_result = CMS2ResultIO.read(each_PSM_results_path);
 print_progress = CPrintProgress(length(msms_result.Peptides));
 pipeline_cfg = CIMPProcessingPipelineConfig.fromTaskParam(obj.m_taskParam, obj.m_cMs12DatasetIO);
 pipeline = CIMPProcessingPipeline(pipeline_cfg);

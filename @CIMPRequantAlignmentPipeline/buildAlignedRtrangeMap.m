@@ -4,7 +4,7 @@ function [pep_rtrange_map, report] = buildAlignedRtrangeMap(obj, ...
 % Input:
 %   obj (CIMPRequantAlignmentPipeline)
 %       Pipeline instance
-%   msms_result (CMSMSResult)
+%   msms_result (CMS2Result)
 %       MSMS results from report_msms.txt
 %   fdr_filtered_result_path (1 x 1 char/string)
 %       FDR filtered result file path
