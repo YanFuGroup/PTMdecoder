@@ -2,7 +2,7 @@ classdef CMS2SpectrumPipelineConfig
     % Config for CMS2SpectrumPipeline
     % Recommended external usage:
     %   cfg = CMS2SpectrumPipelineConfig.fromTaskParam(...)
-    % Constructor is kept for backward compatibility.
+    % Constructor supports struct and positional argument styles.
 
     properties
         model
