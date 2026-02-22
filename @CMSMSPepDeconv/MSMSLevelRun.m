@@ -79,16 +79,49 @@ while ~feof(fin)
     else
         % meet a spectrum for an old peptide
         str = regexp(strLine,'\t','split');
+        dataset_name = str{1};
+        spec_name = str{2};
         [isProtN,isProtC] = obj.CPepProtService.getWhetherProtNC(pepSeq);
         eachSpecPipeline = CMS2SpectrumPipeline(pepSeq,isProtN,isProtC, ...
-            obj.m_cMgfDatasetIO,str{1},str{2},obj.m_fixedModNameMass, ...
+            obj.m_cMgfDatasetIO,dataset_name,spec_name,obj.m_fixedModNameMass, ...
             obj.m_variableModNameMass,cms2_cfg);
-        [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff, ...
-            warning_msg,is_X_not_full_column_rank] = eachSpecPipeline.processSpectrum();
+
+        try
+            [expPeaks,iCharge,precursorMZ] = obj.m_cMgfDatasetIO.read_oneSpec( ...
+                dataset_name,spec_name);
+
+            peptideCtx = struct( ...
+                'pepSeq', pepSeq, ...
+                'isProtN', isProtN, ...
+                'isProtC', isProtC, ...
+                'fixedModNameMass', {obj.m_fixedModNameMass}, ...
+                'variableModNameMass', {obj.m_variableModNameMass});
+
+            spectrumCtx = struct( ...
+                'datasetName', dataset_name, ...
+                'specName', spec_name, ...
+                'expPeaks', expPeaks, ...
+                'iCharge', iCharge, ...
+                'precursorMZ', precursorMZ);
+
+            [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff, ...
+                warning_msg,is_X_not_full_column_rank] = ...
+                eachSpecPipeline.processSpectrumWithContext(peptideCtx, spectrumCtx);
+        catch ME
+            bSuccess = false;
+            cstrIMP = [];
+            abundance = [];
+            ionTypePosCharge = [];
+            ionIntens = [];
+            frageff = [];
+            is_X_not_full_column_rank = false;
+            warning_msg = ['[CMS2] ', ME.identifier, ': ', ME.message, '\n'];
+        end
+
         warning_message = [warning_message, warning_msg]; %#ok<AGROW>
         if bSuccess
             if is_X_not_full_column_rank
-                fprintf(fo_may_FP,'%s\t%s\n',str{1},str{2});
+                fprintf(fo_may_FP,'%s\t%s\n',dataset_name,spec_name);
             end
             if is_record_fragment_information
                 if isempty(frageff)
@@ -129,7 +162,7 @@ while ~feof(fin)
                 if_wrote_peptide = true;
                 if_the_first = false;
             end
-            fprintf(fout,'S\t%s\t%s\n',str{1},str{2});
+                fprintf(fout,'S\t%s\t%s\n',dataset_name,spec_name);
             imp_idx_nonzero = find(abundance~=0);
             for idx = 1:length(imp_idx_nonzero)
                 fprintf(fout,'%s\t%f\n',cstrIMP{imp_idx_nonzero(idx)},...

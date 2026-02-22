@@ -104,5 +104,6 @@ classdef CMS2SpectrumPipeline
         end
 
         [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,warning_msg,is_X_not_full_column_rank] = processSpectrum(obj);
+        [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,warning_msg,is_X_not_full_column_rank] = processSpectrumWithContext(obj, peptideCtx, spectrumCtx);
     end
 end
