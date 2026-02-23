@@ -13,6 +13,7 @@ function system_test_runner()
     testDataDir = fullfile(currentDir, 'data');
     msms_pep_paramFile = fullfile(testDataDir, 'msms_pep_site.param');
     pep_requant_paramFile = fullfile(testDataDir, 'requant_pep_site.param');
+    pairwise_paramFile = fullfile(testDataDir, 'pairwise.param');
     demo_paramFile = fullfile(testDataDir, 'demo.param');
     goldenDir = fullfile(currentDir, 'golden');
     outputDir = fullfile(currentDir, 'output');
@@ -41,6 +42,9 @@ function system_test_runner()
 
     fprintf('Running pep-requant procedure...\n');
     main(pep_requant_paramFile);
+
+    fprintf('Running pairwise merging procedure...\n');
+    main(pairwise_paramFile);
     
     fprintf('Running drawXIC test...\n');
     helper_test_draw_xic(projectDir, testDataDir, outputDir);

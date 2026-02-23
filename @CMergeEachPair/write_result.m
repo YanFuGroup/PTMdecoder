@@ -4,6 +4,12 @@ function write_result(obj)
 %   obj (CMergeEachPair)
 %       merge instance with m_result populated
 
+% Create directory if it doesn't exist
+[output_dir, ~, ~] = fileparts(obj.m_output_path);
+if ~isempty(output_dir) && ~isfolder(output_dir)
+    mkdir(output_dir);
+end
+
 % Open the file
 fout = fopen(obj.m_output_path,'w');
 if fout == -1
