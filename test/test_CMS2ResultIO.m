@@ -68,6 +68,54 @@ testCase.verifyEqual(length(p2.spectrum_list), 1, 'Peptide B should have 1 spect
 testCase.verifyTrue(strcmp(p2.spectrum_list(1).spectrum_name, 'SpecB2_Valid'), 'Remaining spectrum should be SpecB2_Valid');
 end
 
+function testWriteReadRoundTrip(testCase)
+% TESTWRITEREADROUNDTRIP Validate write->read round-trip consistency for CMS2Result
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
+
+testFile = fullfile(pwd, 'test_msms_res_roundtrip_temp.txt');
+testCase.addTeardown(@() deleteTestFile(testFile));
+
+% Build source result object
+src = CMS2Result();
+src.addOrSelectPeptide('PEPTIDE_A');
+src.addSpectrum('Dataset1', 'SpecA1');
+src.addPeptidoform('FormA1', 100);
+src.addPeptidoform('FormA2', 200);
+
+src.addOrSelectPeptide('PEPTIDE_B');
+src.addSpectrum('Dataset2', 'SpecB1');
+src.addPeptidoform('FormB1', 300.5);
+
+src.compress();
+
+% Round-trip: write then read
+CMS2ResultIO.write(src, testFile);
+dst = CMS2ResultIO.read(testFile);
+
+% Verify hierarchical structure is consistent
+testCase.verifyEqual(length(dst.Peptides), length(src.Peptides));
+
+for i = 1:length(src.Peptides)
+    srcPep = src.Peptides(i);
+    dstPep = dst.Peptides(i);
+    testCase.verifyEqual(dstPep.peptide_sequence, srcPep.peptide_sequence);
+    testCase.verifyEqual(length(dstPep.spectrum_list), length(srcPep.spectrum_list));
+
+    for j = 1:length(srcPep.spectrum_list)
+        srcSpec = srcPep.spectrum_list(j);
+        dstSpec = dstPep.spectrum_list(j);
+        testCase.verifyEqual(dstSpec.dataset_name, srcSpec.dataset_name);
+        testCase.verifyEqual(dstSpec.spectrum_name, srcSpec.spectrum_name);
+        testCase.verifyEqual(dstSpec.peptidoform_num, srcSpec.peptidoform_num);
+        testCase.verifyEqual(dstSpec.peptidoform_list_str, srcSpec.peptidoform_list_str);
+        testCase.verifyEqual(dstSpec.peptidoform_list_abun, srcSpec.peptidoform_list_abun, 'AbsTol', 1e-12);
+    end
+end
+end
+
 function deleteTestFile(testFile)
 % DELETETESTFILE Remove temp test file if exists
 % Input:
