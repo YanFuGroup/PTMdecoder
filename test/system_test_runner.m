@@ -51,6 +51,9 @@ function system_test_runner()
     fprintf('Running FDR filtering test...\n');
     helper_test_FDR_filtering(projectDir, testDataDir, outputDir);
 
+    fprintf('Running report_msms_top1 generation test...\n');
+    helper_test_report_msms_top1(projectDir, testDataDir, outputDir);
+
     fprintf('Running auto alignment and quantification test...\n');
     helper_test_auto_align_quant(projectDir, testDataDir, outputDir);
 
