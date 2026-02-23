@@ -14,7 +14,6 @@ for i=1:nfiles
     plfilepath = fullfile(path,datafiles(i).name);
     [resulti] = ReadDatResult(plfilepath);   
     result = [result resulti]; %#ok<AGROW>
-    fprintf('\n')   
 end
 
 end

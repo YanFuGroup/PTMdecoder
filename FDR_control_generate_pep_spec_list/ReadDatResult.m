@@ -18,12 +18,12 @@ end
 % monoisotopic = [71.03711 156.10111 114.04293 115.02694 103.00919 129.04259 128.05858 57.02146 137.05891 113.08406 113.08406 128.09496 131.04049 147.06841 97.05276 87.03203 101.04768 186.07931 163.06333 99.06841];
 
 bufnum = 2000;
-result1(bufnum) = struct('DatasetName','','Index1',0,'Calc_neutral_pepmass',0,'massdiff',0,'num_match_ions',0,'peptide','',...
+result1(bufnum) = struct('DatasetName','','Index1',0,'Calc_neutral_pepmass',0,'massdiff',0,'num_match_ions','','peptide','',...
     'modification','','modificationlocation','','ionscore',0,'protein','');
 numrlt = 0;
-ct_prt = 0;
+last_msg_len = 0;
 [~, progress_name, progress_ext] = fileparts(char(pathin));
-progress_prefix = sprintf('Reading %s%s ... ',progress_name,progress_ext);
+fprintf('Reading %s%s ... ',progress_name,progress_ext);
 s = fgetl(fidin);
 head1 = 'IT_MODS=';
 % head2 = 'queries=';
@@ -113,7 +113,7 @@ while ~strncmp(s,head8,length(head8))
     
     calcneutralpepmass = str2double(char(S1(2)));
     massdiff = str2double(char(S1(3)));
-    nummatchions = str2double(char(S1(4)));
+    nummatchions = char(S1(4));
     peptide = char(S1(5));
     
     % variable modification
@@ -217,7 +217,7 @@ while ~strncmp(s,head8,length(head8))
     
     if numrlt>bufnum
         bufnum = bufnum+2000;
-        result1(bufnum) = struct('DatasetName','','Index1',0,'Calc_neutral_pepmass',0,'massdiff',0,'num_match_ions',0,'peptide','',...
+        result1(bufnum) = struct('DatasetName','','Index1',0,'Calc_neutral_pepmass',0,'massdiff',0,'num_match_ions','','peptide','',...
             'modification','','modificationlocation','','ionscore',0,'protein','');
     end
     
@@ -233,9 +233,9 @@ while ~strncmp(s,head8,length(head8))
     result1(numrlt).protein = protein;
     
     if rem(numrlt,200)==0
-        msg = sprintf('%s%i..',progress_prefix,numrlt);
-        ct_prt = max(ct_prt,length(msg));
-        fprintf('\r%-*s',ct_prt,msg);
+        msg = sprintf('%i..',numrlt);
+        fprintf([repmat('\b',1,last_msg_len) '%s'],msg);
+        last_msg_len = length(msg);
         drawnow limitrate;
     end
     
@@ -246,10 +246,10 @@ result1(numrlt+1:end)=[];
 
 % tic;
 result2(length(result1)) = struct('Site','','DatasetName','','Scan','','Spectrum','','Charge',0,...
-    'Calc_neutral_pepmass',0,'precursor_neutral_mass',0,'massdiff',0,'num_match_ions',0,'peptide','',...
+    'Calc_neutral_pepmass',0,'precursor_neutral_mass',0,'massdiff',0,'num_match_ions','','peptide','',...
     'protein','','modification','','modificationlocation','','Score',0);
 
-ct_prt = 0;
+last_msg_len = 0;
 
 
 for i = 1:length(result1)
@@ -310,16 +310,16 @@ for i = 1:length(result1)
     
     
     if rem(i,200)==0
-        msg = sprintf('%s%i..',progress_prefix,i);
-        ct_prt = max(ct_prt,length(msg));
-        fprintf('\r%-*s',ct_prt,msg);
+        msg = sprintf('%i..',i);
+        fprintf([repmat('\b',1,last_msg_len) '%s'],msg);
+        last_msg_len = length(msg);
         drawnow limitrate;
     end
 end
 % toc;
 
 
-if ct_prt > 0
+if last_msg_len > 0
     fprintf('\n');
 end
 

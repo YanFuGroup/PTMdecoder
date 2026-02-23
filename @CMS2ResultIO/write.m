@@ -16,13 +16,16 @@ cleanup = onCleanup(@() fclose(fid));
 
 if isa(result, 'CMS2Result')
     for i = 1:length(result.Peptides)
+        if i > 1
+            fprintf(fid, '\n\n');
+        end
         peptide = result.Peptides(i);
         fprintf(fid, 'P\t%s\n', peptide.peptide_sequence);
         for j = 1:length(peptide.spectrum_list)
             spectrum = peptide.spectrum_list(j);
             fprintf(fid, 'S\t%s\t%s\n', spectrum.dataset_name, spectrum.spectrum_name);
             for k = 1:spectrum.peptidoform_num
-                fprintf(fid, '%s\t%.15g\n', spectrum.peptidoform_list_str{k}, spectrum.peptidoform_list_abun(k));
+                fprintf(fid, '%s\t%.6f\n', spectrum.peptidoform_list_str{k}, spectrum.peptidoform_list_abun(k));
             end
         end
     end

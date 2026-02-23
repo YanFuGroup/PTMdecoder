@@ -35,10 +35,7 @@ if ~isfolder(obj.m_outputDir)
 end
 
 each_PSM_results_path = fullfile(obj.m_outputDir,'report_msms.txt');
-fout = fopen(each_PSM_results_path,'w');
-if fout <= 0
-    error(['Cannot open the the report file ', each_PSM_results_path]);
-end
+msms_result = CMS2Result();
 fo_may_FP = fopen(fullfile(obj.m_outputDir,'report_spectra_may_FP.txt'),'w');
 if fo_may_FP <= 0
     error(['Cannot open the the report file ', fullfile(obj.m_outputDir,'report_spectra_may_FP.txt')]);
@@ -47,7 +44,6 @@ strLine = fgetl(fin);
 str = regexp(strLine,'\t','split');
 pepSeq = str{1}; % record the current peptide sequence
 if_wrote_peptide = false;
-if_the_first = true;
 
 % Build and reuse static CMS2 pipeline config for all spectra in this run
 cms2_cfg = CMS2SpectrumPipelineConfig(struct( ...
@@ -155,23 +151,19 @@ while ~feof(fin)
             end
             
             if ~if_wrote_peptide
-                if ~if_the_first
-                    fprintf(fout,'\n\n');
-                end
-                fprintf(fout,'P\t%s\n',pepSeq);
+                msms_result.addPeptide(pepSeq);
                 if_wrote_peptide = true;
-                if_the_first = false;
             end
-                fprintf(fout,'S\t%s\t%s\n',dataset_name,spec_name);
+            msms_result.addSpectrum(dataset_name,spec_name);
             imp_idx_nonzero = find(abundance~=0);
             for idx = 1:length(imp_idx_nonzero)
-                fprintf(fout,'%s\t%f\n',cstrIMP{imp_idx_nonzero(idx)},...
+                msms_result.addPeptidoform(cstrIMP{imp_idx_nonzero(idx)},...
                     abundance(imp_idx_nonzero(idx)));
             end
         end
     end
 end
-fclose(fout);
+CMS2ResultIO.write(msms_result, each_PSM_results_path);
 fclose(fo_may_FP);
 fclose(fin);
 print_progress.last_update();

@@ -18,7 +18,7 @@ elseif isnumeric(value)
     if isempty(value)
         out = '';
     elseif isscalar(value)
-        out = num2str(value, '%.15g');
+        out = num2str(value, '%.6f');
     else
         out = num2str(value);
     end
