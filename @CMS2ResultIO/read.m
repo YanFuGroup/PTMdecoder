@@ -12,13 +12,15 @@ resultObj = CMS2Result();
 
 fin = fopen(msms_res_path, 'r');
 if fin < 0
-    error(['Cannot open the msms level result:"', msms_res_path, '"!']);
+    error('CMS2ResultIO:OpenFileFailed', ...
+        'Cannot open the msms level result:"%s"!', msms_res_path);
 end
 cleanup = onCleanup(@() fclose(fin));
 
 file_total_length = dir(msms_res_path).bytes;
 if file_total_length == 0
-    error(['Warning: The file "', msms_res_path, '" is empty!']);
+    error('CMS2ResultIO:EmptyFile', ...
+        'Warning: The file "%s" is empty!', msms_res_path);
 end
 
 % Read the file
@@ -43,7 +45,7 @@ while(~feof(fin))
         resultObj.addSpectrum(tokens{2}, tokens{3});
     else
         % Record one peptidoform line
-        if numel(tokens) < 2
+        if numel(tokens) ~= 2
             error('CMS2ResultIO:InvalidPeptidoformLine', 'Invalid peptidoform line: %s', strline);
         end
         resultObj.addPeptidoform(tokens{1}, str2double(tokens{2}));

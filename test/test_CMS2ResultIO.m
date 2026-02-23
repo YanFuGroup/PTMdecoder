@@ -116,6 +116,79 @@ for i = 1:length(src.Peptides)
 end
 end
 
+function testReadInvalidPeptideLineErrorId(testCase)
+% TESTREADINVALIDPEPTIDELINEERRORID Validate invalid peptide line raises fixed error id
+
+testFile = fullfile(pwd, 'test_msms_res_invalid_peptide_temp.txt');
+testCase.addTeardown(@() deleteTestFile(testFile));
+
+fid = fopen(testFile, 'w');
+if fid < 0
+    error('Could not create temp test file.');
+end
+fprintf(fid, 'P\n');
+fclose(fid);
+
+testCase.verifyError(@() CMS2ResultIO.read(testFile), 'CMS2ResultIO:InvalidPeptideLine');
+end
+
+function testReadInvalidSpectrumLineErrorId(testCase)
+% TESTREADINVALIDSPECTRUMLINEERRORID Validate invalid spectrum line raises fixed error id
+
+testFile = fullfile(pwd, 'test_msms_res_invalid_spectrum_temp.txt');
+testCase.addTeardown(@() deleteTestFile(testFile));
+
+fid = fopen(testFile, 'w');
+if fid < 0
+    error('Could not create temp test file.');
+end
+fprintf(fid, 'P\tPEPTIDE_A\n');
+fprintf(fid, 'S\tDatasetOnly\n');
+fclose(fid);
+
+testCase.verifyError(@() CMS2ResultIO.read(testFile), 'CMS2ResultIO:InvalidSpectrumLine');
+end
+
+function testReadBadLineErrorId(testCase)
+% TESTREADBADLINEERRORID Validate malformed peptidoform line raises fixed error id
+
+testFile = fullfile(pwd, 'test_msms_res_bad_line_temp.txt');
+testCase.addTeardown(@() deleteTestFile(testFile));
+
+fid = fopen(testFile, 'w');
+if fid < 0
+    error('Could not create temp test file.');
+end
+fprintf(fid, 'P\tPEPTIDE_A\n');
+fprintf(fid, 'S\tDataset1\tSpec1\n');
+fprintf(fid, 'BAD\t123\textra\n');
+fclose(fid);
+
+testCase.verifyError(@() CMS2ResultIO.read(testFile), 'CMS2ResultIO:InvalidPeptidoformLine');
+end
+
+function testReadEmptyFileErrorId(testCase)
+% TESTREADEMPTYFILEERRORID Validate empty file raises fixed error id
+
+testFile = fullfile(pwd, 'test_msms_res_empty_temp.txt');
+testCase.addTeardown(@() deleteTestFile(testFile));
+
+fid = fopen(testFile, 'w');
+if fid < 0
+    error('Could not create temp test file.');
+end
+fclose(fid);
+
+testCase.verifyError(@() CMS2ResultIO.read(testFile), 'CMS2ResultIO:EmptyFile');
+end
+
+function testReadOpenFileFailedErrorId(testCase)
+% TESTREADOPENFILEFAILEDERRORID Validate non-existing path raises fixed error id
+
+missingFile = fullfile(pwd, 'test_msms_res_missing_temp.txt');
+testCase.verifyError(@() CMS2ResultIO.read(missingFile), 'CMS2ResultIO:OpenFileFailed');
+end
+
 function deleteTestFile(testFile)
 % DELETETESTFILE Remove temp test file if exists
 % Input:
