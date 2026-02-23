@@ -92,6 +92,7 @@ for idx_psf = 1:length(msms_result.Peptides)
     end
 end
 print_progress.last_update();
+fprintf('done.\n');
 
 pep_rtrange_map = state.pep_rtrange_map;
 report.summary = state;

@@ -320,7 +320,7 @@ end
 
 
 if last_msg_len > 0
-    fprintf('\n');
+    fprintf('done.\n');
 end
 
 
