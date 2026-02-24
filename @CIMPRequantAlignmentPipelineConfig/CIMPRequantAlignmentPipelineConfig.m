@@ -1,7 +1,5 @@
 classdef CIMPRequantAlignmentPipelineConfig
     % Config for CIMPRequantAlignmentPipeline
-    % Recommended external usage:
-    %   cfg = CIMPRequantAlignmentPipelineConfig.fromTaskParam(...)
     % Constructor is kept mainly for backward compatibility.
 
     properties
@@ -54,50 +52,6 @@ classdef CIMPRequantAlignmentPipelineConfig
             obj.aligner = cfg.aligner;
             obj.align_strategy = cfg.align_strategy;
             obj.align_options = cfg.align_options;
-        end
-    end
-
-    methods (Static)
-        function obj = fromTaskParam(taskParam, ms12DatasetIO, aligner, align_strategy, align_options, overrides)
-            % Preferred factory method for business-layer calls.
-            % Build config from CTaskParam with optional overrides
-            % Input:
-            %   taskParam (CTaskParam)
-            %       task parameter object
-            %   ms12DatasetIO (CMS12DatasetIO)
-            %       initialized MS1/MS2 dataset IO
-            %   aligner (CXICAligner)
-            %       aligner instance
-            %   align_strategy (CRunAlignStrategy)
-            %       alignment strategy
-            %   align_options (struct, optional)
-            %       alignment options
-            %   overrides (struct, optional)
-            %       override fields of this config
-
-            if nargin < 4
-                error('CIMPRequantAlignmentPipelineConfig:MissingInput', ...
-                    'taskParam, ms12DatasetIO, aligner, and align_strategy are required.');
-            end
-            if nargin < 5 || isempty(align_options)
-                align_options = struct();
-            end
-            if nargin < 6 || isempty(overrides)
-                overrides = struct();
-            end
-
-            cfg = struct();
-            cfg.ms12DatasetIO = ms12DatasetIO;
-            cfg.ms1_tolerance = taskParam.m_ms1_tolerance;
-            cfg.minMSMSnum = taskParam.m_min_MSMS_num;
-            cfg.alpha = taskParam.m_alpha;
-            cfg.resFilterThres = taskParam.m_result_filter_threshold;
-            cfg.aligner = aligner;
-            cfg.align_strategy = align_strategy;
-            cfg.align_options = align_options;
-
-            cfg = CIMPRequantAlignmentPipelineConfig.applyOverrides(cfg, overrides);
-            obj = CIMPRequantAlignmentPipelineConfig(cfg);
         end
     end
 

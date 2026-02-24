@@ -35,7 +35,7 @@ report = CIMPQuantReport();
 % Read and process
 msms_result = CMS2ResultIO.read(each_PSM_results_path);
 print_progress = CPrintProgress(length(msms_result.Peptides));
-pipeline_cfg = CIMPProcessingPipelineConfig.fromTaskParam(obj.m_taskParam, obj.m_cMs12DatasetIO);
+pipeline_cfg = obj.buildIMPProcessingPipelineConfig();
 pipeline = CIMPProcessingPipeline(pipeline_cfg);
 stats_cleanup = onCleanup(@() CIMPQuantifier.rt_sorted_stats('flush', fullfile(obj.m_outputDir, 'rt_sorted_stats.mat')));
 

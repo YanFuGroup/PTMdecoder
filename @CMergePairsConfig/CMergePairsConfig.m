@@ -27,21 +27,6 @@ classdef CMergePairsConfig
         end
     end
 
-    methods (Static)
-        function obj = fromTaskParam(taskParam)
-            % Build config from CTaskParam (temporary bridge in migration).
-            % Input:
-            %   taskParam (CTaskParam)
-            % Output:
-            %   obj (CMergePairsConfig)
-            cfg = struct( ...
-                'result_paths', {taskParam.m_pair}, ...
-                'output_path', taskParam.m_final_output_path, ...
-                'group_titles', {taskParam.m_left_right_name});
-            obj = CMergePairsConfig(cfg);
-        end
-    end
-
     methods (Static, Access = private)
         function cfg = finalize(cfg)
             if ~isfield(cfg, 'result_paths') || isempty(cfg.result_paths); cfg.result_paths = {}; end

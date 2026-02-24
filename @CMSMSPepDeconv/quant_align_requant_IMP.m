@@ -79,8 +79,7 @@ end
 % Build aligned RT range map
 anchor_selector = CXICAlignAnchorSelector();
 aligner = CXICAligner(anchor_selector, align_options);
-align_cfg = CIMPRequantAlignmentPipelineConfig.fromTaskParam( ...
-    obj.m_taskParam, obj.m_cMs12DatasetIO, aligner, align_strategy, align_options);
+align_cfg = obj.buildAlignmentPipelineConfig(aligner, align_strategy, align_options);
 pipeline = CIMPRequantAlignmentPipeline(align_cfg);
 
 [pep_rtrange_map, align_report] = pipeline.buildAlignedRtrangeMap(...
@@ -96,7 +95,7 @@ output_path = COptionUtils.get(align_options, 'requant_output_path', ...
     fullfile(obj.m_outputDir, 'report_peptide_all_requant_aligned.txt'));
 report = CIMPQuantReport();
 print_progress = CPrintProgress(length(msms_result.Peptides));
-proc_cfg = CIMPProcessingPipelineConfig.fromTaskParam(obj.m_taskParam, obj.m_cMs12DatasetIO);
+proc_cfg = obj.buildIMPProcessingPipelineConfig();
 proc_pipeline = CIMPProcessingPipeline(proc_cfg);
 
 fprintf('Re-quantifying at peptide level (aligned)...')

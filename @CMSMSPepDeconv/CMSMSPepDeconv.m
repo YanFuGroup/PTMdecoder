@@ -35,8 +35,6 @@ classdef CMSMSPepDeconv
         m_matFragInfo;      % Information of ions, three columns represent [b/y type, position, charge], each row is a fragment ion
         m_matFragEff;       % Fragmentation efficiency matrix of ions, each row corresponds to m_matFragInfo, each column is a solvable MS2 spectrum
         m_matFragIntens;    % Sum of experimental peak intensities of ions, each row corresponds to m_matFragInfo, each column is a solvable MS2 spectrum
-
-        m_taskParam;        % Optional cached CTaskParam for factory-based config creation
     end
 
     methods
@@ -45,8 +43,8 @@ classdef CMSMSPepDeconv
             fastaFile,regular_express,pepSpecFile,model,method,lambda,...
             resFilterThres,enzyme,outputDir,ionTypes,checked_peptides_res_path,msms_res_path,filtered_res_file_path)
             % Input (single arg):
-            %   modFile_or_taskparamobj (CTaskParam)
-            %       task parameter object
+            %   modFile_or_taskparamobj (CMSMSPepDeconvConfig)
+            %       config object
             % Input (full args):
             %   modFile_or_taskparamobj (1 x 1 char/string)
             %       modification file path
@@ -88,37 +86,39 @@ classdef CMSMSPepDeconv
             %       MSMS results path
             %   filtered_res_file_path (1 x 1 char/string, optional)
             %       filtered PSM results path
-            obj.m_taskParam = [];
             if nargin == 1
-                % This is a method to read parameters from a .param file
-                taskParam = modFile_or_taskparamobj;
-                obj.m_taskParam = taskParam;
-                obj.m_specPath = taskParam.m_spec_dir_path;
-                obj.m_modFile = taskParam.m_mod_file_path;
-                obj.m_fastaFile = taskParam.m_fasta_file_path;
-                obj.m_regular_express = taskParam.m_regular_express;
-                obj.m_pepSpecFile = taskParam.m_pep_spec_file_path;
-                obj.m_filtered_res_file_path = taskParam.m_filtered_res_file_path;
-                obj.m_outputDir = taskParam.m_output_dir_path;
-                obj.m_model = taskParam.m_model;
-                obj.m_method = taskParam.m_method;
-                obj.m_lambda = taskParam.m_lambda;
-                obj.m_ms1_tolerance = taskParam.m_ms1_tolerance;
-                obj.m_ms2_tolerance = taskParam.m_ms2_tolerance;
-                obj.m_alpha = taskParam.m_alpha;
-                obj.m_resFilterThres = taskParam.m_result_filter_threshold;
-                obj.m_ionTypes = [1,2];
-                obj.m_enzyme.name = taskParam.m_enzyme_name;
-                obj.m_enzyme.limits = taskParam.m_enzyme_limits;
-                obj.m_checked_peptides_res_path = taskParam.m_checked_peptides_res_path;
-                obj.m_msms_res_path = taskParam.m_msms_res_path;
-                obj.m_min_MSMS_num = taskParam.m_min_MSMS_num;
-                fixedMod = taskParam.m_fixed_mod;
-                variableMod = taskParam.m_variable_mod;
+                if ~isa(modFile_or_taskparamobj, 'CMSMSPepDeconvConfig')
+                    error('CMSMSPepDeconv:InvalidConfigType', ...
+                        'Single-argument constructor requires CMSMSPepDeconvConfig.');
+                end
 
-                obj.m_case_penalty_intens = 'intens_sum';
-                obj.m_grid_penalty_intens = 'intens_sum';
-                obj.m_case_OLS_intens_weight = 'none';
+                cfg = modFile_or_taskparamobj;
+                obj.m_specPath = cfg.spec_dir_path;
+                obj.m_modFile = cfg.mod_file_path;
+                obj.m_fastaFile = cfg.fasta_file_path;
+                obj.m_regular_express = cfg.regular_express;
+                obj.m_pepSpecFile = cfg.pep_spec_file_path;
+                obj.m_filtered_res_file_path = cfg.filtered_res_file_path;
+                obj.m_outputDir = cfg.output_dir_path;
+                obj.m_model = cfg.model;
+                obj.m_method = cfg.method;
+                obj.m_lambda = cfg.lambda;
+                obj.m_ms1_tolerance = cfg.ms1_tolerance;
+                obj.m_ms2_tolerance = cfg.ms2_tolerance;
+                obj.m_alpha = cfg.alpha;
+                obj.m_resFilterThres = cfg.result_filter_threshold;
+                obj.m_ionTypes = cfg.ion_types;
+                obj.m_enzyme.name = cfg.enzyme_name;
+                obj.m_enzyme.limits = cfg.enzyme_limits;
+                obj.m_checked_peptides_res_path = cfg.checked_peptides_res_path;
+                obj.m_msms_res_path = cfg.msms_res_path;
+                obj.m_min_MSMS_num = cfg.min_MSMS_num;
+                fixedMod = cfg.fixed_mod;
+                variableMod = cfg.variable_mod;
+
+                obj.m_case_penalty_intens = cfg.case_penalty_intens;
+                obj.m_grid_penalty_intens = cfg.grid_penalty_intens;
+                obj.m_case_OLS_intens_weight = cfg.case_OLS_intens_weight;
             else
                 obj.m_specPath = specPath;
                 obj.m_modFile = modFile_or_taskparamobj;
@@ -150,13 +150,6 @@ classdef CMSMSPepDeconv
                 if nargin >= 20
                     obj.m_filtered_res_file_path = filtered_res_file_path;
                 end
-
-                % Build a taskParam-like struct for factory-based config creation
-                obj.m_taskParam = struct();
-                obj.m_taskParam.m_ms1_tolerance = obj.m_ms1_tolerance;
-                obj.m_taskParam.m_min_MSMS_num = obj.m_min_MSMS_num;
-                obj.m_taskParam.m_alpha = obj.m_alpha;
-                obj.m_taskParam.m_result_filter_threshold = obj.m_resFilterThres;
             end
 
             % Generate variable modification "name-mass" dictionary using user-specified target modification strings and modification library
@@ -205,6 +198,10 @@ classdef CMSMSPepDeconv
         [obj, created] = ensureMs12DatasetIO(obj);
         [obj, created] = ensureMsFileMapper(obj);
         [obj, created] = ensurePepProtService(obj);
+
+        % Build pipeline configs from current object fields
+        cfg = buildIMPProcessingPipelineConfig(obj, overrides);
+        cfg = buildAlignmentPipelineConfig(obj, aligner, align_strategy, align_options, overrides);
     end
 
 end

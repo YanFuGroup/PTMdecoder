@@ -35,25 +35,6 @@ classdef CSiteLevelPipelineConfig
         end
     end
 
-    methods (Static)
-        function obj = fromTaskParam(taskParam)
-            % Build config from CTaskParam (temporary bridge in migration).
-            % Input:
-            %   taskParam (CTaskParam)
-            % Output:
-            %   obj (CSiteLevelPipelineConfig)
-            cfg = struct( ...
-                'input_path', taskParam.m_pep_level_file_path, ...
-                'output_intere_path', taskParam.m_output_intere_path, ...
-                'output_unintere_path', taskParam.m_output_unintere_path, ...
-                'protein_name_abbr', taskParam.m_protein_name_abbr, ...
-                'mod_name_abbr', taskParam.m_mod_name_abbr, ...
-                'ignore_strings', {taskParam.m_ignore_strings_site_level}, ...
-                'column_idxs', struct('icol_seq', 2, 'icol_auc', 8));
-            obj = CSiteLevelPipelineConfig(cfg);
-        end
-    end
-
     methods (Static, Access = private)
         function cfg = finalize(cfg)
             if ~isfield(cfg, 'input_path'); cfg.input_path = ''; end

@@ -41,7 +41,7 @@ if total_records == 0
     fprintf(['Warning: The file "', checked_pep_path, '" is empty\n']);
 end
 print_progress = CPrintProgress(max(total_records, 1));
-pipeline_cfg = CIMPProcessingPipelineConfig.fromTaskParam(obj.m_taskParam, obj.m_cMs12DatasetIO);
+pipeline_cfg = obj.buildIMPProcessingPipelineConfig();
 pipeline = CIMPProcessingPipeline(pipeline_cfg);
 
 fprintf('Re-quantifying at peptide level...')

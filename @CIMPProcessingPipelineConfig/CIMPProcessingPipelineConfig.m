@@ -1,7 +1,5 @@
 classdef CIMPProcessingPipelineConfig
     % Config for CIMPProcessingPipeline
-    % Recommended external usage:
-    %   cfg = CIMPProcessingPipelineConfig.fromTaskParam(...)
     % Constructor is kept mainly for backward compatibility.
 
     properties
@@ -40,38 +38,6 @@ classdef CIMPProcessingPipelineConfig
             obj.minMSMSnum = cfg.minMSMSnum;
             obj.alpha = cfg.alpha;
             obj.resFilterThres = cfg.resFilterThres;
-        end
-    end
-
-    methods (Static)
-        function obj = fromTaskParam(taskParam, ms12DatasetIO, overrides)
-            % Preferred factory method for business-layer calls.
-            % Build config from CTaskParam with optional overrides
-            % Input:
-            %   taskParam (CTaskParam)
-            %       task parameter object
-            %   ms12DatasetIO (CMS12DatasetIO)
-            %       initialized MS1/MS2 dataset IO
-            %   overrides (struct, optional)
-            %       override fields: minMSMSnum, alpha, resFilterThres, ms1_tolerance, ms12DatasetIO
-
-            if nargin < 2
-                error('CIMPProcessingPipelineConfig:MissingInput', ...
-                    'taskParam and ms12DatasetIO are required.');
-            end
-            if nargin < 3 || isempty(overrides)
-                overrides = struct();
-            end
-
-            cfg = struct();
-            cfg.ms12DatasetIO = ms12DatasetIO;
-            cfg.ms1_tolerance = taskParam.m_ms1_tolerance;
-            cfg.minMSMSnum = taskParam.m_min_MSMS_num;
-            cfg.alpha = taskParam.m_alpha;
-            cfg.resFilterThres = taskParam.m_result_filter_threshold;
-
-            cfg = CIMPProcessingPipelineConfig.applyOverrides(cfg, overrides);
-            obj = CIMPProcessingPipelineConfig(cfg);
         end
     end
 

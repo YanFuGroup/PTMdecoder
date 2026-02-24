@@ -41,7 +41,7 @@ fprintf('done.\n');
 % Run quantification
 overrides = struct('ms1_tolerance', obj.m_ms1_tolerance, 'minMSMSnum', 1, ...
     'alpha', obj.m_alpha, 'resFilterThres', obj.m_resFilterThres);
-pipeline_cfg = CIMPProcessingPipelineConfig.fromTaskParam(obj.m_taskParam, obj.m_cMs12DatasetIO, overrides);
+pipeline_cfg = obj.buildIMPProcessingPipelineConfig(overrides);
 pipeline = CIMPProcessingPipeline(pipeline_cfg);
 stats_cleanup = onCleanup(@() CIMPQuantifier.rt_sorted_stats('flush', fullfile(obj.m_outputDir, 'rt_sorted_stats.mat')));
 report = CIMPQuantReport();

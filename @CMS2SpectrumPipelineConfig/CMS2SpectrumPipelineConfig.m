@@ -1,7 +1,5 @@
 classdef CMS2SpectrumPipelineConfig
     % Config for CMS2SpectrumPipeline
-    % Recommended external usage:
-    %   cfg = CMS2SpectrumPipelineConfig.fromTaskParam(...)
     % Constructor supports struct and positional argument styles.
 
     properties
@@ -70,45 +68,6 @@ classdef CMS2SpectrumPipelineConfig
             obj.case_penalty_intens = cfg.case_penalty_intens;
             obj.grid_penalty_intens = cfg.grid_penalty_intens;
             obj.case_OLS_intens_weight = cfg.case_OLS_intens_weight;
-        end
-    end
-
-    methods (Static)
-        function obj = fromTaskParam(taskParam, overrides)
-            % Build config from CTaskParam with optional overrides.
-            % Input:
-            %   taskParam (CTaskParam)
-            %   overrides (struct, optional)
-
-            if nargin < 1 || isempty(taskParam)
-                error('CMS2SpectrumPipelineConfig:MissingInput', 'taskParam is required.');
-            end
-            if nargin < 2 || isempty(overrides)
-                overrides = struct();
-            end
-
-            % Keep explicit finalize() validation even though values come from CTaskParam.
-            % This provides a single defensive gate for runtime safety now; for future C++
-            % migration we can redesign this validation boundary with stronger typed configs.
-
-            cfg = struct();
-            cfg.model = taskParam.m_model;
-            cfg.method = taskParam.m_method;
-            cfg.lambda = taskParam.m_lambda;
-            cfg.ms1_tolerance = taskParam.m_ms1_tolerance;
-            cfg.ms2_tolerance = taskParam.m_ms2_tolerance;
-            cfg.alpha = taskParam.m_alpha;
-            cfg.resFilterThres = taskParam.m_result_filter_threshold;
-
-            % The following are pipeline defaults (not part of current CTaskParam contract)
-            cfg.ionTypes = [1,2];
-            cfg.enzyme = struct('name', taskParam.m_enzyme_name, 'limits', taskParam.m_enzyme_limits);
-            cfg.case_penalty_intens = 'intens_sum';
-            cfg.grid_penalty_intens = 'intens_sum';
-            cfg.case_OLS_intens_weight = 'none';
-
-            cfg = CMS2SpectrumPipelineConfig.applyOverrides(cfg, overrides);
-            obj = CMS2SpectrumPipelineConfig(cfg);
         end
     end
 

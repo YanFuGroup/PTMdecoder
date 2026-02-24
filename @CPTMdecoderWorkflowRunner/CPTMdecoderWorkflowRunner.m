@@ -41,7 +41,12 @@ classdef CPTMdecoderWorkflowRunner < handle
                 return;
             end
 
-            processor = CMSMSPepDeconv(obj.m_config.legacy_task_param);
+            if isempty(obj.m_config.msms_peptide_config)
+                error('CPTMdecoderWorkflowRunner:MissingMsmsConfig', ...
+                    'msms_peptide_config is required when msms_workflow_mode is not none.');
+            end
+
+            processor = CMSMSPepDeconv(obj.m_config.msms_peptide_config);
             switch mode
                 case 'msms_peptide'
                     processor.startRun();
