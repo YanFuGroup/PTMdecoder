@@ -60,15 +60,12 @@ classdef CPTMdecoderWorkflowRunner < handle
                 return;
             end
 
-            cfg = obj.m_config.site_level_config;
-            process = CSiteLevelSummary( ...
-                cfg.input_path, ...
-                cfg.output_intere_path, ...
-                cfg.output_unintere_path, ...
-                cfg.protein_name_abbr, ...
-                cfg.mod_name_abbr, ...
-                cfg.ignore_strings, ...
-                cfg.column_idxs);
+            site_cfg = obj.m_config.site_level_config;
+            if isempty(site_cfg)
+                error('CPTMdecoderWorkflowRunner:MissingSiteConfig', ...
+                    'site_level_config is required when site_level_on is true.');
+            end
+            process = CSiteLevelSummary(site_cfg);
             process.summary_and_write();
         end
 
@@ -77,19 +74,13 @@ classdef CPTMdecoderWorkflowRunner < handle
                 return;
             end
 
-            cfg = obj.m_config.merge_to_pair_config;
-            if isempty(cfg.pairs)
+            pair_cfgs = obj.m_config.merge_to_pair_config;
+            if isempty(pair_cfgs)
                 return;
             end
 
-            for idx_pairs = 1:size(cfg.pairs, 1)
-                current_pair = cfg.pairs(idx_pairs, :);
-                process = CMergeEachPair( ...
-                    current_pair{1}, ...
-                    current_pair{2}, ...
-                    current_pair{3}, ...
-                    {cfg.left_name, cfg.right_name}, ...
-                    cfg.ignore_strings);
+            for idx_pairs = 1:numel(pair_cfgs)
+                process = CMergeEachPair(pair_cfgs{idx_pairs});
                 process.merge_and_write();
             end
         end
@@ -100,7 +91,11 @@ classdef CPTMdecoderWorkflowRunner < handle
             end
 
             cfg = obj.m_config.merge_pairs_config;
-            process = CMergePairs(cfg.result_paths, cfg.output_path, cfg.group_titles);
+            if isempty(cfg)
+                error('CPTMdecoderWorkflowRunner:MissingMergePairsConfig', ...
+                    'merge_pairs_config is required when merge_pairs_level_on is true.');
+            end
+            process = CMergePairs(cfg);
             process.merge_and_write();
         end
     end

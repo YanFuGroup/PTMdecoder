@@ -15,37 +15,34 @@ classdef CMergePairs
     end
     
     methods
-        function obj = CMergePairs(result_paths_or_task_param_obj,...
-                output_path, group_titles, column_idxs)
+        function obj = CMergePairs(config)
             % Construct an instance of this class
             % Input:
-            %   result_paths_or_task_param_obj (cell or CTaskParam)
-            %       pair result paths or task parameter object
-            %   output_path (1 x 1 char/string)
-            %       output file path
-            %   group_titles (N x 2 cell)
-            %       group names for output header
-            %   column_idxs (struct, optional)
-            %       indices of columns in input files
-            if nargin == 1
-                task_param = result_paths_or_task_param_obj;
-                obj.m_result_paths = task_param.m_pair;
-                obj.m_output_path = task_param.m_final_output_path;
-                obj.m_group_titles = task_param.m_left_right_name;
-            else
-                obj.m_result_paths = result_paths_or_task_param_obj;
-                obj.m_output_path = output_path;
-                obj.m_group_titles = group_titles;
+            %   config (CMergePairsConfig)
+            %       config object for merge-pairs stage
+            %       - result_paths (N x 1 cell)
+            %           paths of pair-level merged result files
+            %       - output_path (1 x 1 char/string)
+            %           output path of final merged report
+            %       - group_titles (N x 2 cell)
+            %           names of each pair, corresponding to result_paths
+            %       - column_idxs (struct)
+            %           parser index settings:
+            %             * icol_site, icol_pep, icol_charge
+            %             * icol_quant_1, icol_quant_2
+            if nargin < 1 || isempty(config)
+                error('CMergePairs:MissingConfig', ...
+                    'CMergePairsConfig is required.');
             end
-            if nargin < 4
-                % Format of lines
-                column_idxs.icol_site = 1;
-                column_idxs.icol_pep = 2;
-                column_idxs.icol_charge = 3;
-                column_idxs.icol_quant_1 = 4;
-                column_idxs.icol_quant_2 = 5;
+            if ~isa(config, 'CMergePairsConfig')
+                error('CMergePairs:InvalidConfigType', ...
+                    'config must be a CMergePairsConfig object.');
             end
-            obj.m_column_idxs = column_idxs;
+
+            obj.m_result_paths = config.result_paths;
+            obj.m_output_path = config.output_path;
+            obj.m_group_titles = config.group_titles;
+            obj.m_column_idxs = config.column_idxs;
         end
         
         function merge_and_write(obj)

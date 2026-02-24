@@ -25,36 +25,40 @@ classdef CMergeEachPair
     end
     
     methods
-        function obj = CMergeEachPair(result_path1,result_path2,output_path,...
-                group_titles,ignore_strings,column_idxs)
+        function obj = CMergeEachPair(config)
             % Construct an instance of this class
             % Input:
-            %   result_path1 (1 x 1 char/string)
-            %       first site-level result file path
-            %   result_path2 (1 x 1 char/string)
-            %       second site-level result file path
-            %   output_path (1 x 1 char/string)
-            %       output file path
-            %   group_titles (1 x 2 cell)
-            %       group names for output header
-            %   ignore_strings (1 x M cell)
-            %       strings to remove from peptide sequence when comparing
-            %   column_idxs (struct, optional)
-            %       indices of columns in input files
-            obj.m_result_path1 = result_path1;
-            obj.m_result_path2 = result_path2;
-            obj.m_output_path = output_path;
-            obj.m_group_titles = group_titles;
-            obj.m_ignore_strings = ignore_strings;
-            if nargin < 6
-                column_idxs.icol_site = 1;   % The index of column of site name in site lines
-                column_idxs.icol_pep = 2;    % The index of column of peptide sequence in peptide lines
-                column_idxs.icol_charge = 3; % The index of column of charge in peptide lines
-                column_idxs.icol_dataset = 4;% The index of column of dataset name in peptide lines
-                column_idxs.icol_quant = 8;  % The index of column of quantification in peptide lines
-                column_idxs.icol_max = 8;    % The maximum index of column
+            %   config (CMergeEachPairConfig)
+            %       config object for one pair merge
+            %       - result_path1 (1 x 1 char/string)
+            %           first site-level result file path
+            %       - result_path2 (1 x 1 char/string)
+            %           second site-level result file path
+            %       - output_path (1 x 1 char/string)
+            %           output path for merged pair result
+            %       - group_titles (1 x 2 cell)
+            %           names used in output header, e.g. {left_name, right_name}
+            %       - ignore_strings (1 x M cell)
+            %           strings removed from peptide sequence before matching
+            %       - column_idxs (struct)
+            %           fields used by parser and merger:
+            %             * icol_site, icol_pep, icol_charge
+            %             * icol_dataset, icol_quant, icol_max
+            if nargin < 1 || isempty(config)
+                error('CMergeEachPair:MissingConfig', ...
+                    'CMergeEachPairConfig is required.');
             end
-            obj.m_column_idxs = column_idxs;
+            if ~isa(config, 'CMergeEachPairConfig')
+                error('CMergeEachPair:InvalidConfigType', ...
+                    'config must be a CMergeEachPairConfig object.');
+            end
+
+            obj.m_result_path1 = config.result_path1;
+            obj.m_result_path2 = config.result_path2;
+            obj.m_output_path = config.output_path;
+            obj.m_group_titles = config.group_titles;
+            obj.m_ignore_strings = config.ignore_strings;
+            obj.m_column_idxs = config.column_idxs;
             obj.m_result = [];
         end
         

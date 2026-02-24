@@ -76,25 +76,30 @@ classdef CPTMdecoderWorkflowConfig
                 'merge_pairs_level' ...
             };
 
-            cfg.site_level_config = struct( ...
-                'input_path', taskParam.m_pep_level_file_path, ...
-                'output_intere_path', taskParam.m_output_intere_path, ...
-                'output_unintere_path', taskParam.m_output_unintere_path, ...
-                'protein_name_abbr', taskParam.m_protein_name_abbr, ...
-                'mod_name_abbr', taskParam.m_mod_name_abbr, ...
-                'ignore_strings', {taskParam.m_ignore_strings_site_level}, ...
-                'column_idxs', struct('icol_seq', 2, 'icol_auc', 8));
+            if cfg.site_level_on
+                cfg.site_level_config = CSiteLevelPipelineConfig.fromTaskParam(taskParam);
+            else
+                cfg.site_level_config = [];
+            end
 
-            cfg.merge_to_pair_config = struct( ...
-                'pairs', {taskParam.m_left_right_out}, ...
-                'left_name', taskParam.m_left_name, ...
-                'right_name', taskParam.m_right_name, ...
-                'ignore_strings', {taskParam.m_ignore_strings_pair_level});
+            if cfg.merge_to_pair_level_on
+                pair_configs = cell(taskParam.m_left_right_out_num, 1);
+                for idx_pairs = 1:taskParam.m_left_right_out_num
+                    current_pair = taskParam.m_left_right_out(idx_pairs, :);
+                    pair_configs{idx_pairs} = CMergeEachPairConfig.fromPairRow( ...
+                        current_pair, taskParam.m_left_name, taskParam.m_right_name, ...
+                        taskParam.m_ignore_strings_pair_level);
+                end
+                cfg.merge_to_pair_config = pair_configs;
+            else
+                cfg.merge_to_pair_config = {};
+            end
 
-            cfg.merge_pairs_config = struct( ...
-                'result_paths', {taskParam.m_pair}, ...
-                'output_path', taskParam.m_final_output_path, ...
-                'group_titles', {taskParam.m_left_right_name});
+            if cfg.merge_pairs_level_on
+                cfg.merge_pairs_config = CMergePairsConfig.fromTaskParam(taskParam);
+            else
+                cfg.merge_pairs_config = [];
+            end
 
             obj = CPTMdecoderWorkflowConfig(cfg);
         end
@@ -133,13 +138,13 @@ classdef CPTMdecoderWorkflowConfig
                 cfg.execution_order = {'msms_workflow', 'site_level', 'merge_to_pair_level', 'merge_pairs_level'};
             end
             if ~isfield(cfg, 'site_level_config') || isempty(cfg.site_level_config)
-                cfg.site_level_config = struct();
+                cfg.site_level_config = [];
             end
             if ~isfield(cfg, 'merge_to_pair_config') || isempty(cfg.merge_to_pair_config)
-                cfg.merge_to_pair_config = struct('pairs', {cell(0, 3)}, 'left_name', '', 'right_name', '', 'ignore_strings', {{}});
+                cfg.merge_to_pair_config = {};
             end
             if ~isfield(cfg, 'merge_pairs_config') || isempty(cfg.merge_pairs_config)
-                cfg.merge_pairs_config = struct('result_paths', {{}}, 'output_path', '', 'group_titles', {{}});
+                cfg.merge_pairs_config = [];
             end
             if ~isfield(cfg, 'legacy_task_param')
                 cfg.legacy_task_param = [];
@@ -154,6 +159,21 @@ classdef CPTMdecoderWorkflowConfig
             if isempty(cfg.legacy_task_param)
                 error('CPTMdecoderWorkflowConfig:MissingLegacyTaskParam', ...
                     'legacy_task_param must be provided in current migration phase.');
+            end
+
+            if cfg.site_level_on && isempty(cfg.site_level_config)
+                error('CPTMdecoderWorkflowConfig:MissingSiteConfig', ...
+                    'site_level_config must be provided when site_level_on is true.');
+            end
+
+            if cfg.merge_to_pair_level_on && isempty(cfg.merge_to_pair_config)
+                error('CPTMdecoderWorkflowConfig:MissingMergeToPairConfig', ...
+                    'merge_to_pair_config must be provided when merge_to_pair_level_on is true.');
+            end
+
+            if cfg.merge_pairs_level_on && isempty(cfg.merge_pairs_config)
+                error('CPTMdecoderWorkflowConfig:MissingMergePairsConfig', ...
+                    'merge_pairs_config must be provided when merge_pairs_level_on is true.');
             end
         end
     end

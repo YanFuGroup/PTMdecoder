@@ -23,46 +23,43 @@ classdef CSiteLevelSummary
     end
     
     methods
-        function obj = CSiteLevelSummary(input_path_or_task_param_obj, ...
-                output_intere_path, output_unintere_path, ...
-                protein_name_abbr, mod_name_abbr, ignore_strings, column_idxs)
+        function obj = CSiteLevelSummary(config)
             %CSITELEVELSUMMARY Construct an instance of this class
             % Input:
-            %   input_path_or_task_param_obj (char/string or CTaskParam)
-            %       peptide-level result path or task parameter object
-            %   output_intere_path (1 x 1 char/string)
-            %       output path for interested sites
-            %   output_unintere_path (1 x 1 char/string)
-            %       output path for uninterested sites
-            %   protein_name_abbr (containers.Map)
-            %       protein name -> abbreviation
-            %   mod_name_abbr (containers.Map)
-            %       modification name -> abbreviation
-            %   ignore_strings (1 x M cell)
-            %       strings to remove from peptide sequence
-            %   column_idxs (struct, optional)
-            %       column index settings
-            if nargin == 1
-                % Initialize using task parameter obj
-                obj.m_input_path = input_path_or_task_param_obj.m_pep_level_file_path;
-                obj.m_output_path_interested = input_path_or_task_param_obj.m_output_intere_path;
-                obj.m_output_path_uninterested = input_path_or_task_param_obj.m_output_unintere_path;
-                obj.m_protein_name_abbr = input_path_or_task_param_obj.m_protein_name_abbr;
-                obj.m_mod_name_abbr = input_path_or_task_param_obj.m_mod_name_abbr;
-                obj.m_ignore_strings = input_path_or_task_param_obj.m_ignore_strings_site_level;
-                % Column indices
-                obj.m_column_idxs.icol_seq = 2;
-                obj.m_column_idxs.icol_auc = 8;
-            else
-                % Initialize using input parameters
-                obj.m_input_path = input_path_or_task_param_obj;
-                obj.m_output_path_interested = output_intere_path;
-                obj.m_output_path_uninterested = output_unintere_path;
-                obj.m_protein_name_abbr = protein_name_abbr;
-                obj.m_mod_name_abbr = mod_name_abbr;
-                obj.m_ignore_strings = ignore_strings;
-                obj.m_column_idxs = column_idxs;
+            %   config (CSiteLevelPipelineConfig)
+            %       site-level pipeline configuration
+            %       - input_path (1 x 1 char/string)
+            %           peptide-level result file path
+            %       - output_intere_path (1 x 1 char/string)
+            %           output path for interested-site summary
+            %       - output_unintere_path (1 x 1 char/string)
+            %           output path for uninterested peptide records
+            %       - protein_name_abbr (containers.Map)
+            %           mapping: full protein name -> abbreviation
+            %       - mod_name_abbr (containers.Map)
+            %           mapping: full modification name -> abbreviation
+            %       - ignore_strings (1 x M cell)
+            %           strings to remove from modified peptide sequence
+            %       - column_idxs (struct)
+            %           required fields:
+            %             * icol_seq : column index of modified sequence
+            %             * icol_auc : column index of quantification value
+            if nargin < 1 || isempty(config)
+                error('CSiteLevelSummary:MissingConfig', ...
+                    'CSiteLevelPipelineConfig is required.');
             end
+            if ~isa(config, 'CSiteLevelPipelineConfig')
+                error('CSiteLevelSummary:InvalidConfigType', ...
+                    'config must be a CSiteLevelPipelineConfig object.');
+            end
+
+            obj.m_input_path = config.input_path;
+            obj.m_output_path_interested = config.output_intere_path;
+            obj.m_output_path_uninterested = config.output_unintere_path;
+            obj.m_protein_name_abbr = config.protein_name_abbr;
+            obj.m_mod_name_abbr = config.mod_name_abbr;
+            obj.m_ignore_strings = config.ignore_strings;
+            obj.m_column_idxs = config.column_idxs;
         end
         
         function summary_and_write(obj)
