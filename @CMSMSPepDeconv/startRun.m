@@ -17,7 +17,7 @@ end
 [obj, ~] = obj.ensureMsFileMapper();
 [obj, mgf_created_here] = obj.ensureMgfDatasetIO();
 if mgf_created_here
-    cleanup_mgf = onCleanup(@() obj.m_cMgfDatasetIO.CloseAllFile()); %#ok<NASGU>
+    cleanup_mgf = onCleanup(@() obj.m_cMgfDatasetIO.CloseAllFile());
 end
 
 % Quantification each IMP for each PSM
