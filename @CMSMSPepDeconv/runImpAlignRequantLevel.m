@@ -72,6 +72,13 @@ obj = obj.ensureMgfDatasetIO();
 [obj, ~] = obj.ensurePepProtService();
 [obj, ~] = obj.ensureMsFileMapper();
 
+% Prebuild raw identification managers once and reuse in align + requant
+rawIdentManagers = cell(1, length(msms_result.Peptides));
+for i_pep = 1:length(msms_result.Peptides)
+    rawIdentManagers{i_pep} = obj.buildRawIdentManagerFromSpectrumList(...
+        msms_result.Peptides(i_pep).spectrum_list);
+end
+
 % Build aligned RT range map
 anchor_selector = CXICAlignAnchorSelector();
 aligner = CXICAligner(anchor_selector, align_options);
@@ -80,8 +87,7 @@ align_executor = CIMPXICAlignRequantExecutor(align_cfg);
 pipeline = CPeptideLevelPipeline([], align_executor);
 
 [pep_rtrange_map, align_report] = pipeline.buildAlignedRtRangeMap(...
-    msms_result, obj.m_filtered_res_file_path, ...
-    @(spectrum_list) obj.buildRawIdentManagerFromSpectrumList(spectrum_list));
+    obj.m_filtered_res_file_path, rawIdentManagers);
 
 alignment_report_path = COptionUtils.get(align_options, 'alignment_report_path', ...
     fullfile(obj.m_outputDir, 'report_alignment.txt'));
@@ -97,12 +103,11 @@ proc_executor = CIMPProcessingExecutor(proc_cfg);
 proc_pipeline = CPeptideLevelPipeline(proc_executor);
 
 fprintf('Re-quantifying at peptide level (aligned)...')
-for idx_psf = 1:length(msms_result.Peptides)
-    print_progress = print_progress.update_show(idx_psf);
-    peptide_sequence = msms_result.Peptides(idx_psf).peptide_sequence;
+for i_pep = 1:length(msms_result.Peptides)
+    print_progress = print_progress.update_show(i_pep);
+    peptide_sequence = msms_result.Peptides(i_pep).peptide_sequence;
     cell_prot_name_pos = obj.CPepProtService.get_protein_name_pos(peptide_sequence);
-    rawIdentManager = obj.buildRawIdentManagerFromSpectrumList( ...
-        msms_result.Peptides(idx_psf).spectrum_list);
+    rawIdentManager = rawIdentManagers{i_pep};
     block = proc_pipeline.requantifyPeptideBlock(cell_prot_name_pos, ...
         rawIdentManager, pep_rtrange_map);
     report = report.append_block(block);

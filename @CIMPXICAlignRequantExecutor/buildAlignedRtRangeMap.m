@@ -1,26 +1,24 @@
 function [pep_rtrange_map, report] = buildAlignedRtRangeMap(obj, ...
-    msms_result, fdr_filtered_result_path, buildRawIdentManagerFn)
+    fdr_filtered_result_path, rawIdentManagers)
 % Build aligned RT range map using anchors and alignment models.
 % Input:
 %   obj (CIMPXICAlignRequantExecutor)
 %       Executor instance
-%   msms_result (CMS2Result)
-%       MSMS results from report_msms.txt
 %   fdr_filtered_result_path (1 x 1 char/string)
 %       FDR filtered result file path
-%   buildRawIdentManagerFn (function_handle)
-%       Function to build CIMPRawIdentManager from a spectrum_list
+%   rawIdentManagers (1 x N cell)
+%       Per-peptide CIMPRawIdentManager list
 % Output:
 %   pep_rtrange_map (containers.Map)
 %       Map of record key -> aligned rt_peaks
 %   report (struct)
 %       Alignment stats and pair model info
 
-if nargin < 4 || isempty(buildRawIdentManagerFn)
-    error('buildAlignedRtRangeMap requires a raw identification builder function.');
+if nargin < 3 || isempty(rawIdentManagers)
+    error('buildAlignedRtRangeMap requires prebuilt rawIdentManagers.');
 end
 
-raw_names = obj.getRawNamesFromMsmsResult(msms_result);
+raw_names = obj.getRawNamesFromRawIdentManagers(rawIdentManagers);
 align_pairs = obj.m_align_strategy.getAlignmentPairs(raw_names);
 
 [obj.m_pair_models, report] = obj.m_aligner.fitPairModels( ...
@@ -36,10 +34,10 @@ if isempty(align_pairs)
 end
 
 fprintf('Aligning RT ranges for %d run pairs...', size(align_pairs, 1));
-print_progress = CPrintProgress(length(msms_result.Peptides));
-for idx_psf = 1:length(msms_result.Peptides)
+print_progress = CPrintProgress(length(rawIdentManagers));
+for idx_psf = 1:length(rawIdentManagers)
     print_progress = print_progress.update_show(idx_psf);
-    rawIdentManager = buildRawIdentManagerFn(msms_result.Peptides(idx_psf).spectrum_list);
+    rawIdentManager = rawIdentManagers{idx_psf};
     raw_imps_map = obj.buildRawImpsMap(rawIdentManager);
 
     for idx_pair = 1:size(align_pairs, 1)

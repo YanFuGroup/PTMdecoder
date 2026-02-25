@@ -42,9 +42,9 @@ classdef CPeptideLevelPipeline < handle
             obj.m_processing_executor.drawImpXicForBlock(rawIdentManager, pep_rtrange_map, dir_save, color_map, legend_map);
         end
 
-        function [pep_rtrange_map, report] = buildAlignedRtRangeMap(obj, msms_result, fdr_filtered_result_path, buildRawIdentManagerFn)
+        function [pep_rtrange_map, report] = buildAlignedRtRangeMap(obj, fdr_filtered_result_path, rawIdentManagers)
             obj.assertAlignRequantExecutor();
-            [pep_rtrange_map, report] = obj.m_align_requant_executor.buildAlignedRtRangeMap(msms_result, fdr_filtered_result_path, buildRawIdentManagerFn);
+            [pep_rtrange_map, report] = obj.m_align_requant_executor.buildAlignedRtRangeMap(fdr_filtered_result_path, rawIdentManagers);
         end
 
         function writeAlignmentReport(obj, report, output_path)
