@@ -42,7 +42,8 @@ if total_records == 0
 end
 print_progress = CPrintProgress(max(total_records, 1));
 pipeline_cfg = obj.buildIMPProcessingPipelineConfig();
-pipeline = CIMPProcessingPipeline(pipeline_cfg);
+executor = CIMPProcessingExecutor(pipeline_cfg);
+pipeline = CPeptideLevelPipeline(executor);
 
 fprintf('Re-quantifying at peptide level...')
 rec_counter = 0;

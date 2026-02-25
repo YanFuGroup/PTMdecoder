@@ -62,7 +62,7 @@ classdef CSiteLevelSummary
             obj.m_column_idxs = config.column_idxs;
         end
         
-        function summary_and_write(obj)
+        function run(obj)
             % Summary and write the result to files
             obj = obj.site_level_summary();
             obj.write_file();

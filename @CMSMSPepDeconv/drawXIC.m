@@ -55,7 +55,8 @@ end
 msms_result = CMS2ResultIO.read(each_PSM_results_path);
 print_progress = CPrintProgress(length(msms_result.Peptides));
 pipeline_cfg = obj.buildIMPProcessingPipelineConfig();
-pipeline = CIMPProcessingPipeline(pipeline_cfg);
+executor = CIMPProcessingExecutor(pipeline_cfg);
+pipeline = CPeptideLevelPipeline(executor);
 
 fprintf('Drawing XIC...');
 for idx_psf = 1:length(msms_result.Peptides)

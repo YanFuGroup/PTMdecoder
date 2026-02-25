@@ -47,6 +47,6 @@ function helper_test_auto_align_quant(projectRootDir, testDataDir, outputDir)
 
     strategy = PairwiseRunAlignStrategy(pairs);
     align_options = struct('min_psm', 1, 'rt_sigma', 0.5, 'outlier_k', 3, ...
-      'outlier_method', 'mad', 'dead_time_min', 0.5);
-    quant_align_requant_IMP(processor, strategy, align_options);
+        'outlier_method', 'mad', 'dead_time_min', 0.5);
+    runImpAlignRequantLevel(processor, strategy, align_options);
 end

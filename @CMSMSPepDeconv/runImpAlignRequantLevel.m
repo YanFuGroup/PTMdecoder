@@ -1,4 +1,4 @@
-function obj = quant_align_requant_IMP(obj, align_strategy, align_options)
+function obj = runImpAlignRequantLevel(obj, align_strategy, align_options)
 % Quantify -> align XIC -> requantify IMPs
 % Input:
 %   obj (CMSMSPepDeconv)
@@ -40,13 +40,12 @@ function obj = quant_align_requant_IMP(obj, align_strategy, align_options)
 %   strategy = PairwiseRunAlignStrategy(pairs);
 %   align_options = struct('min_psm', 3, 'rt_sigma', 0.5, 'outlier_k', 3, ...
 %       'outlier_method', 'mad', 'dead_time_min', 0.5);
-%   obj = quant_align_requant_IMP(obj, align_strategy, align_options);
-
+%   obj = runImpAlignRequantLevel(obj, align_strategy, align_options);
 
 if nargin < 2 || isempty(align_strategy)
-    error('quant_align_requant_IMP requires a CRunAlignStrategy instance.');
+    error('runImpAlignRequantLevel requires a CRunAlignStrategy instance.');
 end
-if nargin < 3 || isempty(align_options)
+if nargin < 3
     align_options = struct();
 end
 if isempty(obj.m_filtered_res_file_path)
@@ -80,9 +79,10 @@ end
 anchor_selector = CXICAlignAnchorSelector();
 aligner = CXICAligner(anchor_selector, align_options);
 align_cfg = obj.buildAlignmentPipelineConfig(aligner, align_strategy, align_options);
-pipeline = CIMPRequantAlignmentPipeline(align_cfg);
+align_executor = CIMPXICAlignRequantExecutor(align_cfg);
+pipeline = CPeptideLevelPipeline([], align_executor);
 
-[pep_rtrange_map, align_report] = pipeline.buildAlignedRtrangeMap(...
+[pep_rtrange_map, align_report] = pipeline.buildAlignedRtRangeMap(...
     msms_result, obj.m_filtered_res_file_path, ...
     @(spectrum_list) obj.buildRawIdentManagerFromSpectrumList(spectrum_list));
 
@@ -96,7 +96,8 @@ output_path = COptionUtils.get(align_options, 'requant_output_path', ...
 report = CIMPQuantReport();
 print_progress = CPrintProgress(length(msms_result.Peptides));
 proc_cfg = obj.buildIMPProcessingPipelineConfig();
-proc_pipeline = CIMPProcessingPipeline(proc_cfg);
+proc_executor = CIMPProcessingExecutor(proc_cfg);
+proc_pipeline = CPeptideLevelPipeline(proc_executor);
 
 fprintf('Re-quantifying at peptide level (aligned)...')
 for idx_psf = 1:length(msms_result.Peptides)
@@ -114,4 +115,3 @@ fprintf('done.\n');
 
 CIMPQuantResultIO.write(report, output_path);
 end
-

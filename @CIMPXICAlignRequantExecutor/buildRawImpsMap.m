@@ -1,8 +1,8 @@
 function raw_imps_map = buildRawImpsMap(obj, rawIdentManager)
 % Build per-IMP info maps for all raws in a peptide block.
 % Input:
-%   obj (CIMPRequantAlignmentPipeline)
-%       Pipeline instance
+%   obj (CIMPXICAlignRequantExecutor)
+%       Executor instance
 %   rawIdentManager (CIMPRawIdentManager)
 %       Per-raw identification store manager
 % Output:

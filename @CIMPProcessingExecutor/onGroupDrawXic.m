@@ -1,8 +1,8 @@
 function state = onGroupDrawXic(obj, state, group)
 % Draw XICs for a single group if RT ranges are available
 % Input:
-%   obj (CIMPProcessingPipeline)
-%       processing pipeline instance
+%   obj (CIMPProcessingExecutor)
+%       processing executor instance
 %   state (struct)
 %       draw state with fields: dir_save, color_map, legend_map
 %   group (CIMPGroup)

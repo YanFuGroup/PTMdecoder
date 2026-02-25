@@ -1,4 +1,4 @@
-function obj = startRun(obj, is_record_fragment_information)
+function obj = run(obj, is_record_fragment_information)
 % Start the run for MSMS level and Peptide level IMP discrimination and quantification
 % Input:
 %   obj (CMSMSPepDeconv)
@@ -8,7 +8,6 @@ function obj = startRun(obj, is_record_fragment_information)
 % Output:
 %   obj (CMSMSPepDeconv)
 %       Updated instance
-
 if nargin < 2
     is_record_fragment_information = false;
 end
@@ -21,9 +20,8 @@ if mgf_created_here
 end
 
 % Quantification each IMP for each PSM
-obj = obj.MSMSLevelRun(is_record_fragment_information);
+obj = obj.runMsmsLevel(is_record_fragment_information);
 
 % Quantification each modified peptide according to each PSMs
-obj = obj.quant_IMP();
-
+obj = obj.runImpQuantLevel();
 end

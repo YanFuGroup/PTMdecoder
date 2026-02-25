@@ -62,7 +62,7 @@ classdef CMergeEachPair
             obj.m_result = [];
         end
         
-        function merge_and_write(obj)
+        function run(obj)
             % Merge the two results and write the result
 
             % Read the two results and merge them

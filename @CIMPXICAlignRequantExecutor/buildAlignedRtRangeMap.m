@@ -1,9 +1,9 @@
-function [pep_rtrange_map, report] = buildAlignedRtrangeMap(obj, ...
+function [pep_rtrange_map, report] = buildAlignedRtRangeMap(obj, ...
     msms_result, fdr_filtered_result_path, buildRawIdentManagerFn)
 % Build aligned RT range map using anchors and alignment models.
 % Input:
-%   obj (CIMPRequantAlignmentPipeline)
-%       Pipeline instance
+%   obj (CIMPXICAlignRequantExecutor)
+%       Executor instance
 %   msms_result (CMS2Result)
 %       MSMS results from report_msms.txt
 %   fdr_filtered_result_path (1 x 1 char/string)
@@ -17,7 +17,7 @@ function [pep_rtrange_map, report] = buildAlignedRtrangeMap(obj, ...
 %       Alignment stats and pair model info
 
 if nargin < 4 || isempty(buildRawIdentManagerFn)
-    error('buildAlignedRtrangeMap requires a raw identification builder function.');
+    error('buildAlignedRtRangeMap requires a raw identification builder function.');
 end
 
 raw_names = obj.getRawNamesFromMsmsResult(msms_result);
@@ -58,7 +58,6 @@ for idx_psf = 1:length(msms_result.Peptides)
             state.num_missing_raw_pair = state.num_missing_raw_pair + 1;
             continue;
         end
-        % shared_keys are IMP+charge observed in both raw files
 
         model_key = obj.m_aligner.pairKey(raw_a, raw_b);
         if ~obj.m_pair_models.isKey(model_key)

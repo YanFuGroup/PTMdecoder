@@ -1,5 +1,5 @@
-classdef CIMPProcessingPipeline < handle
-    % Processing pipeline for IMP quant/requant/draw
+classdef CIMPProcessingExecutor < handle
+    % Execution layer for IMP quant/requant/draw
 
     properties (Access=private)
         m_ms12DatasetIO
@@ -10,9 +10,9 @@ classdef CIMPProcessingPipeline < handle
     end
 
     methods
-        function obj = CIMPProcessingPipeline(ms12DatasetIO, ms1_tolerance, minMSMSnum, alpha, resFilterThres)
-            % Construct a pipeline with shared processing parameters
-            if nargin == 1 && isa(ms12DatasetIO, 'CIMPProcessingPipelineConfig')
+        function obj = CIMPProcessingExecutor(ms12DatasetIO, ms1_tolerance, minMSMSnum, alpha, resFilterThres)
+            % Construct an executor with shared processing parameters
+            if nargin == 1 && isa(ms12DatasetIO, 'CIMPProcessingExecutorConfig')
                 cfg = ms12DatasetIO;
                 obj.m_ms12DatasetIO = cfg.ms12DatasetIO;
                 obj.m_ms1_tolerance = cfg.ms1_tolerance;

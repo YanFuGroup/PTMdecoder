@@ -1,8 +1,8 @@
 function drawImpXicForBlock(obj, rawIdentManager, pep_rtrange_map, dir_save, color_map, legend_map)
 % Draw XICs for IMP groups using checked RT ranges
 % Input:
-%   obj (CIMPProcessingPipeline)
-%       processing pipeline instance
+%   obj (CIMPProcessingExecutor)
+%       processing executor instance
 %   rawIdentManager (CIMPRawIdentManager)
 %       per-raw identification store manager
 %   pep_rtrange_map (containers.Map)

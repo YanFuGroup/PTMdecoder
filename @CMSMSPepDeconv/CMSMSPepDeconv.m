@@ -163,17 +163,17 @@ classdef CMSMSPepDeconv
             end
         end
 
-        % Run at MSMS level and peptide level
-        obj = startRun(obj, is_record_fragment_information)
+        % Unified default entry: run MSMS level then IMP peptide quant level
+        obj = run(obj, is_record_fragment_information)
+
+        % Unified stage entries
+        obj = runMsmsLevel(obj, is_record_fragment_information)
+        obj = runImpQuantLevel(obj)
+        obj = runImpRequantLevel(obj)
+        obj = runImpAlignRequantLevel(obj, align_strategy, align_options)
 
         % Generate modification "name-mass" list from user settings
         [modNameMass] = getModMassName(obj,modificationTypes,mapModification)
-
-        % Re-quantify the IMPs using checked XIC peaks
-        obj = requant_IMP(obj)
-
-        % Quantify -> align XIC -> requantify IMPs
-        obj = quant_align_requant_IMP(obj, align_strategy, align_options)
 
         % Re-quantify the normalization peptides using checked XIC peaks
         obj = requant_norm_pep(obj)

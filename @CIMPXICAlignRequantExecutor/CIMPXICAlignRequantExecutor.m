@@ -1,5 +1,5 @@
-classdef CIMPRequantAlignmentPipeline < handle
-    % Pipeline for quant -> align -> requant workflow
+classdef CIMPXICAlignRequantExecutor < handle
+    % Execution layer for quant -> XIC align -> requant workflow
 
     properties (Access=private)
         m_ms12DatasetIO
@@ -15,9 +15,9 @@ classdef CIMPRequantAlignmentPipeline < handle
     end
 
     methods
-        function obj = CIMPRequantAlignmentPipeline(ms12DatasetIO, ms1_tolerance, minMSMSnum, ...
+        function obj = CIMPXICAlignRequantExecutor(ms12DatasetIO, ms1_tolerance, minMSMSnum, ...
             alpha, resFilterThres, aligner, align_strategy, align_options)
-            % Construct a quant-align-requant pipeline.
+            % Construct a quant-align-requant executor.
             % Input:
             %   ms12DatasetIO (CMS12DatasetIO)
             %       MS1/MS2 dataset IO
@@ -52,9 +52,9 @@ classdef CIMPRequantAlignmentPipeline < handle
             %         - dead_time_min (1 x 1 double)
             %             Min allowed RT start (minutes) for peaks. Default: [] (disabled).
             % Output:
-            %   obj (CIMPRequantAlignmentPipeline)
-            %       Pipeline instance
-            if nargin == 1 && isa(ms12DatasetIO, 'CIMPRequantAlignmentPipelineConfig')
+            %   obj (CIMPXICAlignRequantExecutor)
+            %       Executor instance
+            if nargin == 1 && isa(ms12DatasetIO, 'CIMPXICAlignRequantExecutorConfig')
                 cfg = ms12DatasetIO;
                 obj.m_ms12DatasetIO = cfg.ms12DatasetIO;
                 obj.m_ms1_tolerance = cfg.ms1_tolerance;
@@ -82,7 +82,7 @@ classdef CIMPRequantAlignmentPipeline < handle
     end
 
     methods (Access=public)
-        [pep_rtrange_map, report] = buildAlignedRtrangeMap(obj, msms_result, fdr_filtered_result_path, buildRawIdentManagerFn)
+        [pep_rtrange_map, report] = buildAlignedRtRangeMap(obj, msms_result, fdr_filtered_result_path, buildRawIdentManagerFn)
 
         writeAlignmentReport(obj, report, output_path)
     end

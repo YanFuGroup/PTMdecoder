@@ -42,8 +42,9 @@ fprintf('done.\n');
 overrides = struct('ms1_tolerance', obj.m_ms1_tolerance, 'minMSMSnum', 1, ...
     'alpha', obj.m_alpha, 'resFilterThres', obj.m_resFilterThres);
 pipeline_cfg = obj.buildIMPProcessingPipelineConfig(overrides);
-pipeline = CIMPProcessingPipeline(pipeline_cfg);
-stats_cleanup = onCleanup(@() CIMPQuantifier.rt_sorted_stats('flush', fullfile(obj.m_outputDir, 'rt_sorted_stats.mat')));
+executor = CIMPProcessingExecutor(pipeline_cfg);
+pipeline = CPeptideLevelPipeline(executor);
+stats_cleanup = onCleanup(@() CIMPQuantStats.rt_sorted_stats('flush', fullfile(obj.m_outputDir, 'rt_sorted_stats.mat')));
 report = CIMPQuantReport();
 fprintf('Quantifying %s...', obj.m_specPath);
 for i_list = 1:length(peptide_list)

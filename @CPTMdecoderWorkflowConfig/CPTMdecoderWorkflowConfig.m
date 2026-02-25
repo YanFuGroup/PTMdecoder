@@ -8,6 +8,7 @@ classdef CPTMdecoderWorkflowConfig
         STAGE_MERGE_PAIRS_LEVEL = 'merge_pairs_level'
 
         ACTION_MSMS_PEPTIDE = 'msms_peptide'
+        ACTION_MSMS_ONLY = 'msms_only'
         ACTION_PEPTIDE_REQUANT = 'peptide_requant'
         ACTION_PEPTIDE_ONLY = 'peptide_only'
         ACTION_SITE_SUMMARY = 'site_summary'
@@ -15,6 +16,7 @@ classdef CPTMdecoderWorkflowConfig
         ACTION_MERGE_PAIRS = 'merge_pairs'
 
         PARAM_MSMS_PEPTIDE_LEVEL_ON = 'msms_peptide_level_on'
+        PARAM_MSMS_ONLY_ON = 'msms_only_on'
         PARAM_PEPTIDE_ONLY_ON = 'peptide_only_on'
         PARAM_PEPTIDE_REQUANT_ON = 'peptide_requant_on'
         PARAM_SITE_LEVEL_ON = 'site_level_on'
@@ -199,17 +201,20 @@ classdef CPTMdecoderWorkflowConfig
         end
 
         function action = resolveMsmsWorkflowActionFromMap(task_param_map)
-            msms_on = CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowConfig.PARAM_MSMS_PEPTIDE_LEVEL_ON);
+            msms_pep_on = CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowConfig.PARAM_MSMS_PEPTIDE_LEVEL_ON);
+            msms_only_on = CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowConfig.PARAM_MSMS_ONLY_ON);
             requant_on = CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowConfig.PARAM_PEPTIDE_REQUANT_ON);
             peptide_only_on = CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowConfig.PARAM_PEPTIDE_ONLY_ON);
 
-            if msms_on + requant_on + peptide_only_on > 1
+            if msms_pep_on + msms_only_on + requant_on + peptide_only_on > 1
                 error('CPTMdecoderWorkflowConfig:InvalidMsmsWorkflowAction', ...
-                    'msms_peptide_level_on, peptide_requant_on, peptide_only_on cannot be enabled simultaneously.');
+                    'msms_peptide_level_on, msms_only_on, peptide_requant_on, peptide_only_on cannot be enabled simultaneously.');
             end
 
-            if msms_on
+            if msms_pep_on
                 action = CPTMdecoderWorkflowConfig.ACTION_MSMS_PEPTIDE;
+            elseif msms_only_on
+                action = CPTMdecoderWorkflowConfig.ACTION_MSMS_ONLY;
             elseif requant_on
                 action = CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_REQUANT;
             elseif peptide_only_on
@@ -257,7 +262,7 @@ classdef CPTMdecoderWorkflowConfig
             cfg.grid_penalty_intens = 'intens_sum';
             cfg.case_OLS_intens_weight = 'none';
 
-            if strcmp(mode, CPTMdecoderWorkflowConfig.ACTION_MSMS_PEPTIDE)
+            if strcmp(mode, CPTMdecoderWorkflowConfig.ACTION_MSMS_PEPTIDE) || strcmp(mode, CPTMdecoderWorkflowConfig.ACTION_MSMS_ONLY)
                 cfg.pep_spec_file_path = CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_PEP_SPEC_FILE_PATH, 'peptide-spectrum list path');
                 cfg.checked_peptides_res_path = [];
                 cfg.msms_res_path = [];
@@ -393,6 +398,7 @@ classdef CPTMdecoderWorkflowConfig
                 case CPTMdecoderWorkflowConfig.STAGE_MSMS_WORKFLOW
                     actions = { ...
                         CPTMdecoderWorkflowConfig.ACTION_MSMS_PEPTIDE, ...
+                        CPTMdecoderWorkflowConfig.ACTION_MSMS_ONLY, ...
                         CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_REQUANT, ...
                         CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_ONLY ...
                     };

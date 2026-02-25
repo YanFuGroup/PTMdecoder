@@ -1,6 +1,5 @@
-classdef CIMPRequantAlignmentPipelineConfig
-    % Config for CIMPRequantAlignmentPipeline
-    % Constructor is kept mainly for backward compatibility.
+classdef CIMPXICAlignRequantExecutorConfig
+    % Config for CIMPXICAlignRequantExecutor
 
     properties
         ms12DatasetIO
@@ -14,17 +13,17 @@ classdef CIMPRequantAlignmentPipelineConfig
     end
 
     methods
-        function obj = CIMPRequantAlignmentPipelineConfig(varargin)
-            % Backward-compatible constructor.
+        function obj = CIMPXICAlignRequantExecutorConfig(varargin)
+            % Constructor.
             % Input style 1:
-            %   CIMPRequantAlignmentPipelineConfig(ms12DatasetIO, ms1_tolerance, minMSMSnum, alpha, resFilterThres, aligner, align_strategy, align_options)
+            %   CIMPXICAlignRequantExecutorConfig(ms12DatasetIO, ms1_tolerance, minMSMSnum, alpha, resFilterThres, aligner, align_strategy, align_options)
             % Input style 2:
-            %   CIMPRequantAlignmentPipelineConfig(struct_with_fields)
+            %   CIMPXICAlignRequantExecutorConfig(struct_with_fields)
             if nargin == 1 && isstruct(varargin{1})
                 cfg = varargin{1};
             else
                 if nargin < 7
-                    error('CIMPRequantAlignmentPipelineConfig requires at least 7 arguments or 1 struct argument.');
+                    error('CIMPXICAlignRequantExecutorConfig requires at least 7 arguments or 1 struct argument.');
                 end
                 if nargin < 8
                     align_options = struct();
@@ -42,7 +41,7 @@ classdef CIMPRequantAlignmentPipelineConfig
                     'align_options', align_options);
             end
 
-            cfg = CIMPRequantAlignmentPipelineConfig.finalize(cfg);
+            cfg = CIMPXICAlignRequantExecutorConfig.finalize(cfg);
 
             obj.ms12DatasetIO = cfg.ms12DatasetIO;
             obj.ms1_tolerance = cfg.ms1_tolerance;
@@ -83,51 +82,44 @@ classdef CIMPRequantAlignmentPipelineConfig
             end
 
             if isempty(cfg.ms12DatasetIO)
-                error('CIMPRequantAlignmentPipelineConfig:InvalidMs12DatasetIO', ...
+                error('CIMPXICAlignRequantExecutorConfig:InvalidMs12DatasetIO', ...
                     'ms12DatasetIO must be provided.');
             end
 
             if isempty(cfg.ms1_tolerance) || ~isstruct(cfg.ms1_tolerance) || ...
                     ~isfield(cfg.ms1_tolerance, 'value') || ~isfield(cfg.ms1_tolerance, 'isppm')
-                error('CIMPRequantAlignmentPipelineConfig:InvalidMs1Tolerance', ...
+                error('CIMPXICAlignRequantExecutorConfig:InvalidMs1Tolerance', ...
                     'ms1_tolerance must be a struct with fields: value, isppm.');
             end
 
             if ~isscalar(cfg.minMSMSnum) || ~isnumeric(cfg.minMSMSnum) || cfg.minMSMSnum < 1
-                error('CIMPRequantAlignmentPipelineConfig:InvalidMinMSMSnum', ...
+                error('CIMPXICAlignRequantExecutorConfig:InvalidMinMSMSnum', ...
                     'minMSMSnum must be a numeric scalar >= 1.');
             end
 
             if ~isscalar(cfg.alpha) || ~isnumeric(cfg.alpha) || cfg.alpha < 0
-                error('CIMPRequantAlignmentPipelineConfig:InvalidAlpha', ...
+                error('CIMPXICAlignRequantExecutorConfig:InvalidAlpha', ...
                     'alpha must be a numeric scalar >= 0.');
             end
 
             if ~isscalar(cfg.resFilterThres) || ~isnumeric(cfg.resFilterThres) || cfg.resFilterThres < 0
-                error('CIMPRequantAlignmentPipelineConfig:InvalidResFilterThres', ...
+                error('CIMPXICAlignRequantExecutorConfig:InvalidResFilterThres', ...
                     'resFilterThres must be a numeric scalar >= 0.');
             end
 
             if isempty(cfg.aligner)
-                error('CIMPRequantAlignmentPipelineConfig:InvalidAligner', ...
+                error('CIMPXICAlignRequantExecutorConfig:InvalidAligner', ...
                     'aligner must be provided.');
             end
 
             if isempty(cfg.align_strategy)
-                error('CIMPRequantAlignmentPipelineConfig:InvalidAlignStrategy', ...
+                error('CIMPXICAlignRequantExecutorConfig:InvalidAlignStrategy', ...
                     'align_strategy must be provided.');
             end
 
             if ~isstruct(cfg.align_options)
-                error('CIMPRequantAlignmentPipelineConfig:InvalidAlignOptions', ...
+                error('CIMPXICAlignRequantExecutorConfig:InvalidAlignOptions', ...
                     'align_options must be a struct.');
-            end
-        end
-
-        function cfg = applyOverrides(cfg, overrides)
-            override_fields = fieldnames(overrides);
-            for idx = 1:numel(override_fields)
-                cfg.(override_fields{idx}) = overrides.(override_fields{idx});
             end
         end
     end

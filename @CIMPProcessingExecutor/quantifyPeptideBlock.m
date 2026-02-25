@@ -1,8 +1,8 @@
 function block = quantifyPeptideBlock(obj, prot_names_pos, rawIdentManager)
 % Build a quantification block for one peptide
 % Input:
-%   obj (CIMPProcessingPipeline)
-%       processing pipeline instance
+%   obj (CIMPProcessingExecutor)
+%       processing executor instance
 %   prot_names_pos (P x 2 cell)
 %       protein name and start position pairs
 %   rawIdentManager (CIMPRawIdentManager)

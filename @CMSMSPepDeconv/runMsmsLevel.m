@@ -1,5 +1,5 @@
-function obj = MSMSLevelRun(obj, is_record_fragment_information)
-% MSMSLevelRun - Quantify the MSMS level results
+function obj = runMsmsLevel(obj, is_record_fragment_information)
+% runMsmsLevel - Quantify the MSMS level results
 % Input:
 %   obj (CMSMSPepDeconv)
 %       Processor instance
@@ -8,6 +8,9 @@ function obj = MSMSLevelRun(obj, is_record_fragment_information)
 % Output:
 %   obj (CMSMSPepDeconv)
 %       Updated instance
+if nargin < 2
+    is_record_fragment_information = false;
+end
 
 % Load shared services lazily
 [obj, ~] = obj.ensurePepProtService();
@@ -16,7 +19,7 @@ function obj = MSMSLevelRun(obj, is_record_fragment_information)
 
 [obj, need_release_mgf_index] = obj.ensureMgfDatasetIO();
 if need_release_mgf_index
-    cleanup_mgf = onCleanup(@() obj.m_cMgfDatasetIO.CloseAllFile()); %#ok<NASGU>
+    cleanup_mgf = onCleanup(@() obj.m_cMgfDatasetIO.CloseAllFile());
 end
 
 

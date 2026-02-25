@@ -1,5 +1,5 @@
 function cfg = buildAlignmentPipelineConfig(obj, aligner, align_strategy, align_options, overrides)
-% Build CIMPRequantAlignmentPipelineConfig from current CMSMSPepDeconv fields.
+% Build CIMPXICAlignRequantExecutorConfig from current CMSMSPepDeconv fields.
 % Input:
 %   obj (CMSMSPepDeconv)
 %       Processor instance
@@ -12,8 +12,8 @@ function cfg = buildAlignmentPipelineConfig(obj, aligner, align_strategy, align_
 %   overrides (struct, optional)
 %       Optional overrides for config fields
 % Output:
-%   cfg (CIMPRequantAlignmentPipelineConfig)
-%       Alignment pipeline config
+%   cfg (CIMPXICAlignRequantExecutorConfig)
+%       Alignment executor config
 
 if nargin < 4 || isempty(align_options)
     align_options = struct();
@@ -37,5 +37,5 @@ for idx = 1:numel(override_fields)
     cfg_struct.(override_fields{idx}) = overrides.(override_fields{idx});
 end
 
-cfg = CIMPRequantAlignmentPipelineConfig(cfg_struct);
+cfg = CIMPXICAlignRequantExecutorConfig(cfg_struct);
 end

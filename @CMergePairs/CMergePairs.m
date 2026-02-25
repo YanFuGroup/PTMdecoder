@@ -45,7 +45,7 @@ classdef CMergePairs
             obj.m_column_idxs = config.column_idxs;
         end
         
-        function merge_and_write(obj)
+        function run(obj)
             % Merge the pairs and write the result to the output path
 
             % Read the results and merge them

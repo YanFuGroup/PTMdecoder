@@ -1,5 +1,5 @@
 function cfg = buildIMPProcessingPipelineConfig(obj, overrides)
-% Build CIMPProcessingPipelineConfig from current CMSMSPepDeconv fields.
+% Build CIMPProcessingExecutorConfig from current CMSMSPepDeconv fields.
 % Input:
 %   obj (CMSMSPepDeconv)
 %       Processor instance
@@ -11,8 +11,8 @@ function cfg = buildIMPProcessingPipelineConfig(obj, overrides)
 %       - alpha
 %       - resFilterThres
 % Output:
-%   cfg (CIMPProcessingPipelineConfig)
-%       Processing pipeline config
+%   cfg (CIMPProcessingExecutorConfig)
+%       Processing executor config
 
 if nargin < 2 || isempty(overrides)
     overrides = struct();
@@ -30,5 +30,5 @@ for idx = 1:numel(override_fields)
     cfg_struct.(override_fields{idx}) = overrides.(override_fields{idx});
 end
 
-cfg = CIMPProcessingPipelineConfig(cfg_struct);
+cfg = CIMPProcessingExecutorConfig(cfg_struct);
 end

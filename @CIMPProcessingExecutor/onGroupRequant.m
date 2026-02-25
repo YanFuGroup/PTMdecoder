@@ -1,8 +1,8 @@
 function imp_records = onGroupRequant(obj, imp_records, group)
 % Append re-quantification records for a single group
 % Input:
-%   obj (CIMPProcessingPipeline)
-%       processing pipeline instance
+%   obj (CIMPProcessingExecutor)
+%       processing executor instance
 %   imp_records (CIMPQuantRecord array)
 %       accumulator for IMP records
 %   group (CIMPGroup)
@@ -16,7 +16,7 @@ if isempty(group.impRtRanges) || all(cellfun(@isempty, group.impRtRanges))
 end
 
 [has_nonzero_imp, imp_idx_nonzero, area_imp_final, xic_peak_rt_bounds, max_label, ratio_each_XIC_peak] = ...
-    CIMPQuantifier.requantGroup(obj.m_ms12DatasetIO, group.rawName,...
+    CIMPQuantCore.requantGroup(obj.m_ms12DatasetIO, group.rawName,...
     group.ratio(group.chargeGroupIdxs,:),...
     group.rts(group.chargeGroupIdxs,:),...
     group.intensity(group.chargeGroupIdxs,:),...

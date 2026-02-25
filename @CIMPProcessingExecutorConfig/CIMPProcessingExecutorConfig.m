@@ -1,6 +1,5 @@
-classdef CIMPProcessingPipelineConfig
-    % Config for CIMPProcessingPipeline
-    % Constructor is kept mainly for backward compatibility.
+classdef CIMPProcessingExecutorConfig
+    % Config for CIMPProcessingExecutor
 
     properties
         ms12DatasetIO
@@ -11,17 +10,17 @@ classdef CIMPProcessingPipelineConfig
     end
 
     methods
-        function obj = CIMPProcessingPipelineConfig(varargin)
-            % Backward-compatible constructor.
+        function obj = CIMPProcessingExecutorConfig(varargin)
+            % Constructor.
             % Input style 1:
-            %   CIMPProcessingPipelineConfig(ms12DatasetIO, ms1_tolerance, minMSMSnum, alpha, resFilterThres)
+            %   CIMPProcessingExecutorConfig(ms12DatasetIO, ms1_tolerance, minMSMSnum, alpha, resFilterThres)
             % Input style 2:
-            %   CIMPProcessingPipelineConfig(struct_with_fields)
+            %   CIMPProcessingExecutorConfig(struct_with_fields)
             if nargin == 1 && isstruct(varargin{1})
                 cfg = varargin{1};
             else
                 if nargin < 5
-                    error('CIMPProcessingPipelineConfig requires 5 arguments or 1 struct argument.');
+                    error('CIMPProcessingExecutorConfig requires 5 arguments or 1 struct argument.');
                 end
                 cfg = struct(...
                     'ms12DatasetIO', varargin{1}, ...
@@ -31,7 +30,7 @@ classdef CIMPProcessingPipelineConfig
                     'resFilterThres', varargin{5});
             end
 
-            cfg = CIMPProcessingPipelineConfig.finalize(cfg);
+            cfg = CIMPProcessingExecutorConfig.finalize(cfg);
 
             obj.ms12DatasetIO = cfg.ms12DatasetIO;
             obj.ms1_tolerance = cfg.ms1_tolerance;
@@ -60,36 +59,29 @@ classdef CIMPProcessingPipelineConfig
             end
 
             if isempty(cfg.ms12DatasetIO)
-                error('CIMPProcessingPipelineConfig:InvalidMs12DatasetIO', ...
+                error('CIMPProcessingExecutorConfig:InvalidMs12DatasetIO', ...
                     'ms12DatasetIO must be provided.');
             end
 
             if isempty(cfg.ms1_tolerance) || ~isstruct(cfg.ms1_tolerance) || ...
                     ~isfield(cfg.ms1_tolerance, 'value') || ~isfield(cfg.ms1_tolerance, 'isppm')
-                error('CIMPProcessingPipelineConfig:InvalidMs1Tolerance', ...
+                error('CIMPProcessingExecutorConfig:InvalidMs1Tolerance', ...
                     'ms1_tolerance must be a struct with fields: value, isppm.');
             end
 
             if ~isscalar(cfg.minMSMSnum) || ~isnumeric(cfg.minMSMSnum) || cfg.minMSMSnum < 1
-                error('CIMPProcessingPipelineConfig:InvalidMinMSMSnum', ...
+                error('CIMPProcessingExecutorConfig:InvalidMinMSMSnum', ...
                     'minMSMSnum must be a numeric scalar >= 1.');
             end
 
             if ~isscalar(cfg.alpha) || ~isnumeric(cfg.alpha) || cfg.alpha < 0
-                error('CIMPProcessingPipelineConfig:InvalidAlpha', ...
+                error('CIMPProcessingExecutorConfig:InvalidAlpha', ...
                     'alpha must be a numeric scalar >= 0.');
             end
 
             if ~isscalar(cfg.resFilterThres) || ~isnumeric(cfg.resFilterThres) || cfg.resFilterThres < 0
-                error('CIMPProcessingPipelineConfig:InvalidResFilterThres', ...
+                error('CIMPProcessingExecutorConfig:InvalidResFilterThres', ...
                     'resFilterThres must be a numeric scalar >= 0.');
-            end
-        end
-
-        function cfg = applyOverrides(cfg, overrides)
-            override_fields = fieldnames(overrides);
-            for idx = 1:numel(override_fields)
-                cfg.(override_fields{idx}) = overrides.(override_fields{idx});
             end
         end
     end
