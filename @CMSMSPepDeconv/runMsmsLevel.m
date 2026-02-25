@@ -17,10 +17,7 @@ end
 
 [obj, ~] = obj.ensureMsFileMapper();
 
-[obj, need_release_mgf_index] = obj.ensureMgfDatasetIO();
-if need_release_mgf_index
-    cleanup_mgf = onCleanup(@() obj.m_cMgfDatasetIO.CloseAllFile());
-end
+obj = obj.ensureMgfDatasetIO();
 
 
 % Read the "peptide-spectrum" list and start analysis centered on peptides

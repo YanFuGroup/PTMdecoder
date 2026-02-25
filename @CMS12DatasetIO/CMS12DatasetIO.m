@@ -21,6 +21,9 @@ classdef CMS12DatasetIO<CDatasetIO
             obj.m_mapNameMS2Index = containers.Map();
             obj.m_ms1_tolerance = ms1_tolerance;
             obj.m_cMsFileMapper = CMsFileMapper(strDatasetFoldname);
+
+            % One-step setup: build MS1/MS2 index maps
+            obj.SetMap();
         end
         % Generate spectrum index MS1_index and peak index MS1_peaks using .ms1 file
         success = load_MS1_file(obj,ms1_fullfile);
@@ -28,10 +31,13 @@ classdef CMS12DatasetIO<CDatasetIO
         success = load_MS2_file(obj,ms2_fullfile);
         % Generate mapping between MS1 and MS2 scans using .ms2 file
         success = load_MS1_MS2_mapping(obj, ms2_fullfile);
-        % Build a dictionary mapping spectrum names to corresponding index or peaks
-        SetMap(obj);
         % Output more accurate mass-to-charge ratio
         acc_mz = get_acc_mz(obj,cen_mz,cur_mz,cur_chg);
+    end
+
+    methods (Access=protected)
+        % Build a dictionary mapping spectrum names to corresponding index or peaks
+        SetMap(obj);
     end
 end
 

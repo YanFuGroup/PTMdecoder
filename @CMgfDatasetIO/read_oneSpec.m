@@ -14,7 +14,7 @@ function [Peaks,Charge,PrecursorMZ]=read_oneSpec(obj,filename,specname)
 %       charge state
 %   PrecursorMZ (1 x 1 double)
 %       precursor ion m/z
-% ATTENTION: Before using this function, call SetFidmap so files can be opened.
+% ATTENTION: Before using this function, call Init so index and file handles are ready.
 
 BUF_LENGTH=500;
 Peaks=zeros(BUF_LENGTH,2);% Pre-allocate

@@ -36,10 +36,7 @@ report = CIMPQuantReport();
 
 % Indexing resources lazily
 [obj, ~] = obj.ensureMs12DatasetIO();
-[obj, mgf_created_here] = obj.ensureMgfDatasetIO();
-if mgf_created_here
-	cleanup_mgf = onCleanup(@() obj.m_cMgfDatasetIO.CloseAllFile());
-end
+obj = obj.ensureMgfDatasetIO();
 
 % Initialize protein service lazily
 [obj, ~] = obj.ensurePepProtService();

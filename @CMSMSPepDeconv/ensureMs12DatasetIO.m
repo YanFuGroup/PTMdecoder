@@ -9,7 +9,6 @@ function [obj, created] = ensureMs12DatasetIO(obj)
 created = false;
 if isempty(obj.m_cMs12DatasetIO)
     obj.m_cMs12DatasetIO = CMS12DatasetIO(obj.m_specPath, obj.m_ms1_tolerance);
-    obj.m_cMs12DatasetIO.SetMap();
     created = true;
 end
 end

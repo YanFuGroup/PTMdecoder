@@ -194,7 +194,7 @@ classdef CMSMSPepDeconv
         pep_quant = readFdrPeptides(obj, input_file_path, ms12DatasetIO, peptide_list, pep_quant);
 
         % Ensure shared services/resources are initialized lazily
-        [obj, created] = ensureMgfDatasetIO(obj);
+        obj = ensureMgfDatasetIO(obj);
         [obj, created] = ensureMs12DatasetIO(obj);
         [obj, created] = ensureMsFileMapper(obj);
         [obj, created] = ensurePepProtService(obj);

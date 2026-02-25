@@ -14,10 +14,7 @@ end
 
 % Initialize shared resources lazily
 [obj, ~] = obj.ensureMsFileMapper();
-[obj, mgf_created_here] = obj.ensureMgfDatasetIO();
-if mgf_created_here
-    cleanup_mgf = onCleanup(@() obj.m_cMgfDatasetIO.CloseAllFile());
-end
+obj = obj.ensureMgfDatasetIO();
 
 % Quantification each IMP for each PSM
 obj = obj.runMsmsLevel(is_record_fragment_information);

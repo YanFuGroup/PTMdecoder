@@ -10,10 +10,7 @@ function obj = runImpQuantLevel(obj)
 
 [obj, ~] = obj.ensurePepProtService();
 
-[obj, need_release_mgf_index] = obj.ensureMgfDatasetIO();
-if need_release_mgf_index
-	cleanup_mgf = onCleanup(@() obj.m_cMgfDatasetIO.CloseAllFile()); 
-end
+obj = obj.ensureMgfDatasetIO();
 
 [obj, ~] = obj.ensureMs12DatasetIO();
 

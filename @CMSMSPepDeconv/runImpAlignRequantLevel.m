@@ -66,10 +66,7 @@ msms_result = CMS2ResultIO.read(msms_res_path);
 
 % Initialize dataset IOs lazily
 [obj, ~] = obj.ensureMs12DatasetIO();
-[obj, mgf_created_here] = obj.ensureMgfDatasetIO();
-if mgf_created_here
-    cleanup_mgf = onCleanup(@() obj.m_cMgfDatasetIO.CloseAllFile());
-end
+obj = obj.ensureMgfDatasetIO();
 
 % Initialize shared services lazily
 [obj, ~] = obj.ensurePepProtService();

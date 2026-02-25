@@ -4,14 +4,7 @@ classdef CDatasetIO<handle
         m_strFoldname;  % Directory name
     end
     
-    methods
-        Init(obj,cMLocParam);
-        % Input:
-        %   obj (CDatasetIO)
-        %       dataset IO base instance
-        %   cMLocParam (1 x 1 char/string)
-        %       dataset folder path
-        
+    methods (Access=protected)
         SetMap(obj);
         % Input:
         %   obj (CDatasetIO)
