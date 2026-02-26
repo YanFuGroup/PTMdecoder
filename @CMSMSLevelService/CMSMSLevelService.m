@@ -12,7 +12,7 @@ classdef CMSMSLevelService < handle
     methods
         function obj = CMSMSLevelService(msms_cfg)
             % Input:
-            %   msms_cfg (CMSMSPepDeconvConfig)
+            %   msms_cfg (struct)
             %       config for MSMS processor
             if nargin < 1 || isempty(msms_cfg)
                 error('CMSMSLevelService:MissingConfig', ...

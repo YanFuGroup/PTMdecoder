@@ -9,7 +9,11 @@ classdef CNormalizationRequantService < handle
         function obj = CNormalizationRequantService(cfg)
             % Input:
             %   cfg (struct)
-            %       - msms_cfg (CMSMSPepDeconvConfig)
+            %       - msms_cfg (struct, minimal normalization config)
+            %           required fields:
+            %           spec_dir_path, ms1_tolerance, alpha,
+            %           result_filter_threshold, output_dir_path,
+            %           min_MSMS_num, checked_peptides_res_path
             %       - output_file_name (1 x 1 char/string)
             if nargin < 1 || isempty(cfg)
                 error('CNormalizationRequantService:MissingConfig', ...

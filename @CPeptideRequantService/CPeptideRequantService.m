@@ -8,7 +8,7 @@ classdef CPeptideRequantService < handle
     methods
         function obj = CPeptideRequantService(msms_cfg)
             % Input:
-            %   msms_cfg (CMSMSPepDeconvConfig)
+            %   msms_cfg (struct)
             %       config for peptide-level re-quant processor
             if nargin < 1 || isempty(msms_cfg)
                 error('CPeptideRequantService:MissingConfig', ...

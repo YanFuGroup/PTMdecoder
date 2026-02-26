@@ -9,7 +9,10 @@ classdef CNormalizationQuantService < handle
         function obj = CNormalizationQuantService(cfg)
             % Input:
             %   cfg (struct)
-            %       - msms_cfg (CMSMSPepDeconvConfig)
+            %       - msms_cfg (struct, minimal normalization config)
+            %           required fields:
+            %           spec_dir_path, ms1_tolerance, alpha,
+            %           result_filter_threshold, output_dir_path
             %       - peptide_list (K x 1 cell)
             %       - prot_list (K x 1 cell)
             %       - filtered_res_file_path (1 x 1 char/string)

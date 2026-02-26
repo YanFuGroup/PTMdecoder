@@ -47,8 +47,8 @@ function helper_test_draw_xic(projectRootDir, testDataDir, outputDir)
     
     fprintf('Running test_draw_xic...\n');
     
-    % Create processor object
-    msms_pep_process = CMSMSPepDeconv(modFile, fixedMod, variableMod, ...
+    % Create service object
+    draw_service = CXICDrawService(modFile, fixedMod, variableMod, ...
         msms_pep_site_dir, ms1_tolerance, ms2_tolerance.value, alpha, ...
         fastaFile, parse_reg_exp, pepSpec_path, model, method, lambda, ...
         resFilterThres, enzyme, outputDir, ionTypes, checked_res_path, ...
@@ -58,7 +58,7 @@ function helper_test_draw_xic(projectRootDir, testDataDir, outputDir)
     [color_map, legend_map] = get_colormap_legendmap();
     
     % Run drawXIC
-    msms_pep_process.drawXIC(outputDir, color_map, legend_map);
+    draw_service.run(outputDir, color_map, legend_map);
 end
 
 function [color_map, legend_map] = get_colormap_legendmap()

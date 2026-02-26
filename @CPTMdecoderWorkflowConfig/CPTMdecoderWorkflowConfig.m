@@ -119,22 +119,22 @@ classdef CPTMdecoderWorkflowConfig
             % Runtime dispatch only depends on explicit stage names.
             msms_action = CPTMdecoderWorkflowConfig.resolveMsmsWorkflowActionFromMap(task_param_map);
             if ~isempty(msms_action)
-                msms_cfg_struct = CPTMdecoderWorkflowConfig.buildMsmsPepConfigStructFromMap(task_param_map, msms_action);
+                cfg_struct = CPTMdecoderWorkflowConfig.buildMsmsPepConfigStructFromMap(task_param_map, msms_action);
                 if strcmp(msms_action, CPTMdecoderWorkflowConfig.ACTION_MSMS_PEPTIDE)
-                    msms_cfg = CMSMSPepDeconvConfig(msms_cfg_struct);
+                    msms_cfg = cfg_struct;
                     cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
                         CPTMdecoderWorkflowConfig.STAGE_MSMS_LEVEL, CPTMdecoderWorkflowConfig.ACTION_MSMS_ONLY, msms_cfg, true);
                     cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
                         CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_QUANT, CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_ONLY, msms_cfg, true);
                 elseif strcmp(msms_action, CPTMdecoderWorkflowConfig.ACTION_MSMS_ONLY)
                     cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
-                        CPTMdecoderWorkflowConfig.STAGE_MSMS_LEVEL, msms_action, CMSMSPepDeconvConfig(msms_cfg_struct), true);
+                        CPTMdecoderWorkflowConfig.STAGE_MSMS_LEVEL, msms_action, cfg_struct, true);
                 elseif strcmp(msms_action, CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_ONLY)
                     cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
-                        CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_QUANT, msms_action, CMSMSPepDeconvConfig(msms_cfg_struct), true);
+                        CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_QUANT, msms_action, cfg_struct, true);
                 elseif strcmp(msms_action, CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_REQUANT)
                     cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
-                        CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_REQUANT, msms_action, CMSMSPepDeconvConfig(msms_cfg_struct), true);
+                        CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_REQUANT, msms_action, cfg_struct, true);
                 else
                     error('CPTMdecoderWorkflowConfig:UnsupportedMsmsAction', ...
                         'Unsupported msms action: %s', msms_action);
@@ -321,57 +321,32 @@ classdef CPTMdecoderWorkflowConfig
             end
         end
 
-        function cfg = buildPepDeconvCompatConfigStructFromMap(task_param_map)
+        function cfg = buildNormalizationMinimalConfigStructFromMap(task_param_map)
+            % Build minimal normalization config consumed by normalization services.
+            % This is a compatibility bridge and intentionally keeps only required fields.
             cfg = struct();
-            cfg.mod_file_path = CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_MOD_FILE_PATH, 'modification file path');
-            cfg.fixed_mod = CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_FIXED_MOD, 'fixed modification list');
-            cfg.variable_mod = CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_VARIABLE_MOD, 'variable modification list');
             cfg.spec_dir_path = CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_SPEC_DIR_PATH, 'spectrum directory path');
 
             ms1_tol_value = str2double(CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_MS1_TOLERANCE_VALUE, 'MS1 tolerance value'));
             ms1_tol_type = strtrim(CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_MS1_TOLERANCE_TYPE, 'MS1 tolerance type'));
             cfg.ms1_tolerance = struct('value', ms1_tol_value, 'isppm', strcmpi(ms1_tol_type, 'PPM'));
 
-            cfg.ms2_tolerance = str2double(CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_MS2_TOLERANCE, 'MS2 tolerance value'));
             cfg.alpha = str2double(CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_ALPHA, 'noise filtering threshold'));
-            cfg.fasta_file_path = CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_FASTA_FILE_PATH, 'fasta file path');
-            cfg.regular_express = CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_REGULAR_EXPRESS, 'protein name regex');
-            cfg.filtered_res_file_path = CPTMdecoderWorkflowConfig.getOptional(task_param_map, CPTMdecoderWorkflowConfig.PARAM_FILTERED_RES_FILE_PATH, '');
-            cfg.model = str2double(CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_MODEL, 'algorithm model'));
-            cfg.method = str2double(CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_METHOD, 'algorithm method'));
-
-            lambda_value = CPTMdecoderWorkflowConfig.getOptional(task_param_map, CPTMdecoderWorkflowConfig.PARAM_LAMBDA, '0');
-            cfg.lambda = str2double(lambda_value);
-            if isequal(strtrim(CPTMdecoderWorkflowConfig.getOptional(task_param_map, CPTMdecoderWorkflowConfig.PARAM_METHOD, '')), '2') && ...
-                    ~task_param_map.isKey(CPTMdecoderWorkflowConfig.PARAM_LAMBDA)
-                error('CPTMdecoderWorkflowConfig:MissingLambda', ...
-                    'The lasso parameter ''lambda'' is required when method=2.');
-            end
-
             cfg.result_filter_threshold = str2double(CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_RESULT_FILTER_THRESHOLD, 'result filter threshold'));
-            cfg.enzyme_name = CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_ENZYME_NAME, 'enzyme name');
-            cfg.enzyme_limits = str2num(CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_ENZYME_LIMIT_C_TERM_POSSIBLE_MOD, 'enzyme C-term possible modifications')); %#ok<ST2NM>
             cfg.output_dir_path = CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_OUTPUT_DIR_PATH, 'output directory');
-
             cfg.min_MSMS_num = str2double(CPTMdecoderWorkflowConfig.getOptional(task_param_map, CPTMdecoderWorkflowConfig.PARAM_MIN_MSMS_NUM, '1'));
-            cfg.ion_types = [1,2];
-            cfg.case_penalty_intens = 'intens_sum';
-            cfg.grid_penalty_intens = 'intens_sum';
-            cfg.case_OLS_intens_weight = 'none';
-            cfg.pep_spec_file_path = CPTMdecoderWorkflowConfig.getOptional(task_param_map, CPTMdecoderWorkflowConfig.PARAM_PEP_SPEC_FILE_PATH, '');
             cfg.checked_peptides_res_path = CPTMdecoderWorkflowConfig.getOptional(task_param_map, CPTMdecoderWorkflowConfig.PARAM_CHECKED_PEPTIDES_RES_PATH, []);
-            cfg.msms_res_path = CPTMdecoderWorkflowConfig.getOptional(task_param_map, CPTMdecoderWorkflowConfig.PARAM_MSMS_RES_PATH, []);
         end
 
         function cfg = buildNormalizationQuantConfigFromMap(task_param_map)
-            msms_cfg_struct = CPTMdecoderWorkflowConfig.buildPepDeconvCompatConfigStructFromMap(task_param_map);
+            base_cfg_struct = CPTMdecoderWorkflowConfig.buildNormalizationMinimalConfigStructFromMap(task_param_map);
             pair_file_path = CPTMdecoderWorkflowConfig.getRequired(task_param_map, ...
                 CPTMdecoderWorkflowConfig.PARAM_NORM_PROTEIN_PEPTIDE_PAIR_PATH, ...
                 'normalization protein-peptide pair file path');
             [prot_list, peptide_list] = CProteinPeptidePairFileReader.readPairFile(pair_file_path);
 
             cfg = struct();
-            cfg.msms_cfg = CMSMSPepDeconvConfig(msms_cfg_struct);
+            cfg.msms_cfg = base_cfg_struct;
             cfg.peptide_list = {peptide_list};
             cfg.prot_list = {prot_list};
             cfg.filtered_res_file_path = CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_FILTERED_RES_FILE_PATH, 'filtered result path');
@@ -379,9 +354,9 @@ classdef CPTMdecoderWorkflowConfig
         end
 
         function cfg = buildNormalizationRequantConfigFromMap(task_param_map)
-            msms_cfg_struct = CPTMdecoderWorkflowConfig.buildPepDeconvCompatConfigStructFromMap(task_param_map);
+            base_cfg_struct = CPTMdecoderWorkflowConfig.buildNormalizationMinimalConfigStructFromMap(task_param_map);
             cfg = struct();
-            cfg.msms_cfg = CMSMSPepDeconvConfig(msms_cfg_struct);
+            cfg.msms_cfg = base_cfg_struct;
             cfg.output_file_name = CPTMdecoderWorkflowConfig.getOptional(task_param_map, CPTMdecoderWorkflowConfig.PARAM_NORM_REQUANT_OUTPUT_FILE_NAME, 'peptide4normalization_requant.txt');
         end
 
