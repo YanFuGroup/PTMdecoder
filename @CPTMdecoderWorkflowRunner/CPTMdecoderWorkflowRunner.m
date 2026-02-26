@@ -42,6 +42,8 @@ classdef CPTMdecoderWorkflowRunner < handle
             executors(CPTMdecoderWorkflowConfig.STAGE_MSMS_LEVEL) = @(stage) obj.executeMsmsLevelStage(stage);
             executors(CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_QUANT) = @(stage) obj.executePeptideQuantStage(stage);
             executors(CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_REQUANT) = @(stage) obj.executePeptideRequantStage(stage);
+            executors(CPTMdecoderWorkflowConfig.STAGE_NORM_PEPTIDE_QUANT) = @(stage) obj.executeNormPeptideQuantStage(stage);
+            executors(CPTMdecoderWorkflowConfig.STAGE_NORM_PEPTIDE_REQUANT) = @(stage) obj.executeNormPeptideRequantStage(stage);
             executors(CPTMdecoderWorkflowConfig.STAGE_SITE_LEVEL) = @(stage) obj.executeSiteLevelStage(stage);
             executors(CPTMdecoderWorkflowConfig.STAGE_MERGE_TO_PAIR_LEVEL) = @(stage) obj.executeMergeToPairStage(stage);
             executors(CPTMdecoderWorkflowConfig.STAGE_MERGE_PAIRS_LEVEL) = @(stage) obj.executeMergePairsStage(stage);
@@ -77,6 +79,28 @@ classdef CPTMdecoderWorkflowRunner < handle
             end
 
             service = CPeptideRequantService(msms_cfg);
+            service.run();
+        end
+
+        function executeNormPeptideQuantStage(~, stage)
+            cfg = stage.config;
+            if isempty(cfg)
+                error('CPTMdecoderWorkflowRunner:MissingNormQuantConfig', ...
+                    'Normalization quant stage config is required.');
+            end
+
+            service = CNormalizationQuantService(cfg);
+            service.run();
+        end
+
+        function executeNormPeptideRequantStage(~, stage)
+            cfg = stage.config;
+            if isempty(cfg)
+                error('CPTMdecoderWorkflowRunner:MissingNormRequantConfig', ...
+                    'Normalization requant stage config is required.');
+            end
+
+            service = CNormalizationRequantService(cfg);
             service.run();
         end
 
