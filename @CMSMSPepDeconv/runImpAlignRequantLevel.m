@@ -52,14 +52,12 @@ if isempty(obj.m_filtered_res_file_path)
     error('FDR filtered result path is required for alignment.');
 end
 
-if ~isfolder(obj.m_outputDir)
-    mkdir(obj.m_outputDir);
-end
+CPathResolver.ensureDir(obj.m_outputDir);
 
-msms_res_path = COptionUtils.get(align_options, 'msms_res_path', obj.m_msms_res_path);
-if isempty(msms_res_path)
-    msms_res_path = fullfile(obj.m_outputDir, 'report_msms.txt');
-end
+
+msms_res_path = CPathResolver.resolveFilePath(obj.m_outputDir, 'report_msms.txt', ...
+COptionUtils.get(align_options, 'msms_res_path', obj.m_msms_res_path));
+
 
 % Read MSMS results
 msms_result = CMS2ResultIO.read(msms_res_path);
@@ -90,12 +88,12 @@ pipeline = CPeptideLevelPipeline([], align_executor);
     obj.m_filtered_res_file_path, rawIdentManagers);
 
 alignment_report_path = COptionUtils.get(align_options, 'alignment_report_path', ...
-    fullfile(obj.m_outputDir, 'report_alignment.txt'));
+    CPathResolver.resolveFilePath(obj.m_outputDir, 'report_alignment.txt', ''));
 pipeline.writeAlignmentReport(align_report, alignment_report_path);
 
 % Re-quantify using aligned RT ranges
 output_path = COptionUtils.get(align_options, 'requant_output_path', ...
-    fullfile(obj.m_outputDir, 'report_peptide_all_requant_aligned.txt'));
+    CPathResolver.resolveFilePath(obj.m_outputDir, 'report_peptide_all_requant_aligned.txt', ''));
 report = CIMPQuantReport();
 print_progress = CPrintProgress(length(msms_result.Peptides));
 proc_cfg = obj.buildIMPProcessingPipelineConfig();

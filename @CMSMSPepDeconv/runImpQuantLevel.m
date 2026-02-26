@@ -14,19 +14,15 @@ obj = obj.ensureMgfDatasetIO();
 
 [obj, ~] = obj.ensureMs12DatasetIO();
 
-if ~isfolder(obj.m_outputDir)
-	mkdir(obj.m_outputDir);
-end
+CPathResolver.ensureDir(obj.m_outputDir);
 
 % Check the report_msms.txt file
-if isempty(obj.m_msms_res_path)
-	each_PSM_results_path = fullfile(obj.m_outputDir, 'report_msms.txt');
-else
-	each_PSM_results_path = obj.m_msms_res_path;
-end
+each_PSM_results_path = CPathResolver.resolveFilePath(obj.m_outputDir, ...
+	'report_msms.txt', obj.m_msms_res_path);
 
 % Check and create a new output file
-each_peptide_results_path = fullfile(obj.m_outputDir,'report_peptide_all.txt');
+% TODO: Set the output path for peptide level results
+each_peptide_results_path = CPathResolver.resolveFilePath(obj.m_outputDir, 'report_peptide_all.txt', '');
 report = CIMPQuantReport();
 
 % Read and process
@@ -35,7 +31,7 @@ print_progress = CPrintProgress(length(msms_result.Peptides));
 pipeline_cfg = obj.buildIMPProcessingPipelineConfig();
 executor = CIMPProcessingExecutor(pipeline_cfg);
 pipeline = CPeptideLevelPipeline(executor);
-stats_cleanup = onCleanup(@() CIMPQuantStats.rt_sorted_stats('flush', fullfile(obj.m_outputDir, 'rt_sorted_stats.mat')));
+stats_cleanup = onCleanup(@() CIMPQuantStats.rt_sorted_stats('flush', CPathResolver.resolveFilePath(obj.m_outputDir, 'rt_sorted_stats.mat', '')));
 
 fprintf('Quantifying at peptide level...')
 for idx_psf = 1:length(msms_result.Peptides)

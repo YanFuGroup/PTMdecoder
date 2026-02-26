@@ -20,9 +20,7 @@ if length(peptide_list) ~= length(prot_list)
     error('peptide_list and prot_list must have the same length');
 end
 
-if ~exist(obj.m_outputDir, 'dir')
-    mkdir(obj.m_outputDir);
-end
+CPathResolver.ensureDir(obj.m_outputDir);
 
 % Indexing resources lazily
 [obj, ~] = obj.ensureMs12DatasetIO();
@@ -44,7 +42,7 @@ overrides = struct('ms1_tolerance', obj.m_ms1_tolerance, 'minMSMSnum', 1, ...
 pipeline_cfg = obj.buildIMPProcessingPipelineConfig(overrides);
 executor = CIMPProcessingExecutor(pipeline_cfg);
 pipeline = CPeptideLevelPipeline(executor);
-stats_cleanup = onCleanup(@() CIMPQuantStats.rt_sorted_stats('flush', fullfile(obj.m_outputDir, 'rt_sorted_stats.mat')));
+stats_cleanup = onCleanup(@() CIMPQuantStats.rt_sorted_stats('flush', CPathResolver.resolveFilePath(obj.m_outputDir, 'rt_sorted_stats.mat', '')));
 report = CIMPQuantReport();
 fprintf('Quantifying %s...', obj.m_specPath);
 for i_list = 1:length(peptide_list)
@@ -53,5 +51,6 @@ for i_list = 1:length(peptide_list)
 end
 fprintf('done.\n');
 
-CIMPQuantResultIO.write(report, fullfile(obj.m_outputDir, output_file_name));
+% TODO: Set the output path for peptide level results
+CIMPQuantResultIO.write(report, CPathResolver.resolveFilePath(obj.m_outputDir, output_file_name, ''));
 end

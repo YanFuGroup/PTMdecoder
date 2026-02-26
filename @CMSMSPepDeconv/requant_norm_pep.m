@@ -8,11 +8,8 @@ function obj = requant_norm_pep(obj)
 %       Updated instance
 
 %% Read the checked peptides and their XIC range
-if isempty(obj.m_checked_peptides_res_path)
-    checked_pep_path = fullfile(obj.m_outputDir, 'peptide4normalization_checked.txt');
-else
-    checked_pep_path = obj.m_checked_peptides_res_path;
-end
+checked_pep_path = CPathResolver.resolveFilePath(obj.m_outputDir, ...
+    'peptide4normalization_checked.txt', obj.m_checked_peptides_res_path);
 
 report = CIMPQuantResultIO.read(checked_pep_path);
 pep_rtrange_map = report.build_pep_rtrange_map();
@@ -21,12 +18,11 @@ if isempty(pep_rtrange_map)
     error(['The checked normalization peptide result file "', checked_pep_path, '" is empty!']);
 end
 
-if ~isfolder(obj.m_outputDir)
-    mkdir(obj.m_outputDir);
-end
+CPathResolver.ensureDir(obj.m_outputDir);
 
 %% Requantify the normalization peptides
-output_path = fullfile(obj.m_outputDir, 'peptide4normalization_requant.txt');
+% TODO: Set the output path for requantified peptide level results
+output_path = CPathResolver.resolveFilePath(obj.m_outputDir, 'peptide4normalization_requant.txt', '');
 report_requant = CIMPQuantReport();
 
 % Indexing resources lazily

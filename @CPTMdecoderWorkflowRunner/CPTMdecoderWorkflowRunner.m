@@ -39,34 +39,45 @@ classdef CPTMdecoderWorkflowRunner < handle
 
         function executors = buildStageExecutorRegistry(obj)
             executors = containers.Map('KeyType', 'char', 'ValueType', 'any');
-            executors(CPTMdecoderWorkflowConfig.STAGE_MSMS_WORKFLOW) = @(stage) obj.executeMsmsStage(stage);
+            executors(CPTMdecoderWorkflowConfig.STAGE_MSMS_LEVEL) = @(stage) obj.executeMsmsLevelStage(stage);
+            executors(CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_QUANT) = @(stage) obj.executePeptideQuantStage(stage);
+            executors(CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_REQUANT) = @(stage) obj.executePeptideRequantStage(stage);
             executors(CPTMdecoderWorkflowConfig.STAGE_SITE_LEVEL) = @(stage) obj.executeSiteLevelStage(stage);
             executors(CPTMdecoderWorkflowConfig.STAGE_MERGE_TO_PAIR_LEVEL) = @(stage) obj.executeMergeToPairStage(stage);
             executors(CPTMdecoderWorkflowConfig.STAGE_MERGE_PAIRS_LEVEL) = @(stage) obj.executeMergePairsStage(stage);
         end
 
-        function executeMsmsStage(~, stage)
+        function executeMsmsLevelStage(~, stage)
             msms_cfg = stage.config;
             if isempty(msms_cfg)
                 error('CPTMdecoderWorkflowRunner:MissingMsmsConfig', ...
-                    'MSMS stage config is required.');
+                    'MSMS level stage config is required.');
             end
 
-            processor = CMSMSPepDeconv(msms_cfg);
-            switch stage.action
-                case CPTMdecoderWorkflowConfig.ACTION_MSMS_PEPTIDE
-                    processor.runMsmsLevel();
-                    processor.runImpQuantLevel();
-                case CPTMdecoderWorkflowConfig.ACTION_MSMS_ONLY
-                    processor.runMsmsLevel();
-                case CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_REQUANT
-                    processor.runImpRequantLevel();
-                case CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_ONLY
-                    processor.runImpQuantLevel();
-                otherwise
-                    error('CPTMdecoderWorkflowRunner:InvalidMsmsAction', ...
-                        'Invalid msms workflow action: %s', stage.action);
+            service = CMSMSLevelService(msms_cfg);
+            service.run();
+        end
+
+        function executePeptideQuantStage(~, stage)
+            msms_cfg = stage.config;
+            if isempty(msms_cfg)
+                error('CPTMdecoderWorkflowRunner:MissingMsmsConfig', ...
+                    'Peptide quant stage config is required.');
             end
+
+            service = CPeptideQuantService(msms_cfg);
+            service.run();
+        end
+
+        function executePeptideRequantStage(~, stage)
+            msms_cfg = stage.config;
+            if isempty(msms_cfg)
+                error('CPTMdecoderWorkflowRunner:MissingMsmsConfig', ...
+                    'Peptide requant stage config is required.');
+            end
+
+            service = CPeptideRequantService(msms_cfg);
+            service.run();
         end
 
         function executeSiteLevelStage(~, stage)

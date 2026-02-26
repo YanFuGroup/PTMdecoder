@@ -30,15 +30,15 @@ print_progress = CPrintProgress(file_total_length);
 fprintf('Quantifying at PSM level...')
 warning_message = [];
 
-if ~isfolder(obj.m_outputDir)
-    mkdir(obj.m_outputDir);
-end
+CPathResolver.ensureDir(obj.m_outputDir);
 
-each_PSM_results_path = fullfile(obj.m_outputDir,'report_msms.txt');
+% TODO: Set the output path for MSMS level results
+each_PSM_results_path = CPathResolver.resolveFilePath(obj.m_outputDir, 'report_msms.txt', '');
 msms_result = CMS2Result();
-fo_may_FP = fopen(fullfile(obj.m_outputDir,'report_spectra_may_FP.txt'),'w');
+may_fp_report_path = CPathResolver.resolveFilePath(obj.m_outputDir, 'report_spectra_may_FP.txt', '');
+fo_may_FP = fopen(may_fp_report_path,'w');
 if fo_may_FP <= 0
-    error(['Cannot open the the report file ', fullfile(obj.m_outputDir,'report_spectra_may_FP.txt')]);
+    error(['Cannot open the the report file ', may_fp_report_path]);
 end
 strLine = fgetl(fin);
 str = regexp(strLine,'\t','split');

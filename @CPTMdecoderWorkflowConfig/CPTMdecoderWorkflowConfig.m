@@ -2,7 +2,9 @@ classdef CPTMdecoderWorkflowConfig
     % Workflow config for PTMdecoder top-level orchestration.
 
     properties (Constant)
-        STAGE_MSMS_WORKFLOW = 'msms_workflow'
+        STAGE_MSMS_LEVEL = 'msms_level'
+        STAGE_PEPTIDE_QUANT = 'peptide_quant'
+        STAGE_PEPTIDE_REQUANT = 'peptide_requant'
         STAGE_SITE_LEVEL = 'site_level'
         STAGE_MERGE_TO_PAIR_LEVEL = 'merge_to_pair_level'
         STAGE_MERGE_PAIRS_LEVEL = 'merge_pairs_level'
@@ -107,8 +109,25 @@ classdef CPTMdecoderWorkflowConfig
             msms_action = CPTMdecoderWorkflowConfig.resolveMsmsWorkflowActionFromMap(task_param_map);
             if ~isempty(msms_action)
                 msms_cfg_struct = CPTMdecoderWorkflowConfig.buildMsmsPepConfigStructFromMap(task_param_map, msms_action);
-                cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
-                    CPTMdecoderWorkflowConfig.STAGE_MSMS_WORKFLOW, msms_action, CMSMSPepDeconvConfig(msms_cfg_struct), true);
+                if strcmp(msms_action, CPTMdecoderWorkflowConfig.ACTION_MSMS_PEPTIDE)
+                    msms_cfg = CMSMSPepDeconvConfig(msms_cfg_struct);
+                    cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
+                        CPTMdecoderWorkflowConfig.STAGE_MSMS_LEVEL, CPTMdecoderWorkflowConfig.ACTION_MSMS_ONLY, msms_cfg, true);
+                    cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
+                        CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_QUANT, CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_ONLY, msms_cfg, true);
+                elseif strcmp(msms_action, CPTMdecoderWorkflowConfig.ACTION_MSMS_ONLY)
+                    cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
+                        CPTMdecoderWorkflowConfig.STAGE_MSMS_LEVEL, msms_action, CMSMSPepDeconvConfig(msms_cfg_struct), true);
+                elseif strcmp(msms_action, CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_ONLY)
+                    cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
+                        CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_QUANT, msms_action, CMSMSPepDeconvConfig(msms_cfg_struct), true);
+                elseif strcmp(msms_action, CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_REQUANT)
+                    cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
+                        CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_REQUANT, msms_action, CMSMSPepDeconvConfig(msms_cfg_struct), true);
+                else
+                    error('CPTMdecoderWorkflowConfig:UnsupportedMsmsAction', ...
+                        'Unsupported msms action: %s', msms_action);
+                end
             end
 
             if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowConfig.PARAM_SITE_LEVEL_ON)
@@ -386,7 +405,9 @@ classdef CPTMdecoderWorkflowConfig
 
         function names = allStageNames()
             names = { ...
-                CPTMdecoderWorkflowConfig.STAGE_MSMS_WORKFLOW, ...
+                CPTMdecoderWorkflowConfig.STAGE_MSMS_LEVEL, ...
+                CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_QUANT, ...
+                CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_REQUANT, ...
                 CPTMdecoderWorkflowConfig.STAGE_SITE_LEVEL, ...
                 CPTMdecoderWorkflowConfig.STAGE_MERGE_TO_PAIR_LEVEL, ...
                 CPTMdecoderWorkflowConfig.STAGE_MERGE_PAIRS_LEVEL ...
@@ -395,13 +416,12 @@ classdef CPTMdecoderWorkflowConfig
 
         function actions = stageActions(stage_name)
             switch stage_name
-                case CPTMdecoderWorkflowConfig.STAGE_MSMS_WORKFLOW
-                    actions = { ...
-                        CPTMdecoderWorkflowConfig.ACTION_MSMS_PEPTIDE, ...
-                        CPTMdecoderWorkflowConfig.ACTION_MSMS_ONLY, ...
-                        CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_REQUANT, ...
-                        CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_ONLY ...
-                    };
+                case CPTMdecoderWorkflowConfig.STAGE_MSMS_LEVEL
+                    actions = {CPTMdecoderWorkflowConfig.ACTION_MSMS_ONLY};
+                case CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_QUANT
+                    actions = {CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_ONLY};
+                case CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_REQUANT
+                    actions = {CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_REQUANT};
                 case CPTMdecoderWorkflowConfig.STAGE_SITE_LEVEL
                     actions = {CPTMdecoderWorkflowConfig.ACTION_SITE_SUMMARY};
                 case CPTMdecoderWorkflowConfig.STAGE_MERGE_TO_PAIR_LEVEL

@@ -18,11 +18,8 @@ if nargin < 3
 end
 
 %% Read the checked peptides and their XIC range
-if isempty(obj.m_checked_peptides_res_path)
-    checked_pep_path = fullfile(obj.m_outputDir, 'report_peptide_all_checked.txt');
-else
-    checked_pep_path = obj.m_checked_peptides_res_path;
-end
+checked_pep_path = CPathResolver.resolveFilePath(obj.m_outputDir, ...
+    'report_peptide_all_checked.txt', obj.m_checked_peptides_res_path);
 
 report = CIMPQuantResultIO.read(checked_pep_path);
 pep_rtrange_map = report.build_pep_rtrange_map();
@@ -30,16 +27,11 @@ if isempty(pep_rtrange_map)
     warning(['The checked peptide result file "', checked_pep_path, '" is empty!']);
 end
 
-if ~isfolder(dir_save)
-    mkdir(dir_save);
-end
+CPathResolver.ensureDir(dir_save);
 
 %% Read the msms results and draw XICs
-if isempty(obj.m_msms_res_path)
-    each_PSM_results_path = fullfile(obj.m_outputDir, 'report_msms.txt');
-else
-    each_PSM_results_path = obj.m_msms_res_path;
-end
+each_PSM_results_path = CPathResolver.resolveFilePath(obj.m_outputDir, ...
+    'report_msms.txt', obj.m_msms_res_path);
 
 % Indexing resources lazily
 [obj, ~] = obj.ensureMs12DatasetIO();
