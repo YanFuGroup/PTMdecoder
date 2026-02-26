@@ -16,8 +16,14 @@ classdef CPeptideRawIdentAssembler
             %       dependencies:
             %       - getProfilesFunc (function_handle)
             %           function handle: [rt,iso,mz,ch] = f(dataset_name, spectrum_name)
-            %       - fixedModNameMass (cell)
-            %       - variableModNameMass (cell)
+            %           rt: MS1 RT of precursor scan
+            %           iso: reference isotope intensity near precursor
+            %           mz: precursor m/z
+            %           ch: precursor charge
+            %       - fixedModNameMass (Nf x 3 cell)
+            %           fixed modification list {mod_name, specificity, mass}
+            %       - variableModNameMass (Nv x 3 cell)
+            %           variable modification list {mod_name, specificity, mass}
             % Output:
             %   rawIdentManager (CIMPRawIdentManager)
             %       per-raw identification store manager
@@ -54,8 +60,12 @@ classdef CPeptideRawIdentAssembler
             %       per-peptide raw identification managers
             %   deps (struct)
             %       dependencies:
-            %       - ms12DatasetIO
-            %       - ms1_tolerance
+            %       - ms12DatasetIO (CMS12DatasetIO)
+            %           reader providing MS1/MS2 indices and peaks
+            %       - ms1_tolerance (struct)
+            %           tolerance struct with fields:
+            %           * value (1 x 1 double)
+            %           * isppm (logical/double)
             % Output:
             %   pep_quant (K x 1 cell)
             %       updated per-peptide managers
@@ -129,6 +139,10 @@ classdef CPeptideRawIdentAssembler
 
     methods (Static, Access = private)
         function assertDepsForSpectrumList(deps)
+            % Validate dependencies for buildFromSpectrumList.
+            % Input:
+            %   deps (struct)
+            %       dependency struct containing required fields
             required_fields = {'getProfilesFunc', 'fixedModNameMass', 'variableModNameMass'};
             CPeptideRawIdentAssembler.assertRequiredFields(deps, required_fields, 'buildFromSpectrumList');
             if ~isa(deps.getProfilesFunc, 'function_handle')
@@ -138,6 +152,10 @@ classdef CPeptideRawIdentAssembler
         end
 
         function assertDepsForFdrEntries(deps)
+            % Validate dependencies for buildFromFdrEntries.
+            % Input:
+            %   deps (struct)
+            %       dependency struct containing required fields
             required_fields = {'ms12DatasetIO', 'ms1_tolerance'};
             CPeptideRawIdentAssembler.assertRequiredFields(deps, required_fields, 'buildFromFdrEntries');
             if ~isstruct(deps.ms1_tolerance) || ~isfield(deps.ms1_tolerance, 'value') || ~isfield(deps.ms1_tolerance, 'isppm')
@@ -147,6 +165,14 @@ classdef CPeptideRawIdentAssembler
         end
 
         function assertRequiredFields(s, required_fields, method_name)
+            % Validate that all required fields exist in a struct.
+            % Input:
+            %   s (struct)
+            %       input struct to validate
+            %   required_fields (1 x N cell)
+            %       required field names
+            %   method_name (1 x 1 char/string)
+            %       caller method name for error message
             if nargin < 1 || ~isstruct(s)
                 error('CPeptideRawIdentAssembler:InvalidDependency', ...
                     'deps must be a struct for %s.', method_name);
@@ -161,6 +187,14 @@ classdef CPeptideRawIdentAssembler
 
         function lfMasses = getMassesIMPs(cstrIMP, modNameMass)
             % Get masses of each IMP.
+            % Input:
+            %   cstrIMP (1 x N cell)
+            %       IMP sequence strings with modification tags
+            %   modNameMass (M x 3 cell)
+            %       modification list {mod_name, specificity, mass}
+            % Output:
+            %   lfMasses (N x 1 double)
+            %       calculated monoisotopic masses including H2O
             lfMasses = zeros(length(cstrIMP),1);
             for idx_imp = 1:length(cstrIMP)
                 mod_seq = cstrIMP{idx_imp};
@@ -192,6 +226,12 @@ classdef CPeptideRawIdentAssembler
 
         function lfMass = getMassPeptide(pep_seq)
             % Get mass of peptide sequence.
+            % Input:
+            %   pep_seq (1 x 1 char/string)
+            %       peptide sequence
+            % Output:
+            %   lfMass (1 x 1 double)
+            %       monoisotopic peptide mass including H2O
             lfMass = sum(CConstant.vAAmass(pep_seq-'A'+1));
             lfMass = lfMass + CConstant.hmass*2 + CConstant.omass;
         end

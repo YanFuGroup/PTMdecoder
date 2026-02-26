@@ -48,11 +48,21 @@ function helper_test_draw_xic(projectRootDir, testDataDir, outputDir)
     fprintf('Running test_draw_xic...\n');
     
     % Create service object
-    draw_service = CXICDrawService(modFile, fixedMod, variableMod, ...
-        msms_pep_site_dir, ms1_tolerance, ms2_tolerance.value, alpha, ...
-        fastaFile, parse_reg_exp, pepSpec_path, model, method, lambda, ...
-        resFilterThres, enzyme, outputDir, ionTypes, checked_res_path, ...
-        msms_res_path, filtered_res_path);
+    draw_param_map = containers.Map();
+    draw_param_map('mod_file_path') = modFile;
+    draw_param_map('fixed_mod') = fixedMod;
+    draw_param_map('variable_mod') = variableMod;
+    draw_param_map('spec_dir_path') = msms_pep_site_dir;
+    draw_param_map('ms1_tolerance') = ms1_tolerance;
+    draw_param_map('alpha') = alpha;
+    draw_param_map('result_filter_threshold') = resFilterThres;
+    draw_param_map('output_dir_path') = outputDir;
+    draw_param_map('checked_peptides_res_path') = checked_res_path;
+    draw_param_map('msms_res_path') = msms_res_path;
+    draw_param_map('min_MSMS_num') = 1;
+
+    draw_cfg = CXICDrawServiceConfig.fromParamMap(draw_param_map);
+    draw_service = CXICDrawService(draw_cfg);
     
     % Prepare maps
     [color_map, legend_map] = get_colormap_legendmap();

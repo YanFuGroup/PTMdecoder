@@ -11,11 +11,15 @@ classdef CXICDrawService < handle
     end
 
     methods
-        function obj = CXICDrawService(varargin)
+        function obj = CXICDrawService(cfg)
             % Input:
-            %   varargin
-            %       either a minimal config struct or legacy positional args.
-            obj.m_cfg = obj.parseCtorArgs(varargin{:});
+            %   cfg (struct)
+            %       minimal config struct
+            if ~isstruct(cfg)
+                error('CXICDrawService:InvalidConstructorArgs', ...
+                    'Expected a config struct.');
+            end
+            obj.m_cfg = cfg;
             mapModification = readModifyInfo(obj.m_cfg.mod_file_path);
             obj.m_fixedModNameMass = obj.getModMassName(obj.m_cfg.fixed_mod, mapModification);
             obj.m_variableModNameMass = obj.getModMassName(obj.m_cfg.variable_mod, mapModification);
@@ -25,7 +29,15 @@ classdef CXICDrawService < handle
         end
 
         function run(obj, dir_save, color_map, legend_map)
-            % Draw XIC figures.
+            % Draw XIC figures from checked peptide RT ranges.
+            % Input:
+            %   dir_save (1 x 1 char/string)
+            %       output directory for figures
+            %   color_map (containers.Map, optional)
+            %       map from modified peptide string to RGB color (1 x 3 double)
+            %   legend_map (containers.Map, optional)
+            %       map from modified peptide string to legend display text
+            %       if empty, default plotting color/legend behavior is used
             if nargin < 4
                 legend_map = [];
             end
@@ -71,54 +83,14 @@ classdef CXICDrawService < handle
     end
 
     methods (Access = private)
-        function cfg = parseCtorArgs(~, varargin)
-            if nargin == 2 && isstruct(varargin{1})
-                in_cfg = varargin{1};
-                cfg = struct( ...
-                    'mod_file_path', in_cfg.mod_file_path, ...
-                    'fixed_mod', in_cfg.fixed_mod, ...
-                    'variable_mod', in_cfg.variable_mod, ...
-                    'spec_dir_path', in_cfg.spec_dir_path, ...
-                    'ms1_tolerance', in_cfg.ms1_tolerance, ...
-                    'alpha', in_cfg.alpha, ...
-                    'result_filter_threshold', in_cfg.result_filter_threshold, ...
-                    'output_dir_path', in_cfg.output_dir_path, ...
-                    'checked_peptides_res_path', in_cfg.checked_peptides_res_path, ...
-                    'msms_res_path', in_cfg.msms_res_path, ...
-                    'min_MSMS_num', in_cfg.min_MSMS_num ...
-                );
-                return;
-            end
-
-            if numel(varargin) < 16
-                error('CXICDrawService:InvalidConstructorArgs', ...
-                    'Expected a minimal config struct or legacy positional args.');
-            end
-
-            cfg = struct();
-            cfg.mod_file_path = varargin{1};
-            cfg.fixed_mod = varargin{2};
-            cfg.variable_mod = varargin{3};
-            cfg.spec_dir_path = varargin{4};
-            cfg.ms1_tolerance = varargin{5};
-            cfg.alpha = varargin{7};
-            cfg.result_filter_threshold = varargin{14};
-            cfg.output_dir_path = varargin{16};
-
-            if numel(varargin) >= 18
-                cfg.checked_peptides_res_path = varargin{18};
-            else
-                cfg.checked_peptides_res_path = [];
-            end
-            if numel(varargin) >= 19
-                cfg.msms_res_path = varargin{19};
-            else
-                cfg.msms_res_path = [];
-            end
-            cfg.min_MSMS_num = 1;
-        end
-
         function rawIdentManager = buildRawIdentManagerFromSpectrumList(obj, spectrum_list)
+            % Build raw identification manager from spectrum list.
+            % Input:
+            %   spectrum_list (struct array)
+            %       spectrum list from MSMS result
+            % Output:
+            %   rawIdentManager (CIMPRawIdentManager)
+            %       assembled raw identification manager
             deps = struct( ...
                 'getProfilesFunc', @(dataset_name, spectrum_name) obj.getProfiles(dataset_name, spectrum_name), ...
                 'fixedModNameMass', {obj.m_fixedModNameMass}, ...
@@ -127,6 +99,21 @@ classdef CXICDrawService < handle
         end
 
         function [isorts,c_ref_isointens,cur_mz,cur_ch] = getProfiles(obj, mgf_name, spectrum_name)
+            % Read MS1 profile around one MS2 spectrum precursor.
+            % Input:
+            %   mgf_name (1 x 1 char/string)
+            %       dataset file name in MGF
+            %   spectrum_name (1 x 1 char/string)
+            %       spectrum name in MGF
+            % Output:
+            %   isorts (1 x 1 double)
+            %       MS1 retention time of matched precursor scan
+            %   c_ref_isointens (1 x 1 double)
+            %       reference isotope intensity near precursor m/z
+            %   cur_mz (1 x 1 double)
+            %       precursor m/z from MGF
+            %   cur_ch (1 x 1 double/int)
+            %       precursor charge from MGF
             spec_name = regexp(spectrum_name,'\.','split');
             MS2ScanI = str2double(spec_name{2});
             [~, cur_ch, cur_mz] = obj.m_cMgfDatasetIO.read_oneSpec(mgf_name,spectrum_name);
@@ -158,6 +145,15 @@ classdef CXICDrawService < handle
         end
 
         function modNameMass = getModMassName(~, modificationTypes, mapModification)
+            % Build modification name/mass mapping list from setting string.
+            % Input:
+            %   modificationTypes (1 x 1 char/string)
+            %       semicolon-separated modification declarations
+            %   mapModification (containers.Map)
+            %       modification declaration to mass map
+            % Output:
+            %   modNameMass (N x 3 cell)
+            %       {mod_name, specificity, mass}
             modNameMass = [];
             if isempty(modificationTypes)
                 return

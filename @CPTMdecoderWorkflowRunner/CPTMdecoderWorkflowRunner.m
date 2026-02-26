@@ -8,6 +8,9 @@ classdef CPTMdecoderWorkflowRunner < handle
 
     methods
         function obj = CPTMdecoderWorkflowRunner(workflow_config)
+            % Input:
+            %   workflow_config (CPTMdecoderWorkflowConfig)
+            %       parsed workflow config object
             if nargin < 1 || isempty(workflow_config)
                 error('CPTMdecoderWorkflowRunner:MissingConfig', ...
                     'workflow_config must be provided.');
@@ -17,6 +20,7 @@ classdef CPTMdecoderWorkflowRunner < handle
         end
 
         function run(obj)
+            % Run all enabled workflow stages in order.
             for iStage = 1:numel(obj.m_config.stages)
                 stage = obj.m_config.stages{iStage};
                 if ~stage.enabled
@@ -29,6 +33,14 @@ classdef CPTMdecoderWorkflowRunner < handle
 
     methods (Access = private)
         function executeStage(obj, stage)
+            % Execute one workflow stage using registered executor.
+            % Input:
+            %   stage (struct)
+            %       stage struct with fields: name, action, config, enabled
+            %       - stage.name is used as runtime dispatch key
+            %       - stage.enabled is checked by caller run()
+            %       - stage.action is retained for compatibility tracing
+            %       - stage.config is consumed by concrete stage executor
             if ~obj.m_stage_executor_registry.isKey(stage.name)
                 error('CPTMdecoderWorkflowRunner:UnknownStage', ...
                     'Unknown workflow stage: %s', stage.name);
@@ -38,6 +50,10 @@ classdef CPTMdecoderWorkflowRunner < handle
         end
 
         function executors = buildStageExecutorRegistry(obj)
+            % Build stage-name to executor-function registry.
+            % Output:
+            %   executors (containers.Map)
+            %       map from stage name to execution function handle
             executors = containers.Map('KeyType', 'char', 'ValueType', 'any');
             executors(CPTMdecoderWorkflowConfig.STAGE_MSMS_LEVEL) = @(stage) obj.executeMsmsLevelStage(stage);
             executors(CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_QUANT) = @(stage) obj.executePeptideQuantStage(stage);
@@ -50,6 +66,13 @@ classdef CPTMdecoderWorkflowRunner < handle
         end
 
         function executeMsmsLevelStage(~, stage)
+            % Execute MSMS-level stage.
+            % Input:
+            %   stage (struct)
+            %       stage struct
+            %       - stage.name should be STAGE_MSMS_LEVEL
+            %       - stage.action should be ACTION_MSMS_ONLY
+            %       - stage.config is MSMS config struct
             msms_cfg = stage.config;
             if isempty(msms_cfg)
                 error('CPTMdecoderWorkflowRunner:MissingMsmsConfig', ...
@@ -61,6 +84,13 @@ classdef CPTMdecoderWorkflowRunner < handle
         end
 
         function executePeptideQuantStage(~, stage)
+            % Execute peptide quantification stage.
+            % Input:
+            %   stage (struct)
+            %       stage struct
+            %       - stage.name should be STAGE_PEPTIDE_QUANT
+            %       - stage.action should be ACTION_PEPTIDE_ONLY
+            %       - stage.config is MSMS config struct
             msms_cfg = stage.config;
             if isempty(msms_cfg)
                 error('CPTMdecoderWorkflowRunner:MissingMsmsConfig', ...
@@ -72,6 +102,13 @@ classdef CPTMdecoderWorkflowRunner < handle
         end
 
         function executePeptideRequantStage(~, stage)
+            % Execute peptide re-quantification stage.
+            % Input:
+            %   stage (struct)
+            %       stage struct
+            %       - stage.name should be STAGE_PEPTIDE_REQUANT
+            %       - stage.action should be ACTION_PEPTIDE_REQUANT
+            %       - stage.config is MSMS config struct
             msms_cfg = stage.config;
             if isempty(msms_cfg)
                 error('CPTMdecoderWorkflowRunner:MissingMsmsConfig', ...
@@ -83,6 +120,13 @@ classdef CPTMdecoderWorkflowRunner < handle
         end
 
         function executeNormPeptideQuantStage(~, stage)
+            % Execute normalization peptide quantification stage.
+            % Input:
+            %   stage (struct)
+            %       stage struct
+            %       - stage.name should be STAGE_NORM_PEPTIDE_QUANT
+            %       - stage.action should be ACTION_NORM_PEPTIDE_QUANT
+            %       - stage.config is normalization quant config struct
             cfg = stage.config;
             if isempty(cfg)
                 error('CPTMdecoderWorkflowRunner:MissingNormQuantConfig', ...
@@ -94,6 +138,13 @@ classdef CPTMdecoderWorkflowRunner < handle
         end
 
         function executeNormPeptideRequantStage(~, stage)
+            % Execute normalization peptide re-quantification stage.
+            % Input:
+            %   stage (struct)
+            %       stage struct
+            %       - stage.name should be STAGE_NORM_PEPTIDE_REQUANT
+            %       - stage.action should be ACTION_NORM_PEPTIDE_REQUANT
+            %       - stage.config is normalization requant config struct
             cfg = stage.config;
             if isempty(cfg)
                 error('CPTMdecoderWorkflowRunner:MissingNormRequantConfig', ...
@@ -105,6 +156,13 @@ classdef CPTMdecoderWorkflowRunner < handle
         end
 
         function executeSiteLevelStage(~, stage)
+            % Execute site-level summary stage.
+            % Input:
+            %   stage (struct)
+            %       stage struct
+            %       - stage.name should be STAGE_SITE_LEVEL
+            %       - stage.action should be ACTION_SITE_SUMMARY
+            %       - stage.config is site-level summary config struct
             site_cfg = stage.config;
             if isempty(site_cfg)
                 error('CPTMdecoderWorkflowRunner:MissingSiteConfig', ...
@@ -115,6 +173,13 @@ classdef CPTMdecoderWorkflowRunner < handle
         end
 
         function executeMergeToPairStage(~, stage)
+            % Execute merge-to-pair stage for each pair config.
+            % Input:
+            %   stage (struct)
+            %       stage struct
+            %       - stage.name should be STAGE_MERGE_TO_PAIR_LEVEL
+            %       - stage.action should be ACTION_MERGE_EACH_PAIR
+            %       - stage.config is pair config cell array
             pair_cfgs = stage.config;
             if isempty(pair_cfgs)
                 return;
@@ -127,6 +192,13 @@ classdef CPTMdecoderWorkflowRunner < handle
         end
 
         function executeMergePairsStage(~, stage)
+            % Execute merge-pairs stage.
+            % Input:
+            %   stage (struct)
+            %       stage struct
+            %       - stage.name should be STAGE_MERGE_PAIRS_LEVEL
+            %       - stage.action should be ACTION_MERGE_PAIRS
+            %       - stage.config is merge-pairs config struct
             cfg = stage.config;
             if isempty(cfg)
                 error('CPTMdecoderWorkflowRunner:MissingMergePairsConfig', ...

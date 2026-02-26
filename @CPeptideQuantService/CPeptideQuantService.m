@@ -78,6 +78,15 @@ classdef CPeptideQuantService < handle
 
     methods (Access = private)
         function [modNameMass]=getModMassName(~,modificationTypes,mapModification)
+            % Build modification name/mass mapping list from setting string.
+            % Input:
+            %   modificationTypes (1 x 1 char/string)
+            %       semicolon-separated modification declarations
+            %   mapModification (containers.Map)
+            %       modification declaration to mass map
+            % Output:
+            %   modNameMass (N x 3 cell)
+            %       {mod_name, specificity, mass}
             modNameMass=[];
             if isempty(modificationTypes)
                 return
@@ -109,6 +118,31 @@ classdef CPeptideQuantService < handle
         end
 
         function [isorts,c_ref_isointens,cur_mz,cur_ch] = getProfiles(~, cMgfDatasetIO, cMs12DatasetIO, cMsFileMapper, ms1_tolerance, specPath, mgf_name, spectrum_name)
+            % Read MS1 profile around one MS2 spectrum precursor.
+            % Input:
+            %   cMgfDatasetIO (CMgfDatasetIO)
+            %       MGF dataset reader
+            %   cMs12DatasetIO (CMS12DatasetIO)
+            %       MS1/MS2 dataset reader
+            %   cMsFileMapper (CMsFileMapper)
+            %       MGF-to-MS1 mapping helper
+            %   ms1_tolerance (struct)
+            %       MS1 tolerance (fields: value, isppm)
+            %   specPath (1 x 1 char/string)
+            %       spectrum directory path
+            %   mgf_name (1 x 1 char/string)
+            %       dataset file name in MGF
+            %   spectrum_name (1 x 1 char/string)
+            %       spectrum name in MGF
+            % Output:
+            %   isorts (1 x 1 double)
+            %       MS1 retention time of matched precursor scan
+            %   c_ref_isointens (1 x 1 double)
+            %       reference isotope intensity near precursor m/z
+            %   cur_mz (1 x 1 double)
+            %       precursor m/z from MGF
+            %   cur_ch (1 x 1 double/int)
+            %       precursor charge from MGF
             spec_name = regexp(spectrum_name,'\.','split');
             MS2ScanI = str2double(spec_name{2});
             [~, cur_ch, cur_mz] = cMgfDatasetIO.read_oneSpec(mgf_name,spectrum_name);

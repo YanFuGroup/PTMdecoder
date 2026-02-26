@@ -106,129 +106,28 @@ classdef CPTMdecoderWorkflowConfig
     end
 
     methods (Static)
-        function obj = fromParamFile(param_file_path)
-            % Build workflow config directly from parameter file.
-            task_param_map = CPTMdecoderWorkflowConfig.parseParamFileToMap(param_file_path);
-
-            cfg = struct();
-            cfg.param_file_path = param_file_path;
-
-            cfg.stages = {};
-
-            % msms_action is an input intent flag, not a stage runtime action.
-            % Runtime dispatch only depends on explicit stage names.
-            msms_action = CPTMdecoderWorkflowConfig.resolveMsmsWorkflowActionFromMap(task_param_map);
-            if ~isempty(msms_action)
-                cfg_struct = CPTMdecoderWorkflowConfig.buildMsmsPepConfigStructFromMap(task_param_map, msms_action);
-                if strcmp(msms_action, CPTMdecoderWorkflowConfig.ACTION_MSMS_PEPTIDE)
-                    msms_cfg = cfg_struct;
-                    cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
-                        CPTMdecoderWorkflowConfig.STAGE_MSMS_LEVEL, CPTMdecoderWorkflowConfig.ACTION_MSMS_ONLY, msms_cfg, true);
-                    cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
-                        CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_QUANT, CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_ONLY, msms_cfg, true);
-                elseif strcmp(msms_action, CPTMdecoderWorkflowConfig.ACTION_MSMS_ONLY)
-                    cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
-                        CPTMdecoderWorkflowConfig.STAGE_MSMS_LEVEL, msms_action, cfg_struct, true);
-                elseif strcmp(msms_action, CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_ONLY)
-                    cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
-                        CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_QUANT, msms_action, cfg_struct, true);
-                elseif strcmp(msms_action, CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_REQUANT)
-                    cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
-                        CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_REQUANT, msms_action, cfg_struct, true);
-                else
-                    error('CPTMdecoderWorkflowConfig:UnsupportedMsmsAction', ...
-                        'Unsupported msms action: %s', msms_action);
-                end
-            end
-
-            if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowConfig.PARAM_NORM_PEPTIDE_QUANT_ON)
-                norm_quant_cfg = CPTMdecoderWorkflowConfig.buildNormalizationQuantConfigFromMap(task_param_map);
-                cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
-                    CPTMdecoderWorkflowConfig.STAGE_NORM_PEPTIDE_QUANT, CPTMdecoderWorkflowConfig.ACTION_NORM_PEPTIDE_QUANT, ...
-                    norm_quant_cfg, true);
-            end
-
-            if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowConfig.PARAM_NORM_PEPTIDE_REQUANT_ON)
-                norm_requant_cfg = CPTMdecoderWorkflowConfig.buildNormalizationRequantConfigFromMap(task_param_map);
-                cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
-                    CPTMdecoderWorkflowConfig.STAGE_NORM_PEPTIDE_REQUANT, CPTMdecoderWorkflowConfig.ACTION_NORM_PEPTIDE_REQUANT, ...
-                    norm_requant_cfg, true);
-            end
-
-            if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowConfig.PARAM_SITE_LEVEL_ON)
-                site_cfg_struct = CPTMdecoderWorkflowConfig.buildSiteConfigStructFromMap(task_param_map);
-                cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
-                    CPTMdecoderWorkflowConfig.STAGE_SITE_LEVEL, CPTMdecoderWorkflowConfig.ACTION_SITE_SUMMARY, ...
-                    CSiteLevelPipelineConfig(site_cfg_struct), true);
-            end
-
-            if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowConfig.PARAM_MERGE_TO_PAIR_LEVEL_ON)
-                merge_to_pair_cfgs = CPTMdecoderWorkflowConfig.buildMergeToPairConfigsFromMap(task_param_map);
-                cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
-                    CPTMdecoderWorkflowConfig.STAGE_MERGE_TO_PAIR_LEVEL, CPTMdecoderWorkflowConfig.ACTION_MERGE_EACH_PAIR, ...
-                    merge_to_pair_cfgs, true);
-            end
-
-            if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowConfig.PARAM_MERGE_PAIRS_LEVEL_ON)
-                merge_pairs_cfg_struct = CPTMdecoderWorkflowConfig.buildMergePairsConfigStructFromMap(task_param_map);
-                cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
-                    CPTMdecoderWorkflowConfig.STAGE_MERGE_PAIRS_LEVEL, CPTMdecoderWorkflowConfig.ACTION_MERGE_PAIRS, ...
-                    CMergePairsConfig(merge_pairs_cfg_struct), true);
-            end
-
-            obj = CPTMdecoderWorkflowConfig(cfg);
-        end
-
+        % Build workflow config directly from parameter file.
+        obj = fromParamFile(param_file_path)
     end
 
     methods (Static, Access = private)
-        function task_param_map = parseParamFileToMap(param_file_path)
-            fid = fopen(param_file_path, 'r');
-            if fid <= 0
-                error('CPTMdecoderWorkflowConfig:OpenParamFileFailed', ...
-                    'Failed to open parameter file: %s', param_file_path);
-            end
-
-            task_param_map = containers.Map();
-            line_num = 0;
-            while ~feof(fid)
-                line_num = line_num + 1;
-                str_line = fgetl(fid);
-                if ~ischar(str_line)
-                    continue;
-                end
-
-                str_line = CPTMdecoderWorkflowConfig.removeComments(str_line);
-                str_line = strtrim(str_line);
-                if isempty(str_line)
-                    continue;
-                end
-
-                str_seg = split(str_line, '=');
-                if length(str_seg) ~= 2
-                    error('CPTMdecoderWorkflowConfig:InvalidParamFormat', ...
-                        'Unexpected parameter format in line %d: %s', line_num, str_line);
-                end
-
-                m_key = strtrim(str_seg(1));
-                m_val = strtrim(str_seg(2));
-                task_param_map(m_key{1}) = m_val{1};
-            end
-            fclose(fid);
-        end
-
-        function str_line = removeComments(str_line)
-            idx = strfind(str_line, '#');
-            if ~isempty(idx)
-                str_line(idx(1):end) = [];
-            end
-        end
-
         function flag = getFlag(task_param_map, key_name)
+            % Get a boolean flag from the parameter map.
+            %   task_param_map (containers.Map)
+            %       parameter key-value map
+            %   key_name (1 x 1 char/string)
+            %       parameter key name
             flag = task_param_map.isKey(key_name) && strcmp(strtrim(task_param_map(key_name)), '1');
         end
 
         function value = getRequired(task_param_map, key_name, explain)
+            % Get a required parameter value from the map, error if missing.
+            %   task_param_map (containers.Map)
+            %       parameter key-value map
+            %   key_name (1 x 1 char/string)
+            %       parameter key name
+            %   explain (1 x 1 char/string)
+            %       description for error message
             if ~task_param_map.isKey(key_name)
                 error('CPTMdecoderWorkflowConfig:MissingRequiredParam', ...
                     'Required param ''%s'' is missing (%s).', key_name, explain);
@@ -237,6 +136,13 @@ classdef CPTMdecoderWorkflowConfig
         end
 
         function value = getOptional(task_param_map, key_name, default_value)
+            % Get an optional parameter value from the map, use default if missing.
+            %   task_param_map (containers.Map)
+            %       parameter key-value map
+            %   key_name (1 x 1 char/string)
+            %       parameter key name
+            %   default_value (any)
+            %       default value if key not present
             if task_param_map.isKey(key_name)
                 value = task_param_map(key_name);
             else
@@ -245,6 +151,9 @@ classdef CPTMdecoderWorkflowConfig
         end
 
         function action = resolveMsmsWorkflowActionFromMap(task_param_map)
+            % Resolve the MSMS workflow action based on flags in the parameter map.
+            %   task_param_map (containers.Map)
+            %       parameter key-value map
             msms_pep_on = CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowConfig.PARAM_MSMS_PEPTIDE_LEVEL_ON);
             msms_only_on = CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowConfig.PARAM_MSMS_ONLY_ON);
             requant_on = CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowConfig.PARAM_PEPTIDE_REQUANT_ON);
@@ -269,6 +178,11 @@ classdef CPTMdecoderWorkflowConfig
         end
 
         function cfg = buildMsmsPepConfigStructFromMap(task_param_map, mode)
+            % Build MSMS peptide config struct from parameter map.
+            %   task_param_map (containers.Map)
+            %       parameter key-value map
+            %   mode (1 x 1 char/string)
+            %       workflow mode
             cfg = struct();
             cfg.mod_file_path = CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_MOD_FILE_PATH, 'modification file path');
             cfg.fixed_mod = CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_FIXED_MOD, 'fixed modification list');
@@ -322,6 +236,12 @@ classdef CPTMdecoderWorkflowConfig
         end
 
         function cfg = buildNormalizationMinimalConfigStructFromMap(task_param_map)
+            % Build minimal normalization config struct from parameter map.
+            %   task_param_map (containers.Map)
+            %       parameter key-value map
+            % Build minimal normalization config struct from parameter map.
+            %   task_param_map (containers.Map)
+            %       parameter key-value map
             % Build minimal normalization config consumed by normalization services.
             % This is a compatibility bridge and intentionally keeps only required fields.
             cfg = struct();
@@ -339,6 +259,9 @@ classdef CPTMdecoderWorkflowConfig
         end
 
         function cfg = buildNormalizationQuantConfigFromMap(task_param_map)
+            % Build normalization quant config from parameter map.
+            %   task_param_map (containers.Map)
+            %       parameter key-value map
             base_cfg_struct = CPTMdecoderWorkflowConfig.buildNormalizationMinimalConfigStructFromMap(task_param_map);
             pair_file_path = CPTMdecoderWorkflowConfig.getRequired(task_param_map, ...
                 CPTMdecoderWorkflowConfig.PARAM_NORM_PROTEIN_PEPTIDE_PAIR_PATH, ...
@@ -354,6 +277,9 @@ classdef CPTMdecoderWorkflowConfig
         end
 
         function cfg = buildNormalizationRequantConfigFromMap(task_param_map)
+            % Build normalization requant config from parameter map.
+            %   task_param_map (containers.Map)
+            %       parameter key-value map
             base_cfg_struct = CPTMdecoderWorkflowConfig.buildNormalizationMinimalConfigStructFromMap(task_param_map);
             cfg = struct();
             cfg.msms_cfg = base_cfg_struct;
@@ -361,6 +287,9 @@ classdef CPTMdecoderWorkflowConfig
         end
 
         function cfg = buildSiteConfigStructFromMap(task_param_map)
+            % Build site config struct from parameter map.
+            %   task_param_map (containers.Map)
+            %       parameter key-value map
             cfg = struct();
 
             output_dir_path = CPTMdecoderWorkflowConfig.getOptional(task_param_map, CPTMdecoderWorkflowConfig.PARAM_OUTPUT_DIR_PATH, '');
@@ -409,6 +338,9 @@ classdef CPTMdecoderWorkflowConfig
         end
 
         function pair_configs = buildMergeToPairConfigsFromMap(task_param_map)
+            % Build merge to pair configs from parameter map.
+            %   task_param_map (containers.Map)
+            %       parameter key-value map
             left_right_out_num = str2double(CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_LEFT_RIGHT_OUT_NUM, 'number of pairwise comparisons'));
             left_name = CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_LEFT_NAME, 'left group name');
             right_name = CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_RIGHT_NAME, 'right group name');
@@ -426,6 +358,9 @@ classdef CPTMdecoderWorkflowConfig
         end
 
         function cfg = buildMergePairsConfigStructFromMap(task_param_map)
+            % Build merge pairs config struct from parameter map.
+            %   task_param_map (containers.Map)
+            %       parameter key-value map
             pair_num = str2double(CPTMdecoderWorkflowConfig.getRequired(task_param_map, CPTMdecoderWorkflowConfig.PARAM_PAIR_NUM, 'number of pairs to merge'));
             result_paths = cell(pair_num, 1);
             group_titles = cell(pair_num, 2);
@@ -447,6 +382,9 @@ classdef CPTMdecoderWorkflowConfig
         end
 
         function ignore_strings = parseIgnoreStrings(ignore_strings_str)
+            % Parse ignore strings from a string.
+            %   ignore_strings_str (1 x 1 char/string)
+            %       input string containing ignore strings
             ignore_strings = {};
             ignore_strings_seg = strsplit(ignore_strings_str, ';');
             ignore_strings_seg = cellfun(@(s) regexp(s, '"([^"]*)"', 'tokens'), ...
@@ -461,6 +399,24 @@ classdef CPTMdecoderWorkflowConfig
 
         function stage = makeStage(name, action, cfg_obj, enabled)
             % Build a stage struct.
+            %   name (1 x 1 char/string)
+            %       stage name
+            %   action (1 x 1 char/string)
+            %       stage action
+            %   cfg_obj (struct)
+            %       config object
+            %   enabled (logical)
+            %       whether the stage is enabled
+            % Build a stage struct.
+            %   name (1 x 1 char/string)
+            %       stage name
+            %   action (1 x 1 char/string)
+            %       stage action
+            %   cfg_obj (struct)
+            %       config object
+            %   enabled (logical)
+            %       whether the stage is enabled
+            % Build a stage struct.
             % Note: action is retained as a compatibility field for input intent trace,
             % while runtime dispatch is based on stage.name.
             stage = struct();
@@ -471,6 +427,7 @@ classdef CPTMdecoderWorkflowConfig
         end
 
         function names = allStageNames()
+            % Get all valid stage names.
             names = { ...
                 CPTMdecoderWorkflowConfig.STAGE_MSMS_LEVEL, ...
                 CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_QUANT, ...
@@ -484,6 +441,9 @@ classdef CPTMdecoderWorkflowConfig
         end
 
         function actions = stageActions(stage_name)
+            % Get valid actions for a given stage name.
+            %   stage_name (1 x 1 char/string)
+            %       stage name
             switch stage_name
                 case CPTMdecoderWorkflowConfig.STAGE_MSMS_LEVEL
                     actions = {CPTMdecoderWorkflowConfig.ACTION_MSMS_ONLY};
@@ -507,6 +467,9 @@ classdef CPTMdecoderWorkflowConfig
         end
 
         function cfg = finalize(cfg)
+            % Finalize and validate the config struct.
+            %   cfg (struct)
+            %       config struct to finalize
             if ~isfield(cfg, 'param_file_path') || isempty(cfg.param_file_path)
                 cfg.param_file_path = '';
             end

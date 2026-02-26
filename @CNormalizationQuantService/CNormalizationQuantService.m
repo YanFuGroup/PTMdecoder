@@ -25,6 +25,7 @@ classdef CNormalizationQuantService < handle
         end
 
         function run(obj)
+            % Run normalization peptide quantification stage.
             cfg = obj.m_cfg;
             msms_cfg = cfg.msms_cfg;
 

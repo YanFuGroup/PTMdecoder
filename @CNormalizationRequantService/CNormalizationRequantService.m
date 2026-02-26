@@ -23,6 +23,7 @@ classdef CNormalizationRequantService < handle
         end
 
         function run(obj)
+            % Run normalization peptide re-quantification stage.
             cfg = obj.m_cfg;
             msms_cfg = cfg.msms_cfg;
 
@@ -111,7 +112,7 @@ function lfMass = get_mass_peptide(pep_seq)
 %       peptide sequence
 % Output:
 %   lfMass (1 x 1 double) Da
-%       mass of the peptide
+%       monoisotopic peptide mass including H2O
 lfMass = sum(CConstant.vAAmass(pep_seq-'A'+1));
 lfMass = lfMass + CConstant.hmass*2 + CConstant.omass;
 end

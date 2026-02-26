@@ -12,11 +12,15 @@ classdef CPeptideAlignRequantService < handle
     end
 
     methods
-        function obj = CPeptideAlignRequantService(varargin)
+        function obj = CPeptideAlignRequantService(cfg)
             % Input:
-            %   varargin
-            %       either a minimal config struct or legacy positional args.
-            obj.m_cfg = obj.parseCtorArgs(varargin{:});
+            %   cfg (struct)
+            %       minimal config struct
+            if ~isstruct(cfg)
+                error('CPeptideAlignRequantService:InvalidConstructorArgs', ...
+                    'Expected a config struct.');
+            end
+            obj.m_cfg = cfg;
 
             mapModification = readModifyInfo(obj.m_cfg.mod_file_path);
             obj.m_fixedModNameMass = obj.getModMassName(obj.m_cfg.fixed_mod, mapModification);
@@ -29,7 +33,35 @@ classdef CPeptideAlignRequantService < handle
         end
 
         function run(obj, align_strategy, align_options)
-            % Run align->requant procedure.
+            % Run peptide-level alignment and re-quantification.
+            % Input:
+            %   align_strategy (1 x 1 char/string)
+            %       alignment strategy name
+            %   align_options (struct, optional)
+            %       alignment/requant options (recognized keys):
+            %       - msms_res_path (1 x 1 char/string)
+            %           input MSMS result path (default: cfg.msms_res_path or report_msms.txt)
+            %       - alignment_report_path (1 x 1 char/string)
+            %           output path for alignment report (default: report_alignment.txt)
+            %       - requant_output_path (1 x 1 char/string)
+            %           output path for aligned requant report (default: report_peptide_all_requant_aligned.txt)
+            %       - min_psm (1 x 1 double)
+            %           minimum anchors/PSMs for alignment (passed to aligner)
+            %       - num_bins (1 x 1 double)
+            %           number of RT bins in local transform fitting (passed to aligner)
+            %       - min_per_bin (1 x 1 double)
+            %           minimum anchors per RT bin (passed to aligner)
+            %       - outlier_k (1 x 1 double)
+            %           outlier threshold factor for transform fitting (passed to aligner)
+            %       - outlier_method (1 x 1 char/string)
+            %           outlier method, e.g. 'mad'/'std' (passed to aligner)
+            %       - rt_sigma (1 x 1 double)
+            %           RT Gaussian sigma for peak selection (passed to aligner)
+            %       - max_rt_residual (1 x 1 double)
+            %           max RT residual for candidate pairing (passed to aligner)
+            %       - dead_time_min (1 x 1 double)
+            %           minimum allowed RT start (passed to aligner)
+            %       unknown keys are ignored by this service and forwarded downstream
             if nargin < 2 || isempty(align_strategy)
                 error('CPeptideAlignRequantService:MissingAlignStrategy', ...
                     'align_strategy is required.');
@@ -106,49 +138,15 @@ classdef CPeptideAlignRequantService < handle
     end
 
     methods (Access = private)
-        function cfg = parseCtorArgs(~, varargin)
-            if nargin == 2 && isstruct(varargin{1})
-                in_cfg = varargin{1};
-                cfg = struct( ...
-                    'mod_file_path', in_cfg.mod_file_path, ...
-                    'fixed_mod', in_cfg.fixed_mod, ...
-                    'variable_mod', in_cfg.variable_mod, ...
-                    'spec_dir_path', in_cfg.spec_dir_path, ...
-                    'ms1_tolerance', in_cfg.ms1_tolerance, ...
-                    'alpha', in_cfg.alpha, ...
-                    'result_filter_threshold', in_cfg.result_filter_threshold, ...
-                    'fasta_file_path', in_cfg.fasta_file_path, ...
-                    'regular_express', in_cfg.regular_express, ...
-                    'filtered_res_file_path', in_cfg.filtered_res_file_path, ...
-                    'output_dir_path', in_cfg.output_dir_path, ...
-                    'msms_res_path', in_cfg.msms_res_path, ...
-                    'min_MSMS_num', in_cfg.min_MSMS_num ...
-                );
-                return;
-            end
-
-            if numel(varargin) < 20
-                error('CPeptideAlignRequantService:InvalidConstructorArgs', ...
-                    'Expected a minimal config struct or legacy positional args.');
-            end
-
-            cfg = struct();
-            cfg.mod_file_path = varargin{1};
-            cfg.fixed_mod = varargin{2};
-            cfg.variable_mod = varargin{3};
-            cfg.spec_dir_path = varargin{4};
-            cfg.ms1_tolerance = varargin{5};
-            cfg.alpha = varargin{7};
-            cfg.fasta_file_path = varargin{8};
-            cfg.regular_express = varargin{9};
-            cfg.result_filter_threshold = varargin{14};
-            cfg.output_dir_path = varargin{16};
-            cfg.msms_res_path = varargin{19};
-            cfg.filtered_res_file_path = varargin{20};
-            cfg.min_MSMS_num = 1;
-        end
 
         function rawIdentManager = buildRawIdentManagerFromSpectrumList(obj, spectrum_list)
+            % Build raw identification manager from spectrum list.
+            % Input:
+            %   spectrum_list (struct array)
+            %       spectrum list from MSMS result
+            % Output:
+            %   rawIdentManager (CIMPRawIdentManager)
+            %       assembled raw identification manager
             deps = struct( ...
                 'getProfilesFunc', @(dataset_name, spectrum_name) obj.getProfiles(dataset_name, spectrum_name), ...
                 'fixedModNameMass', {obj.m_fixedModNameMass}, ...
@@ -157,6 +155,21 @@ classdef CPeptideAlignRequantService < handle
         end
 
         function [isorts,c_ref_isointens,cur_mz,cur_ch] = getProfiles(obj, mgf_name, spectrum_name)
+            % Read MS1 profile around one MS2 spectrum precursor.
+            % Input:
+            %   mgf_name (1 x 1 char/string)
+            %       dataset file name in MGF
+            %   spectrum_name (1 x 1 char/string)
+            %       spectrum name in MGF
+            % Output:
+            %   isorts (1 x 1 double)
+            %       MS1 retention time of matched precursor scan
+            %   c_ref_isointens (1 x 1 double)
+            %       reference isotope intensity near precursor m/z
+            %   cur_mz (1 x 1 double)
+            %       precursor m/z from MGF
+            %   cur_ch (1 x 1 double/int)
+            %       precursor charge from MGF
             spec_name = regexp(spectrum_name,'\.','split');
             MS2ScanI = str2double(spec_name{2});
             [~, cur_ch, cur_mz] = obj.m_cMgfDatasetIO.read_oneSpec(mgf_name,spectrum_name);
@@ -188,6 +201,15 @@ classdef CPeptideAlignRequantService < handle
         end
 
         function modNameMass = getModMassName(~, modificationTypes, mapModification)
+            % Build modification name/mass mapping list from setting string.
+            % Input:
+            %   modificationTypes (1 x 1 char/string)
+            %       semicolon-separated modification declarations
+            %   mapModification (containers.Map)
+            %       modification declaration to mass map
+            % Output:
+            %   modNameMass (N x 3 cell)
+            %       {mod_name, specificity, mass}
             modNameMass = [];
             if isempty(modificationTypes)
                 return
