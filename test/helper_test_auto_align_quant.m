@@ -19,8 +19,6 @@ function helper_test_auto_align_quant(projectRootDir, testDataDir, outputDir)
     mod_file = fullfile(projectRootDir, 'modify.ini');
     fixed_mod = '';
     variable_mod = 'Acetyl[K];Methyl[K];Dimethyl[K];Trimethyl[K]';
-    enzyme.name = 'trypsin';
-    enzyme.limits = 14.015650;
 
     align_param_map = containers.Map();
     align_param_map(CPTMdecoderWorkflowParamKeys.PARAM_MOD_FILE_PATH) = mod_file;
@@ -37,16 +35,17 @@ function helper_test_auto_align_quant(projectRootDir, testDataDir, outputDir)
     align_param_map(CPTMdecoderWorkflowParamKeys.PARAM_MSMS_RES_PATH) = fullfile(input_dir, 'report_msms.txt');
     align_param_map(CPTMdecoderWorkflowParamKeys.PARAM_FILTERED_RES_FILE_PATH) = fullfile(input_dir, 'filtered_result_mascot.txt');
     align_param_map(CPTMdecoderWorkflowParamKeys.PARAM_MIN_MSMS_NUM) = 1;
+    align_param_map(CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_STRATEGY_TYPE) = 'pairwise';
+    align_param_map(CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_PAIR_NUM) = 1;
+    align_param_map([CPTMdecoderWorkflowParamKeys.PARAM_PREFIX_ALIGN_PAIR, '1']) = ...
+        'MCF7_JIB04_2_HISTONE_0723_HCDFT.mgf|MCF7_DMSO_2_HISTONE_0723_HCDFT.mgf';
+    align_param_map(CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_MIN_PSM) = 1;
+    align_param_map(CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_RT_SIGMA) = 0.5;
+    align_param_map(CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_OUTLIER_K) = 3;
+    align_param_map(CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_OUTLIER_METHOD) = 'mad';
+    align_param_map(CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_DEAD_TIME_MIN) = 0.5;
 
     align_cfg = CPeptideAlignRequantServiceConfig.fromParamMap(align_param_map);
     align_requant_service = CPeptideAlignRequantService(align_cfg);
-    
-    pairs = { ...
-        'MCF7_JIB04_2_HISTONE_0723_HCDFT.mgf', 'MCF7_DMSO_2_HISTONE_0723_HCDFT.mgf'; ...
-    };
-
-    strategy = PairwiseRunAlignStrategy(pairs);
-    align_options = struct('min_psm', 1, 'rt_sigma', 0.5, 'outlier_k', 3, ...
-        'outlier_method', 'mad', 'dead_time_min', 0.5);
-    align_requant_service.run(strategy, align_options);
+    align_requant_service.run();
 end

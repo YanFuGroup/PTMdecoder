@@ -5,6 +5,7 @@ classdef CPTMdecoderWorkflowConfig
         STAGE_MSMS_LEVEL = 'msms_level'
         STAGE_PEPTIDE_QUANT = 'peptide_quant'
         STAGE_PEPTIDE_REQUANT = 'peptide_requant'
+        STAGE_PEPTIDE_ALIGN_REQUANT = 'peptide_align_requant'
         STAGE_NORM_PEPTIDE_QUANT = 'norm_peptide_quant'
         STAGE_NORM_PEPTIDE_REQUANT = 'norm_peptide_requant'
         STAGE_SITE_LEVEL = 'site_level'
@@ -14,6 +15,7 @@ classdef CPTMdecoderWorkflowConfig
         ACTION_MSMS_PEPTIDE = 'msms_peptide'
         ACTION_MSMS_ONLY = 'msms_only'
         ACTION_PEPTIDE_REQUANT = 'peptide_requant'
+        ACTION_PEPTIDE_ALIGN_REQUANT = 'peptide_align_requant'
         ACTION_PEPTIDE_ONLY = 'peptide_only'
         ACTION_NORM_PEPTIDE_QUANT = 'norm_peptide_quant'
         ACTION_NORM_PEPTIDE_REQUANT = 'norm_peptide_requant'
@@ -71,11 +73,13 @@ classdef CPTMdecoderWorkflowConfig
             msms_pep_on = CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MSMS_PEPTIDE_LEVEL_ON);
             msms_only_on = CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MSMS_ONLY_ON);
             requant_on = CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_PEPTIDE_REQUANT_ON);
+            align_requant_on = CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_PEPTIDE_ALIGN_REQUANT_ON);
             peptide_only_on = CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_PEPTIDE_ONLY_ON);
 
-            if msms_pep_on + msms_only_on + requant_on + peptide_only_on > 1
+            if msms_pep_on + msms_only_on + requant_on + align_requant_on + peptide_only_on > 1
                 error('CPTMdecoderWorkflowConfig:InvalidMsmsWorkflowAction', ...
-                    'msms_peptide_level_on, msms_only_on, peptide_requant_on, peptide_only_on cannot be enabled simultaneously.');
+                    ['msms_peptide_level_on, msms_only_on, peptide_requant_on, ', ...
+                    'peptide_align_requant_on, peptide_only_on cannot be enabled simultaneously.']);
             end
 
             if msms_pep_on
@@ -84,6 +88,8 @@ classdef CPTMdecoderWorkflowConfig
                 action = CPTMdecoderWorkflowConfig.ACTION_MSMS_ONLY;
             elseif requant_on
                 action = CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_REQUANT;
+            elseif align_requant_on
+                action = CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_ALIGN_REQUANT;
             elseif peptide_only_on
                 action = CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_ONLY;
             else
@@ -126,6 +132,7 @@ classdef CPTMdecoderWorkflowConfig
                 CPTMdecoderWorkflowConfig.STAGE_MSMS_LEVEL, ...
                 CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_QUANT, ...
                 CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_REQUANT, ...
+                CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_ALIGN_REQUANT, ...
                 CPTMdecoderWorkflowConfig.STAGE_NORM_PEPTIDE_QUANT, ...
                 CPTMdecoderWorkflowConfig.STAGE_NORM_PEPTIDE_REQUANT, ...
                 CPTMdecoderWorkflowConfig.STAGE_SITE_LEVEL, ...
@@ -145,6 +152,8 @@ classdef CPTMdecoderWorkflowConfig
                     actions = {CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_ONLY};
                 case CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_REQUANT
                     actions = {CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_REQUANT};
+                case CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_ALIGN_REQUANT
+                    actions = {CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_ALIGN_REQUANT};
                 case CPTMdecoderWorkflowConfig.STAGE_NORM_PEPTIDE_QUANT
                     actions = {CPTMdecoderWorkflowConfig.ACTION_NORM_PEPTIDE_QUANT};
                 case CPTMdecoderWorkflowConfig.STAGE_NORM_PEPTIDE_REQUANT

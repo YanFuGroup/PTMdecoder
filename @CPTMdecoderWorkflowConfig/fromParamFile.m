@@ -35,6 +35,10 @@ if ~isempty(msms_action)
         pep_requant_cfg = CPeptideRequantServiceConfig.fromParamMap(task_param_map);
         cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
             CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_REQUANT, msms_action, pep_requant_cfg, true);
+    elseif strcmp(msms_action, CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_ALIGN_REQUANT)
+        pep_align_requant_cfg = CPeptideAlignRequantServiceConfig.fromParamMap(task_param_map);
+        cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
+            CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_ALIGN_REQUANT, msms_action, pep_align_requant_cfg, true);
     else
         error('CPTMdecoderWorkflowConfig:UnsupportedMsmsAction', ...
             'Unsupported msms action: %s', msms_action);

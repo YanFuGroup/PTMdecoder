@@ -22,9 +22,9 @@ ms1_tol_type = strtrim(CParamMapUtils.getRequired(task_param_map, CPTMdecoderWor
 base_cfg_struct.ms1_tolerance = struct('value', ms1_tol_value, 'isppm', strcmpi(ms1_tol_type, 'PPM'));
 
 base_cfg_struct.alpha = CParamMapUtils.getRequiredNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_ALPHA, ...
-    'noise filtering threshold', 'CNormalizationRequantServiceConfig'));
+    'noise filtering threshold', 'CNormalizationRequantServiceConfig');
 base_cfg_struct.result_filter_threshold = CParamMapUtils.getRequiredNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_RESULT_FILTER_THRESHOLD, ...
-    'result filter threshold', 'CNormalizationRequantServiceConfig'));
+    'result filter threshold', 'CNormalizationRequantServiceConfig');
 base_cfg_struct.output_dir_path = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_OUTPUT_DIR_PATH, ...
     'output directory', 'CNormalizationRequantServiceConfig');
 base_cfg_struct.min_MSMS_num = CParamMapUtils.getOptionalNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MIN_MSMS_NUM, 1, 'CNormalizationRequantServiceConfig');

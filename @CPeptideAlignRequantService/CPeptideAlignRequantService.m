@@ -32,19 +32,14 @@ classdef CPeptideAlignRequantService < handle
                 obj.m_cfg.regular_express, obj.m_cfg.filtered_res_file_path);
         end
 
-        function run(obj, align_strategy, align_options)
+        function run(obj)
             % Run peptide-level alignment and re-quantification.
-            % Input:
-            %   align_strategy (1 x 1 char/string)
-            %       alignment strategy name
-            %   align_options (struct, optional)
-            %       alignment/requant options (recognized keys):
+            % Alignment strategy and options are provided via cfg fields:
+            %   - cfg.align_strategy_obj
+            %   - cfg.align_options
+            % Recognized align_options keys:
             %       - msms_res_path (1 x 1 char/string)
             %           input MSMS result path (default: cfg.msms_res_path or report_msms.txt)
-            %       - alignment_report_path (1 x 1 char/string)
-            %           output path for alignment report (default: report_alignment.txt)
-            %       - requant_output_path (1 x 1 char/string)
-            %           output path for aligned requant report (default: report_peptide_all_requant_aligned.txt)
             %       - min_psm (1 x 1 double)
             %           minimum anchors/PSMs for alignment (passed to aligner)
             %       - num_bins (1 x 1 double)
@@ -62,15 +57,18 @@ classdef CPeptideAlignRequantService < handle
             %       - dead_time_min (1 x 1 double)
             %           minimum allowed RT start (passed to aligner)
             %       unknown keys are ignored by this service and forwarded downstream
-            if nargin < 2 || isempty(align_strategy)
+            cfg = obj.m_cfg;
+            align_strategy = cfg.align_strategy_obj;
+            align_options = cfg.align_options;
+
+            if isempty(align_strategy)
                 error('CPeptideAlignRequantService:MissingAlignStrategy', ...
                     'align_strategy is required.');
             end
-            if nargin < 3
+            if isempty(align_options)
                 align_options = struct();
             end
 
-            cfg = obj.m_cfg;
             if isempty(cfg.filtered_res_file_path)
                 error('CPeptideAlignRequantService:MissingFilteredResult', ...
                     'FDR filtered result path is required for alignment.');
@@ -104,12 +102,9 @@ classdef CPeptideAlignRequantService < handle
             [pep_rtrange_map, align_report] = pipeline.buildAlignedRtRangeMap( ...
                 cfg.filtered_res_file_path, rawIdentManagers);
 
-            alignment_report_path = CStructOptionUtils.get(align_options, 'alignment_report_path', ...
-                CPathResolver.resolveFilePath(cfg.output_dir_path, 'report_alignment.txt', ''));
-            pipeline.writeAlignmentReport(align_report, alignment_report_path);
+            pipeline.writeAlignmentReport(align_report, cfg.alignment_report_path);
 
-            output_path = CStructOptionUtils.get(align_options, 'requant_output_path', ...
-                CPathResolver.resolveFilePath(cfg.output_dir_path, 'report_peptide_all_requant_aligned.txt', ''));
+            output_path = cfg.requant_output_path;
             report = CIMPQuantReport();
             print_progress = CPrintProgress(length(msms_result.Peptides));
             proc_cfg = CIMPProcessingExecutorConfig(struct( ...

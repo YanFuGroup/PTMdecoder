@@ -58,6 +58,7 @@ classdef CPTMdecoderWorkflowRunner < handle
             executors(CPTMdecoderWorkflowConfig.STAGE_MSMS_LEVEL) = @(stage) obj.executeMsmsLevelStage(stage);
             executors(CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_QUANT) = @(stage) obj.executePeptideQuantStage(stage);
             executors(CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_REQUANT) = @(stage) obj.executePeptideRequantStage(stage);
+            executors(CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_ALIGN_REQUANT) = @(stage) obj.executePeptideAlignRequantStage(stage);
             executors(CPTMdecoderWorkflowConfig.STAGE_NORM_PEPTIDE_QUANT) = @(stage) obj.executeNormPeptideQuantStage(stage);
             executors(CPTMdecoderWorkflowConfig.STAGE_NORM_PEPTIDE_REQUANT) = @(stage) obj.executeNormPeptideRequantStage(stage);
             executors(CPTMdecoderWorkflowConfig.STAGE_SITE_LEVEL) = @(stage) obj.executeSiteLevelStage(stage);
@@ -116,6 +117,24 @@ classdef CPTMdecoderWorkflowRunner < handle
             end
 
             service = CPeptideRequantService(msms_cfg);
+            service.run();
+        end
+
+        function executePeptideAlignRequantStage(~, stage)
+            % Execute peptide align-requantification stage.
+            % Input:
+            %   stage (struct)
+            %       stage struct
+            %       - stage.name should be STAGE_PEPTIDE_ALIGN_REQUANT
+            %       - stage.action should be ACTION_PEPTIDE_ALIGN_REQUANT
+            %       - stage.config is peptide align-requant config struct
+            cfg = stage.config;
+            if isempty(cfg)
+                error('CPTMdecoderWorkflowRunner:MissingPeptideAlignRequantConfig', ...
+                    'Peptide align-requant stage config is required.');
+            end
+
+            service = CPeptideAlignRequantService(cfg);
             service.run();
         end
 

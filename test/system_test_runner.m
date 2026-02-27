@@ -11,8 +11,9 @@ function system_test_runner()
     
     % Configure test data
     testDataDir = fullfile(currentDir, 'data');
-    msms_pep_paramFile = fullfile(testDataDir, 'msms_pep_site.param');
+    msms_pep_site_paramFile = fullfile(testDataDir, 'msms_pep_site.param');
     pep_requant_paramFile = fullfile(testDataDir, 'requant_pep_site.param');
+    align_requant_paramFile = fullfile(testDataDir, 'align_requant.param');
     pairwise_paramFile = fullfile(testDataDir, 'pairwise.param');
     demo_paramFile = fullfile(testDataDir, 'demo.param');
     goldenDir = fullfile(currentDir, 'golden');
@@ -38,13 +39,16 @@ function system_test_runner()
     main(demo_paramFile)
     
     fprintf('Running msms-pep procedure...\n');
-    main(msms_pep_paramFile); 
+    main(msms_pep_site_paramFile); 
+
+    fprintf('Running pairwise merging procedure...\n');
+    main(pairwise_paramFile);
 
     fprintf('Running pep-requant procedure...\n');
     main(pep_requant_paramFile);
 
-    fprintf('Running pairwise merging procedure...\n');
-    main(pairwise_paramFile);
+    fprintf('Running align-requant workflow procedure...\n');
+    main(align_requant_paramFile);
     
     fprintf('Running drawXIC test...\n');
     helper_test_draw_xic(projectDir, testDataDir, outputDir);
@@ -57,9 +61,6 @@ function system_test_runner()
 
     fprintf('Running report_msms_top1 generation test...\n');
     helper_test_report_msms_top1(projectDir, testDataDir, outputDir);
-
-    fprintf('Running auto alignment and quantification test...\n');
-    helper_test_auto_align_quant(projectDir, testDataDir, outputDir);
 
     fprintf('Run completed, start comparing results...\n');
     

@@ -14,34 +14,20 @@ function helper_test_draw_xic(projectRootDir, testDataDir, outputDir)
     msms_pep_site_dir = fullfile(testDataDir, 'msms_pep_site');
     
     % Input files
-    pepSpec_path = fullfile(msms_pep_site_dir, 'pepSpecFile.txt');
-    filtered_res_path = fullfile(msms_pep_site_dir, 'filtered_result_mascot.txt');
     checked_res_path = fullfile(draw_xic_data_dir, 'report_peptide_all.txt');
     msms_res_path = fullfile(draw_xic_data_dir, 'report_msms.txt');
     
     % Resource files
     modFile = fullfile(projectRootDir, 'modify.ini');
-    fastaFile = fullfile(msms_pep_site_dir, 'uniprotkb_human_histone_E_coli_comb_rever_czy_20231015.fasta');
-    
-    parse_reg_exp = '>([^ ,]*)';
 
     % Parameters
     fixedMod = '';
     variableMod = 'Acetyl[K];Methyl[K];Dimethyl[K];Trimethyl[K]';
-
-    enzyme.name = 'trypsin';
-    enzyme.limits = 14.015650;
     
-    lambda = 0.5;
     ms1_tolerance_value = 10;
     ms1_tolerance_type = 'PPM';
-    ms2_tolerance.value = 0.02;
     alpha = 0.01;
     resFilterThres = 0.1;
-    
-    ionTypes = [1,2];
-    model = 1;
-    method = 2;
 
     % --- Execution ---
     
