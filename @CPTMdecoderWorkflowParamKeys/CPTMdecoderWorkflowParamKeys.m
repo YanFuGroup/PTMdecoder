@@ -1,0 +1,62 @@
+classdef CPTMdecoderWorkflowParamKeys
+    % Parameter key constants for PTMdecoder workflow and stage config builders.
+
+    properties (Constant)
+        PARAM_MSMS_PEPTIDE_LEVEL_ON = 'msms_peptide_level_on'
+        PARAM_MSMS_ONLY_ON = 'msms_only_on'
+        PARAM_PEPTIDE_ONLY_ON = 'peptide_only_on'
+        PARAM_PEPTIDE_REQUANT_ON = 'peptide_requant_on'
+        PARAM_NORM_PEPTIDE_QUANT_ON = 'norm_peptide_quant_on'
+        PARAM_NORM_PEPTIDE_REQUANT_ON = 'norm_peptide_requant_on'
+        PARAM_SITE_LEVEL_ON = 'site_level_on'
+        PARAM_MERGE_TO_PAIR_LEVEL_ON = 'merge_to_pair_level_on'
+        PARAM_MERGE_PAIRS_LEVEL_ON = 'merge_pairs_level_on'
+
+        PARAM_MOD_FILE_PATH = 'mod_file_path'
+        PARAM_FIXED_MOD = 'fixed_mod'
+        PARAM_VARIABLE_MOD = 'variable_mod'
+        PARAM_SPEC_DIR_PATH = 'spec_dir_path'
+        PARAM_MS1_TOLERANCE_VALUE = 'ms1_tolerance_value'
+        PARAM_MS1_TOLERANCE_TYPE = 'ms1_tolerance_type'
+        PARAM_MS2_TOLERANCE = 'ms2_tolerance'
+        PARAM_ALPHA = 'alpha'
+        PARAM_FASTA_FILE_PATH = 'fasta_file_path'
+        PARAM_REGULAR_EXPRESS = 'regular_express'
+        PARAM_FILTERED_RES_FILE_PATH = 'filtered_res_file_path'
+        PARAM_MODEL = 'model'
+        PARAM_METHOD = 'method'
+        PARAM_LAMBDA = 'lambda'
+        PARAM_RESULT_FILTER_THRESHOLD = 'result_filter_threshold'
+        PARAM_ENZYME_NAME = 'enzyme_name'
+        PARAM_ENZYME_LIMIT_C_TERM_POSSIBLE_MOD = 'enzyme_limit_C_term_possible_mod'
+        PARAM_OUTPUT_DIR_PATH = 'output_dir_path'
+        PARAM_MIN_MSMS_NUM = 'min_MSMS_num'
+        PARAM_PEP_SPEC_FILE_PATH = 'pep_spec_file_path'
+        PARAM_CHECKED_PEPTIDES_RES_PATH = 'checked_peptides_res_path'
+        PARAM_MSMS_RES_PATH = 'msms_res_path'
+        PARAM_NORM_PROTEIN_PEPTIDE_PAIR_PATH = 'norm_protein_peptide_pair_path'
+        PARAM_NORM_OUTPUT_FILE_NAME = 'norm_output_file_name'
+        PARAM_NORM_REQUANT_OUTPUT_FILE_NAME = 'norm_requant_output_file_name'
+
+        PARAM_PEP_LEVEL_FILE_PATH = 'pep_level_file_path'
+        PARAM_OUTPUT_INTERE_PATH = 'output_intere_path'
+        PARAM_OUTPUT_UNINTERE_PATH = 'output_unintere_path'
+        PARAM_PROTEIN_NAME_ABBR_NUM = 'protein_name_abbr_num'
+        PARAM_MOD_NAME_ABBR_NUM = 'mod_name_abbr_num'
+        PARAM_IGNORE_STRINGS_SITE_LEVEL = 'ignore_strings_site_level'
+
+        PARAM_LEFT_RIGHT_OUT_NUM = 'left_right_out_num'
+        PARAM_LEFT_NAME = 'left_name'
+        PARAM_RIGHT_NAME = 'right_name'
+        PARAM_IGNORE_STRINGS_PAIR_LEVEL = 'ignore_strings_pair_level'
+
+        PARAM_PAIR_NUM = 'pair_num'
+        PARAM_FINAL_OUTPUT_PATH = 'final_output_path'
+
+        PARAM_PREFIX_PROTEIN_NAME_ABBR = 'protein_name_abbr_'
+        PARAM_PREFIX_MOD_NAME_ABBR = 'mod_name_abbr_'
+        PARAM_PREFIX_LEFT_RIGHT_OUT = 'left_right_out_'
+        PARAM_PREFIX_PAIR = 'pair_'
+        PARAM_PREFIX_LEFT_RIGHT_NAME = 'left_right_name_'
+    end
+end

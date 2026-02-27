@@ -16,61 +16,64 @@ cfg.stages = {};
 % Runtime dispatch only depends on explicit stage names.
 msms_action = CPTMdecoderWorkflowConfig.resolveMsmsWorkflowActionFromMap(task_param_map);
 if ~isempty(msms_action)
-    cfg_struct = CPTMdecoderWorkflowConfig.buildMsmsPepConfigStructFromMap(task_param_map, msms_action);
     if strcmp(msms_action, CPTMdecoderWorkflowConfig.ACTION_MSMS_PEPTIDE)
-        msms_cfg = cfg_struct;
+        msms_cfg = CMSMSLevelServiceConfig.fromParamMap(task_param_map);
+        pep_quant_cfg = CPeptideQuantServiceConfig.fromParamMap(task_param_map);
         cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
             CPTMdecoderWorkflowConfig.STAGE_MSMS_LEVEL, CPTMdecoderWorkflowConfig.ACTION_MSMS_ONLY, msms_cfg, true);
         cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
-            CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_QUANT, CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_ONLY, msms_cfg, true);
+            CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_QUANT, CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_ONLY, pep_quant_cfg, true);
     elseif strcmp(msms_action, CPTMdecoderWorkflowConfig.ACTION_MSMS_ONLY)
+        msms_cfg = CMSMSLevelServiceConfig.fromParamMap(task_param_map);
         cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
-            CPTMdecoderWorkflowConfig.STAGE_MSMS_LEVEL, msms_action, cfg_struct, true);
+            CPTMdecoderWorkflowConfig.STAGE_MSMS_LEVEL, msms_action, msms_cfg, true);
     elseif strcmp(msms_action, CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_ONLY)
+        pep_quant_cfg = CPeptideQuantServiceConfig.fromParamMap(task_param_map);
         cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
-            CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_QUANT, msms_action, cfg_struct, true);
+            CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_QUANT, msms_action, pep_quant_cfg, true);
     elseif strcmp(msms_action, CPTMdecoderWorkflowConfig.ACTION_PEPTIDE_REQUANT)
+        pep_requant_cfg = CPeptideRequantServiceConfig.fromParamMap(task_param_map);
         cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
-            CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_REQUANT, msms_action, cfg_struct, true);
+            CPTMdecoderWorkflowConfig.STAGE_PEPTIDE_REQUANT, msms_action, pep_requant_cfg, true);
     else
         error('CPTMdecoderWorkflowConfig:UnsupportedMsmsAction', ...
             'Unsupported msms action: %s', msms_action);
     end
 end
 
-if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowConfig.PARAM_NORM_PEPTIDE_QUANT_ON)
-    norm_quant_cfg = CPTMdecoderWorkflowConfig.buildNormalizationQuantConfigFromMap(task_param_map);
+if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_NORM_PEPTIDE_QUANT_ON)
+    norm_quant_cfg = CNormalizationQuantServiceConfig.fromParamMap(task_param_map);
     cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
         CPTMdecoderWorkflowConfig.STAGE_NORM_PEPTIDE_QUANT, CPTMdecoderWorkflowConfig.ACTION_NORM_PEPTIDE_QUANT, ...
         norm_quant_cfg, true);
 end
 
-if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowConfig.PARAM_NORM_PEPTIDE_REQUANT_ON)
-    norm_requant_cfg = CPTMdecoderWorkflowConfig.buildNormalizationRequantConfigFromMap(task_param_map);
+if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_NORM_PEPTIDE_REQUANT_ON)
+    norm_requant_cfg = CNormalizationRequantServiceConfig.fromParamMap(task_param_map);
     cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
         CPTMdecoderWorkflowConfig.STAGE_NORM_PEPTIDE_REQUANT, CPTMdecoderWorkflowConfig.ACTION_NORM_PEPTIDE_REQUANT, ...
         norm_requant_cfg, true);
 end
 
-if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowConfig.PARAM_SITE_LEVEL_ON)
-    site_cfg_struct = CPTMdecoderWorkflowConfig.buildSiteConfigStructFromMap(task_param_map);
+if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_SITE_LEVEL_ON)
+    site_cfg = CSiteLevelPipelineConfig.fromParamMap(task_param_map);
     cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
         CPTMdecoderWorkflowConfig.STAGE_SITE_LEVEL, CPTMdecoderWorkflowConfig.ACTION_SITE_SUMMARY, ...
-        CSiteLevelPipelineConfig(site_cfg_struct), true);
+        site_cfg, true);
 end
 
-if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowConfig.PARAM_MERGE_TO_PAIR_LEVEL_ON)
-    merge_to_pair_cfgs = CPTMdecoderWorkflowConfig.buildMergeToPairConfigsFromMap(task_param_map);
+if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MERGE_TO_PAIR_LEVEL_ON)
+    merge_to_pair_cfgs = CMergeEachPairConfig.fromParamMap(task_param_map);
     cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
         CPTMdecoderWorkflowConfig.STAGE_MERGE_TO_PAIR_LEVEL, CPTMdecoderWorkflowConfig.ACTION_MERGE_EACH_PAIR, ...
         merge_to_pair_cfgs, true);
 end
 
-if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowConfig.PARAM_MERGE_PAIRS_LEVEL_ON)
-    merge_pairs_cfg_struct = CPTMdecoderWorkflowConfig.buildMergePairsConfigStructFromMap(task_param_map);
+if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MERGE_PAIRS_LEVEL_ON)
+    merge_pairs_cfg = CMergePairsConfig.fromParamMap(task_param_map);
     cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
         CPTMdecoderWorkflowConfig.STAGE_MERGE_PAIRS_LEVEL, CPTMdecoderWorkflowConfig.ACTION_MERGE_PAIRS, ...
-        CMergePairsConfig(merge_pairs_cfg_struct), true);
+        merge_pairs_cfg, true);
 end
 
 obj = CPTMdecoderWorkflowConfig(cfg);

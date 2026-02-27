@@ -10,24 +10,14 @@ classdef CIMPProcessingExecutorConfig
     end
 
     methods
-        function obj = CIMPProcessingExecutorConfig(varargin)
+        function obj = CIMPProcessingExecutorConfig(cfg)
             % Constructor.
-            % Input style 1:
-            %   CIMPProcessingExecutorConfig(ms12DatasetIO, ms1_tolerance, minMSMSnum, alpha, resFilterThres)
-            % Input style 2:
-            %   CIMPProcessingExecutorConfig(struct_with_fields)
-            if nargin == 1 && isstruct(varargin{1})
-                cfg = varargin{1};
-            else
-                if nargin < 5
-                    error('CIMPProcessingExecutorConfig requires 5 arguments or 1 struct argument.');
-                end
-                cfg = struct(...
-                    'ms12DatasetIO', varargin{1}, ...
-                    'ms1_tolerance', varargin{2}, ...
-                    'minMSMSnum', varargin{3}, ...
-                    'alpha', varargin{4}, ...
-                    'resFilterThres', varargin{5});
+            % Input:
+            %   cfg (struct)
+            %       config struct for IMP processing executor
+            if nargin < 1 || ~isstruct(cfg)
+                error('CIMPProcessingExecutorConfig:InvalidConstructorArgs', ...
+                    'Expected a config struct.');
             end
 
             cfg = CIMPProcessingExecutorConfig.finalize(cfg);

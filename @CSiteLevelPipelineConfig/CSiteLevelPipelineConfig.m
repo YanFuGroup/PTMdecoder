@@ -35,6 +35,10 @@ classdef CSiteLevelPipelineConfig
         end
     end
 
+    methods (Static)
+        cfg = fromParamMap(task_param_map)
+    end
+
     methods (Static, Access = private)
         function cfg = finalize(cfg)
             if ~isfield(cfg, 'input_path'); cfg.input_path = ''; end

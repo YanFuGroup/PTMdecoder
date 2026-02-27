@@ -33,8 +33,8 @@ function helper_test_draw_xic(projectRootDir, testDataDir, outputDir)
     enzyme.limits = 14.015650;
     
     lambda = 0.5;
-    ms1_tolerance.value = 10;
-    ms1_tolerance.isppm = 1;
+    ms1_tolerance_value = 10;
+    ms1_tolerance_type = 'PPM';
     ms2_tolerance.value = 0.02;
     alpha = 0.01;
     resFilterThres = 0.1;
@@ -49,17 +49,18 @@ function helper_test_draw_xic(projectRootDir, testDataDir, outputDir)
     
     % Create service object
     draw_param_map = containers.Map();
-    draw_param_map('mod_file_path') = modFile;
-    draw_param_map('fixed_mod') = fixedMod;
-    draw_param_map('variable_mod') = variableMod;
-    draw_param_map('spec_dir_path') = msms_pep_site_dir;
-    draw_param_map('ms1_tolerance') = ms1_tolerance;
-    draw_param_map('alpha') = alpha;
-    draw_param_map('result_filter_threshold') = resFilterThres;
-    draw_param_map('output_dir_path') = outputDir;
-    draw_param_map('checked_peptides_res_path') = checked_res_path;
-    draw_param_map('msms_res_path') = msms_res_path;
-    draw_param_map('min_MSMS_num') = 1;
+    draw_param_map(CPTMdecoderWorkflowParamKeys.PARAM_MOD_FILE_PATH) = modFile;
+    draw_param_map(CPTMdecoderWorkflowParamKeys.PARAM_FIXED_MOD) = fixedMod;
+    draw_param_map(CPTMdecoderWorkflowParamKeys.PARAM_VARIABLE_MOD) = variableMod;
+    draw_param_map(CPTMdecoderWorkflowParamKeys.PARAM_SPEC_DIR_PATH) = msms_pep_site_dir;
+    draw_param_map(CPTMdecoderWorkflowParamKeys.PARAM_MS1_TOLERANCE_VALUE) = ms1_tolerance_value;
+    draw_param_map(CPTMdecoderWorkflowParamKeys.PARAM_MS1_TOLERANCE_TYPE) = ms1_tolerance_type;
+    draw_param_map(CPTMdecoderWorkflowParamKeys.PARAM_ALPHA) = alpha;
+    draw_param_map(CPTMdecoderWorkflowParamKeys.PARAM_RESULT_FILTER_THRESHOLD) = resFilterThres;
+    draw_param_map(CPTMdecoderWorkflowParamKeys.PARAM_OUTPUT_DIR_PATH) = outputDir;
+    draw_param_map(CPTMdecoderWorkflowParamKeys.PARAM_CHECKED_PEPTIDES_RES_PATH) = checked_res_path;
+    draw_param_map(CPTMdecoderWorkflowParamKeys.PARAM_MSMS_RES_PATH) = msms_res_path;
+    draw_param_map(CPTMdecoderWorkflowParamKeys.PARAM_MIN_MSMS_NUM) = 1;
 
     draw_cfg = CXICDrawServiceConfig.fromParamMap(draw_param_map);
     draw_service = CXICDrawService(draw_cfg);

@@ -1,6 +1,6 @@
 classdef CMS2SpectrumPipelineConfig
     % Config for CMS2SpectrumPipeline
-    % Constructor supports struct and positional argument styles.
+    % Constructor accepts struct input style.
 
     properties
         model
@@ -18,40 +18,13 @@ classdef CMS2SpectrumPipelineConfig
     end
 
     methods
-        function obj = CMS2SpectrumPipelineConfig(varargin)
-            % Input style 1:
-            %   CMS2SpectrumPipelineConfig(struct_with_fields)
-            % Input style 2:
-            %   CMS2SpectrumPipelineConfig(model, method, lambda, ms1_tolerance, ms2_tolerance, ...
-            %       alpha, resFilterThres, ionTypes, enzyme, case_penalty_intens, ...
-            %       grid_penalty_intens, case_OLS_intens_weight)
-
-            if nargin == 1 && isstruct(varargin{1})
-                cfg = varargin{1};
-            else
-                if nargin < 9
-                    error('CMS2SpectrumPipelineConfig requires at least 9 arguments or 1 struct argument.');
-                end
-                cfg = struct(...
-                    'model', varargin{1}, ...
-                    'method', varargin{2}, ...
-                    'lambda', varargin{3}, ...
-                    'ms1_tolerance', varargin{4}, ...
-                    'ms2_tolerance', varargin{5}, ...
-                    'alpha', varargin{6}, ...
-                    'resFilterThres', varargin{7}, ...
-                    'ionTypes', varargin{8}, ...
-                    'enzyme', varargin{9});
-
-                if nargin >= 10
-                    cfg.case_penalty_intens = varargin{10};
-                end
-                if nargin >= 11
-                    cfg.grid_penalty_intens = varargin{11};
-                end
-                if nargin >= 12
-                    cfg.case_OLS_intens_weight = varargin{12};
-                end
+        function obj = CMS2SpectrumPipelineConfig(cfg)
+            % Input:
+            %   cfg (struct)
+            %       config struct with CMS2 spectrum pipeline fields
+            if nargin < 1 || ~isstruct(cfg)
+                error('CMS2SpectrumPipelineConfig:InvalidConstructorArgs', ...
+                    'Expected a config struct.');
             end
 
             cfg = CMS2SpectrumPipelineConfig.finalize(cfg);
@@ -145,11 +118,5 @@ classdef CMS2SpectrumPipelineConfig
             end
         end
 
-        function cfg = applyOverrides(cfg, overrides)
-            override_fields = fieldnames(overrides);
-            for idx = 1:numel(override_fields)
-                cfg.(override_fields{idx}) = overrides.(override_fields{idx});
-            end
-        end
     end
 end

@@ -61,9 +61,9 @@ if ~ok_a || ~ok_b
     return;
 end
 
-sigma = COptionUtils.get(options, 'rt_sigma', 0.5);
-max_rt_residual = COptionUtils.get(options, 'max_rt_residual', []);
-dead_time_min = COptionUtils.get(options, 'dead_time_min', []);
+sigma = CStructOptionUtils.get(options, 'rt_sigma', 0.5);
+max_rt_residual = CStructOptionUtils.get(options, 'max_rt_residual', []);
+dead_time_min = CStructOptionUtils.get(options, 'dead_time_min', []);
 
 scores_a = data_a.area_imp_by_peak .* data_a.imp_max_props;
 scores_b = data_b.area_imp_by_peak .* data_b.imp_max_props;

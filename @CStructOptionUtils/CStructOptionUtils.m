@@ -1,5 +1,5 @@
-classdef COptionUtils
-    % Utilities for option structs
+classdef CStructOptionUtils
+    % Utilities for struct options
 
     methods (Static)
         function value = get(options, field_name, default_value)

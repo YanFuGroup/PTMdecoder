@@ -79,7 +79,7 @@ classdef CPeptideAlignRequantService < handle
             CPathResolver.ensureDir(cfg.output_dir_path);
 
             msms_res_path = CPathResolver.resolveFilePath(cfg.output_dir_path, 'report_msms.txt', ...
-                COptionUtils.get(align_options, 'msms_res_path', cfg.msms_res_path));
+                CStructOptionUtils.get(align_options, 'msms_res_path', cfg.msms_res_path));
             msms_result = CMS2ResultIO.read(msms_res_path);
 
             rawIdentManagers = cell(1, length(msms_result.Peptides));
@@ -104,11 +104,11 @@ classdef CPeptideAlignRequantService < handle
             [pep_rtrange_map, align_report] = pipeline.buildAlignedRtRangeMap( ...
                 cfg.filtered_res_file_path, rawIdentManagers);
 
-            alignment_report_path = COptionUtils.get(align_options, 'alignment_report_path', ...
+            alignment_report_path = CStructOptionUtils.get(align_options, 'alignment_report_path', ...
                 CPathResolver.resolveFilePath(cfg.output_dir_path, 'report_alignment.txt', ''));
             pipeline.writeAlignmentReport(align_report, alignment_report_path);
 
-            output_path = COptionUtils.get(align_options, 'requant_output_path', ...
+            output_path = CStructOptionUtils.get(align_options, 'requant_output_path', ...
                 CPathResolver.resolveFilePath(cfg.output_dir_path, 'report_peptide_all_requant_aligned.txt', ''));
             report = CIMPQuantReport();
             print_progress = CPrintProgress(length(msms_result.Peptides));

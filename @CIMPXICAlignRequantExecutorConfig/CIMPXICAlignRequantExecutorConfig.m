@@ -13,32 +13,14 @@ classdef CIMPXICAlignRequantExecutorConfig
     end
 
     methods
-        function obj = CIMPXICAlignRequantExecutorConfig(varargin)
+        function obj = CIMPXICAlignRequantExecutorConfig(cfg)
             % Constructor.
-            % Input style 1:
-            %   CIMPXICAlignRequantExecutorConfig(ms12DatasetIO, ms1_tolerance, minMSMSnum, alpha, resFilterThres, aligner, align_strategy, align_options)
-            % Input style 2:
-            %   CIMPXICAlignRequantExecutorConfig(struct_with_fields)
-            if nargin == 1 && isstruct(varargin{1})
-                cfg = varargin{1};
-            else
-                if nargin < 7
-                    error('CIMPXICAlignRequantExecutorConfig requires at least 7 arguments or 1 struct argument.');
-                end
-                if nargin < 8
-                    align_options = struct();
-                else
-                    align_options = varargin{8};
-                end
-                cfg = struct(...
-                    'ms12DatasetIO', varargin{1}, ...
-                    'ms1_tolerance', varargin{2}, ...
-                    'minMSMSnum', varargin{3}, ...
-                    'alpha', varargin{4}, ...
-                    'resFilterThres', varargin{5}, ...
-                    'aligner', varargin{6}, ...
-                    'align_strategy', varargin{7}, ...
-                    'align_options', align_options);
+            % Input:
+            %   cfg (struct)
+            %       config struct for XIC align-requant executor
+            if nargin < 1 || ~isstruct(cfg)
+                error('CIMPXICAlignRequantExecutorConfig:InvalidConstructorArgs', ...
+                    'Expected a config struct.');
             end
 
             cfg = CIMPXICAlignRequantExecutorConfig.finalize(cfg);

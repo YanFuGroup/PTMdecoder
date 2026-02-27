@@ -31,7 +31,7 @@ if numel(rt_pred) ~= num_imp
         'rt_pred must have the same number of elements as imp_max_props rows.');
 end
 
-sigma = COptionUtils.get(options, 'rt_sigma', 0.5);
+sigma = CStructOptionUtils.get(options, 'rt_sigma', 0.5);
 weighted_props = imp_max_props;
 for idx_imp = 1:num_imp
     rt_center = rt_pred(idx_imp);

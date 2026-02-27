@@ -18,7 +18,7 @@ function anchors = selectAnchors(~, fdr_filtered_result_path, ms12DatasetIO, opt
 if nargin < 4
     options = struct();
 end
-min_psm = COptionUtils.get(options, 'min_psm', 3);
+min_psm = CStructOptionUtils.get(options, 'min_psm', 3);
 
 fdr_results = CFdrFilteredResultIO.read(fdr_filtered_result_path);
 entries = fdr_results.entries;

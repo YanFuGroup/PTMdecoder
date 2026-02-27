@@ -33,6 +33,8 @@ classdef CMergeEachPairConfig
     end
 
     methods (Static)
+        cfgs = fromParamMap(task_param_map)
+
         function obj = fromPairRow(pair_row, left_name, right_name, ignore_strings)
             % Build one-pair merge config from a [left right output] row.
             % Input:

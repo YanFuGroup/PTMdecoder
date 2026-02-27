@@ -32,8 +32,8 @@ ref_rts = ref_rts(:);
 target_rts = target_rts(:);
 p = polyfit(ref_rts, target_rts, 1);
 
-outlier_k = COptionUtils.get(options, 'outlier_k', 3);
-outlier_method = COptionUtils.get(options, 'outlier_method', 'mad');
+outlier_k = CStructOptionUtils.get(options, 'outlier_k', 3);
+outlier_method = CStructOptionUtils.get(options, 'outlier_method', 'mad');
 if outlier_k > 0
     rt_pred = p(1) .* ref_rts + p(2);
     residuals = target_rts - rt_pred;
@@ -63,8 +63,8 @@ model.slope = p(1);
 model.intercept = p(2);
 model.has_model = true;
 
-num_bins = COptionUtils.get(options, 'num_bins', 5);
-min_per_bin = COptionUtils.get(options, 'min_per_bin', 5);
+num_bins = CStructOptionUtils.get(options, 'num_bins', 5);
+min_per_bin = CStructOptionUtils.get(options, 'min_per_bin', 5);
 if num_bins <= 1
     return;
 end

@@ -56,7 +56,7 @@ CPathResolver.ensureDir(obj.m_outputDir);
 
 
 msms_res_path = CPathResolver.resolveFilePath(obj.m_outputDir, 'report_msms.txt', ...
-COptionUtils.get(align_options, 'msms_res_path', obj.m_msms_res_path));
+CStructOptionUtils.get(align_options, 'msms_res_path', obj.m_msms_res_path));
 
 
 % Read MSMS results
@@ -87,12 +87,12 @@ pipeline = CPeptideLevelPipeline([], align_executor);
 [pep_rtrange_map, align_report] = pipeline.buildAlignedRtRangeMap(...
     obj.m_filtered_res_file_path, rawIdentManagers);
 
-alignment_report_path = COptionUtils.get(align_options, 'alignment_report_path', ...
+alignment_report_path = CStructOptionUtils.get(align_options, 'alignment_report_path', ...
     CPathResolver.resolveFilePath(obj.m_outputDir, 'report_alignment.txt', ''));
 pipeline.writeAlignmentReport(align_report, alignment_report_path);
 
 % Re-quantify using aligned RT ranges
-output_path = COptionUtils.get(align_options, 'requant_output_path', ...
+output_path = CStructOptionUtils.get(align_options, 'requant_output_path', ...
     CPathResolver.resolveFilePath(obj.m_outputDir, 'report_peptide_all_requant_aligned.txt', ''));
 report = CIMPQuantReport();
 print_progress = CPrintProgress(length(msms_result.Peptides));
