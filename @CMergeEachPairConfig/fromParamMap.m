@@ -15,7 +15,7 @@ left_right_out_num = CParamMapUtils.getRequiredNumber(task_param_map, CPTMdecode
 left_name = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_LEFT_NAME, 'left group name');
 right_name = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_RIGHT_NAME, 'right group name');
 ignore_str = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_IGNORE_STRINGS_PAIR_LEVEL, 'ignore strings for pair-level merge');
-ignore_strings = parseIgnoreStrings(ignore_str);
+ignore_strings = CParamMapUtils.parseQuotedList(ignore_str, ';');
 
 cfgs = cell(left_right_out_num, 1);
 for idx = 1:left_right_out_num
@@ -24,19 +24,5 @@ for idx = 1:left_right_out_num
     split_str = strsplit(left_right_out_str, {'|', '>'});
     pair_row = strtrim(split_str);
     cfgs{idx} = CMergeEachPairConfig.fromPairRow(pair_row, left_name, right_name, ignore_strings);
-end
-end
-
-function ignore_strings = parseIgnoreStrings(ignore_strings_str)
-% Parse ignore strings from a semicolon-separated quoted string.
-ignore_strings = {};
-ignore_strings_seg = strsplit(ignore_strings_str, ';');
-ignore_strings_seg = cellfun(@(s) regexp(s, '"([^"]*)"', 'tokens'), ...
-    ignore_strings_seg, 'UniformOutput', false);
-for idx_is = 1:length(ignore_strings_seg)
-    if isempty(ignore_strings_seg{idx_is})
-        continue;
-    end
-    ignore_strings = [ignore_strings, ignore_strings_seg{idx_is}{1}]; %#ok<AGROW>
 end
 end

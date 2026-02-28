@@ -49,7 +49,7 @@ end
 cfg_struct.mod_name_abbr = mod_name_abbr;
 
 ignore_str = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_IGNORE_STRINGS_SITE_LEVEL, 'ignore strings for site-level summary');
-cfg_struct.ignore_strings = parseIgnoreStrings(ignore_str);
+cfg_struct.ignore_strings = CParamMapUtils.parseQuotedList(ignore_str, ';');
 cfg_struct.column_idxs = struct('icol_seq', 2, 'icol_auc', 8);
 
 if isempty(cfg_struct.input_path)
@@ -66,18 +66,4 @@ if ~isfield(cfg_struct.column_idxs, 'icol_seq') || ~isfield(cfg_struct.column_id
 end
 
 cfg = CSiteLevelPipelineConfig(cfg_struct);
-end
-
-function ignore_strings = parseIgnoreStrings(ignore_strings_str)
-% Parse ignore strings from a semicolon-separated quoted string.
-ignore_strings = {};
-ignore_strings_seg = strsplit(ignore_strings_str, ';');
-ignore_strings_seg = cellfun(@(s) regexp(s, '"([^"]*)"', 'tokens'), ...
-    ignore_strings_seg, 'UniformOutput', false);
-for idx_is = 1:length(ignore_strings_seg)
-    if isempty(ignore_strings_seg{idx_is})
-        continue;
-    end
-    ignore_strings = [ignore_strings, ignore_strings_seg{idx_is}{1}]; %#ok<AGROW>
-end
 end

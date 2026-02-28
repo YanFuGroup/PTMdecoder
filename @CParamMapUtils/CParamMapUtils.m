@@ -113,6 +113,49 @@ classdef CParamMapUtils
 
             value = CParamMapUtils.toNumber(raw_value, key_name, err_id_prefix);
         end
+
+        function values = parseQuotedList(raw_value, delimiter)
+            % Parse quoted values from a delimiter-separated string.
+            % Input:
+            %   raw_value (1 x 1 char/string)
+            %       source string containing quoted values
+            %   delimiter (1 x 1 char/string, optional)
+            %       segment delimiter (default: ';')
+            % Output:
+            %   values (cell)
+            %       parsed values as 1 x N cell array
+            if nargin < 2 || isempty(delimiter)
+                delimiter = ';';
+            end
+
+            if isempty(raw_value)
+                values = {};
+                return;
+            end
+
+            if isstring(raw_value) && isscalar(raw_value)
+                raw_value = char(raw_value);
+            end
+            if isstring(delimiter) && isscalar(delimiter)
+                delimiter = char(delimiter);
+            end
+
+            if ~ischar(raw_value)
+                error('CParamMapUtils:InvalidQuotedListType', ...
+                    'Expected raw_value to be a char/string scalar.');
+            end
+
+            values = {};
+            segments = strsplit(raw_value, delimiter);
+            token_groups = cellfun(@(s) regexp(s, '"([^"]*)"', 'tokens'), ...
+                segments, 'UniformOutput', false);
+            for idx = 1:length(token_groups)
+                if isempty(token_groups{idx})
+                    continue;
+                end
+                values = [values, token_groups{idx}{1}]; %#ok<AGROW>
+            end
+        end
     end
 
     methods (Static, Access = private)
