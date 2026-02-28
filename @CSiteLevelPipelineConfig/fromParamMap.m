@@ -10,7 +10,7 @@ if ~isa(task_param_map, 'containers.Map')
         'Expected task_param_map to be a containers.Map.');
 end
 
-output_dir_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_OUTPUT_DIR_PATH, '');
+output_dir_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_OUTPUT_DIR_PATH, '', 'CSiteLevelPipelineConfig');
 if ~isempty(output_dir_path)
     pep_default = fullfile(output_dir_path, 'report_peptide_all.txt');
     intere_default = fullfile(output_dir_path, 'report_site.txt');
@@ -25,9 +25,9 @@ else
 end
 
 cfg_struct = struct();
-cfg_struct.input_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_PEP_LEVEL_FILE_PATH, pep_default);
-cfg_struct.output_intere_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_OUTPUT_INTERE_PATH, intere_default);
-cfg_struct.output_unintere_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_OUTPUT_UNINTERE_PATH, unintere_default);
+cfg_struct.input_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_PEP_LEVEL_FILE_PATH, pep_default, 'CSiteLevelPipelineConfig');
+cfg_struct.output_intere_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_OUTPUT_INTERE_PATH, intere_default, 'CSiteLevelPipelineConfig');
+cfg_struct.output_unintere_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_OUTPUT_UNINTERE_PATH, unintere_default, 'CSiteLevelPipelineConfig');
 protein_name_abbr_num = CParamMapUtils.getRequiredNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_PROTEIN_NAME_ABBR_NUM, 'number of protein abbreviation mappings');
 protein_name_abbr = containers.Map;
 for idx = 1:protein_name_abbr_num

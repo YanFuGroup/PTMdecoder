@@ -28,7 +28,7 @@ base_cfg_struct.result_filter_threshold = CParamMapUtils.getRequiredNumber(task_
 base_cfg_struct.output_dir_path = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_OUTPUT_DIR_PATH, ...
     'output directory', 'CNormalizationQuantServiceConfig');
 base_cfg_struct.min_MSMS_num = CParamMapUtils.getOptionalNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MIN_MSMS_NUM, 1, 'CNormalizationQuantServiceConfig');
-base_cfg_struct.checked_peptides_res_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_CHECKED_PEPTIDES_RES_PATH, []);
+base_cfg_struct.checked_peptides_res_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_CHECKED_PEPTIDES_RES_PATH, [], 'CNormalizationQuantServiceConfig');
 
 pair_file_path = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_NORM_PROTEIN_PEPTIDE_PAIR_PATH, ...
     'normalization protein-peptide pair file path', 'CNormalizationQuantServiceConfig');
@@ -40,5 +40,5 @@ cfg.peptide_list = {peptide_list};
 cfg.prot_list = {prot_list};
 cfg.filtered_res_file_path = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_FILTERED_RES_FILE_PATH, ...
     'filtered result path', 'CNormalizationQuantServiceConfig');
-cfg.output_file_name = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_NORM_OUTPUT_FILE_NAME, 'peptide4normalization.txt');
+cfg.output_file_name = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_NORM_OUTPUT_FILE_NAME, 'peptide4normalization.txt', 'CNormalizationQuantServiceConfig');
 end

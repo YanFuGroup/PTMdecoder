@@ -66,7 +66,8 @@ classdef CPeptideAlignRequantService < handle
                     'align_strategy is required.');
             end
             if isempty(align_options)
-                align_options = struct();
+                error('CPeptideAlignRequantService:MissingAlignOptions', ...
+                    'align_options is required.');
             end
 
             if isempty(cfg.filtered_res_file_path)

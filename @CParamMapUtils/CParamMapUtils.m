@@ -30,20 +30,29 @@ classdef CParamMapUtils
             value = param_map(key_name);
         end
 
-        function value = getOptional(param_map, key_name, default_value)
+        function value = getOptional(param_map, key_name, default_value, err_id_prefix)
             % Get an optional parameter value from map, use default if missing.
             % Input:
             %   param_map (containers.Map)
             %       parameter key-value map
             %   key_name (1 x 1 char/string)
             %       parameter key name
-            %   default_value (any)
-            %       default value if key not present
+            %   default_value (any, optional)
+            %       default value if key not present;
+            %       if omitted, returns [] when key missing/empty
+            %   err_id_prefix (1 x 1 char/string, optional)
+            %       error id prefix (default: CParamMapUtils)
             % Output:
             %   value (any)
-            %       parameter value or default value
+            %       parameter value, default value, or [] if no default
+            if nargin < 3
+                default_value = [];
+            end
+            if nargin < 4 || isempty(err_id_prefix)
+                err_id_prefix = 'CParamMapUtils';
+            end
             if ~isa(param_map, 'containers.Map')
-                error('CParamMapUtils:InvalidParamMap', ...
+                error([err_id_prefix, ':InvalidParamMap'], ...
                     'Expected param_map to be a containers.Map.');
             end
             if param_map.isKey(key_name) && ~isempty(param_map(key_name))
@@ -81,17 +90,27 @@ classdef CParamMapUtils
             %       parameter key-value map
             %   key_name (1 x 1 char/string)
             %       parameter key name
-            %   default_value (numeric/char/string)
-            %       default numeric value if key not present
+            %   default_value (numeric/char/string, optional)
+            %       default numeric value if key not present;
+            %       if omitted, returns [] when key missing/empty
             %   err_id_prefix (1 x 1 char/string, optional)
             %       error id prefix (default: CParamMapUtils)
             % Output:
-            %   value (double)
-            %       optional numeric parameter value
+            %   value (double or [])
+            %       optional numeric parameter value, or [] if no default
             if nargin < 4 || isempty(err_id_prefix)
                 err_id_prefix = 'CParamMapUtils';
             end
-            raw_value = CParamMapUtils.getOptional(param_map, key_name, default_value);
+            if nargin < 3
+                default_value = [];
+            end
+
+            raw_value = CParamMapUtils.getOptional(param_map, key_name, default_value, err_id_prefix);
+            if isempty(raw_value)
+                value = [];
+                return;
+            end
+
             value = CParamMapUtils.toNumber(raw_value, key_name, err_id_prefix);
         end
     end

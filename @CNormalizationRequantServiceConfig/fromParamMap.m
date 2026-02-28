@@ -28,10 +28,10 @@ base_cfg_struct.result_filter_threshold = CParamMapUtils.getRequiredNumber(task_
 base_cfg_struct.output_dir_path = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_OUTPUT_DIR_PATH, ...
     'output directory', 'CNormalizationRequantServiceConfig');
 base_cfg_struct.min_MSMS_num = CParamMapUtils.getOptionalNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MIN_MSMS_NUM, 1, 'CNormalizationRequantServiceConfig');
-base_cfg_struct.checked_peptides_res_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_CHECKED_PEPTIDES_RES_PATH, []);
+base_cfg_struct.checked_peptides_res_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_CHECKED_PEPTIDES_RES_PATH, [], 'CNormalizationRequantServiceConfig');
 
 cfg = struct();
 cfg.msms_cfg = base_cfg_struct;
 cfg.output_file_name = CParamMapUtils.getOptional(task_param_map, ...
-    CPTMdecoderWorkflowParamKeys.PARAM_NORM_REQUANT_OUTPUT_FILE_NAME, 'peptide4normalization_requant.txt');
+    CPTMdecoderWorkflowParamKeys.PARAM_NORM_REQUANT_OUTPUT_FILE_NAME, 'peptide4normalization_requant.txt', 'CNormalizationRequantServiceConfig');
 end

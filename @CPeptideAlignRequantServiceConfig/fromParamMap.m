@@ -29,13 +29,13 @@ cfg.fasta_file_path = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWork
 cfg.regular_express = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_REGULAR_EXPRESS, 'regular expression', 'CPeptideAlignRequantServiceConfig');
 cfg.output_dir_path = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_OUTPUT_DIR_PATH, 'output directory path', 'CPeptideAlignRequantServiceConfig');
 
-cfg.filtered_res_file_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_FILTERED_RES_FILE_PATH, '');
-cfg.msms_res_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MSMS_RES_PATH, []);
+cfg.filtered_res_file_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_FILTERED_RES_FILE_PATH, '', 'CPeptideAlignRequantServiceConfig');
+cfg.msms_res_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MSMS_RES_PATH, [], 'CPeptideAlignRequantServiceConfig');
 cfg.min_MSMS_num = CParamMapUtils.getOptionalNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MIN_MSMS_NUM, 1, 'CPeptideAlignRequantServiceConfig');
 cfg.alignment_report_path = CParamMapUtils.getOptional(task_param_map, ...
-    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_REPORT_PATH, '');
+    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_REPORT_PATH, '', 'CPeptideAlignRequantServiceConfig');
 cfg.requant_output_path = CParamMapUtils.getOptional(task_param_map, ...
-    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_REQUANT_OUTPUT_PATH, '');
+    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_REQUANT_OUTPUT_PATH, '', 'CPeptideAlignRequantServiceConfig');
 
 cfg.align_strategy_obj = parseAlignStrategyFromMap(task_param_map);
 cfg.align_options = parseAlignOptionsFromMap(task_param_map);
@@ -45,12 +45,12 @@ end
 function align_strategy_obj = parseAlignStrategyFromMap(task_param_map)
 % Build run-alignment strategy object from parameter map.
 strategy_type = lower(strtrim(CParamMapUtils.getOptional(task_param_map, ...
-    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_STRATEGY_TYPE, 'reference')));
+    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_STRATEGY_TYPE, 'reference', 'CPeptideAlignRequantServiceConfig')));
 
 switch strategy_type
     case 'reference'
         reference_raw = CParamMapUtils.getOptional(task_param_map, ...
-            CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_REFERENCE_RAW, '');
+            CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_REFERENCE_RAW, '', 'CPeptideAlignRequantServiceConfig');
         align_strategy_obj = ReferenceRunAlignStrategy(reference_raw);
     case 'pairwise'
         pair_num = CParamMapUtils.getRequiredNumber(task_param_map, ...
@@ -85,19 +85,19 @@ function align_options = parseAlignOptionsFromMap(task_param_map)
 align_options = struct();
 
 align_options.min_psm = CParamMapUtils.getOptionalNumber(task_param_map, ...
-    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_MIN_PSM, 1, 'CPeptideAlignRequantServiceConfig');
+    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_MIN_PSM, [], 'CPeptideAlignRequantServiceConfig');
 align_options.num_bins = CParamMapUtils.getOptionalNumber(task_param_map, ...
-    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_NUM_BINS, 5, 'CPeptideAlignRequantServiceConfig');
+    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_NUM_BINS, [], 'CPeptideAlignRequantServiceConfig');
 align_options.min_per_bin = CParamMapUtils.getOptionalNumber(task_param_map, ...
-    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_MIN_PER_BIN, 5, 'CPeptideAlignRequantServiceConfig');
+    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_MIN_PER_BIN, [], 'CPeptideAlignRequantServiceConfig');
 align_options.outlier_k = CParamMapUtils.getOptionalNumber(task_param_map, ...
-    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_OUTLIER_K, 3, 'CPeptideAlignRequantServiceConfig');
+    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_OUTLIER_K, [], 'CPeptideAlignRequantServiceConfig');
 align_options.outlier_method = CParamMapUtils.getOptional(task_param_map, ...
-    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_OUTLIER_METHOD, 'mad');
+    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_OUTLIER_METHOD, [], 'CPeptideAlignRequantServiceConfig');
 align_options.rt_sigma = CParamMapUtils.getOptionalNumber(task_param_map, ...
-    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_RT_SIGMA, 0.5, 'CPeptideAlignRequantServiceConfig');
+    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_RT_SIGMA, [], 'CPeptideAlignRequantServiceConfig');
 align_options.max_rt_residual = CParamMapUtils.getOptionalNumber(task_param_map, ...
-    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_MAX_RT_RESIDUAL, -1, 'CPeptideAlignRequantServiceConfig');
+    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_MAX_RT_RESIDUAL, [], 'CPeptideAlignRequantServiceConfig');
 align_options.dead_time_min = CParamMapUtils.getOptionalNumber(task_param_map, ...
-    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_DEAD_TIME_MIN, 0.5, 'CPeptideAlignRequantServiceConfig');
+    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_DEAD_TIME_MIN, [], 'CPeptideAlignRequantServiceConfig');
 end
