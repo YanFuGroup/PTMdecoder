@@ -22,9 +22,7 @@ classdef CPeptideAlignRequantService < handle
             end
             obj.m_cfg = cfg;
 
-            mapModification = readModifyInfo(obj.m_cfg.mod_file_path);
-            obj.m_fixedModNameMass = obj.getModMassName(obj.m_cfg.fixed_mod, mapModification);
-            obj.m_variableModNameMass = obj.getModMassName(obj.m_cfg.variable_mod, mapModification);
+            [obj.m_fixedModNameMass, obj.m_variableModNameMass] = CModificationRegistry.fromConfig(obj.m_cfg);
             obj.m_cMgfDatasetIO = CMgfDatasetIO(obj.m_cfg.spec_dir_path);
             obj.m_cMs12DatasetIO = CMS12DatasetIO(obj.m_cfg.spec_dir_path, obj.m_cfg.ms1_tolerance);
             obj.m_cMsFileMapper = CMsFileMapper(obj.m_cfg.spec_dir_path);
@@ -196,44 +194,5 @@ classdef CPeptideAlignRequantService < handle
             end
         end
 
-        function modNameMass = getModMassName(~, modificationTypes, mapModification)
-            % Build modification name/mass mapping list from setting string.
-            % Input:
-            %   modificationTypes (1 x 1 char/string)
-            %       semicolon-separated modification declarations
-            %   mapModification (containers.Map)
-            %       modification declaration to mass map
-            % Output:
-            %   modNameMass (N x 3 cell)
-            %       {mod_name, specificity, mass}
-            modNameMass = [];
-            if isempty(modificationTypes)
-                return
-            end
-            S_modificationTypes = regexp(modificationTypes,';','split');
-            modNameMass = cell(length(S_modificationTypes),3);
-            for i = 1:length(S_modificationTypes)
-                if isempty(S_modificationTypes{i})
-                    continue;
-                end
-                left_brac_pos = strfind(S_modificationTypes{i},'[');
-                if length(left_brac_pos)>2
-                    error(['Unexpected modification: ',S_modificationTypes{i}, ...
-                        'The modification string are expected to be in either ' ...
-                        '"Carbamidomethyl[C]" or "ICPL_13C(6)[K](NIC_13C(6)[K])"']);
-                elseif length(left_brac_pos)==2
-                    right_brac_pos = strfind(S_modificationTypes{i},']');
-                    modNameMass{i,1} = [S_modificationTypes{i}(1:left_brac_pos(1)-1),...
-                        S_modificationTypes{i}(right_brac_pos(1)+1:left_brac_pos(2)),')'];
-                    modNameMass{i,2} = S_modificationTypes{i}(left_brac_pos(1)+1:...
-                        right_brac_pos(1)-1);
-                else
-                    modNameMass{i,1} = S_modificationTypes{i}(1:left_brac_pos(1)-1);
-                    modNameMass{i,2} = S_modificationTypes{i}(left_brac_pos(1)+1:end-1);
-                end
-                modNameMass{i,3} = mapModification(S_modificationTypes{i});
-            end
-            modNameMass(cellfun(@isempty,modNameMass(:,1)),:) = [];
-        end
     end
 end
