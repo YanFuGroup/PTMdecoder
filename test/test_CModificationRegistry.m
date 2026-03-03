@@ -8,14 +8,13 @@ function tests = test_CModificationRegistry
 tests = functiontests(localfunctions);
 end
 
-function testLoadMapFromIniAndCompatibilityWrapper(testCase)
-% TESTLOADMAPFROMINIANDCOMPATIBILITYWRAPPER Validate map loading and wrapper compatibility.
+function testLoadMapFromIni(testCase)
+% TESTLOADMAPFROMINI Validate map loading from ini.
 
 ini_path = createTempModifyIni();
 cleanup_file = onCleanup(@() deleteIfExists(ini_path)); %#ok<NASGU>
 
 map1 = CModificationRegistry.loadMap(ini_path);
-map2 = readModifyInfo(ini_path);
 
 testCase.verifyEqual(map1('Carbamidomethyl[C]'), 57.021464);
 testCase.verifyEqual(map1('Oxidation[M]'), 15.994915);
@@ -23,8 +22,6 @@ testCase.verifyEqual(map1('null'), 0);
 testCase.verifyEqual(map1('NULL'), 0);
 testCase.verifyEqual(map1('Null'), 0);
 testCase.verifyEqual(map1('unknown'), 0);
-testCase.verifyEqual(map2('Carbamidomethyl[C]'), map1('Carbamidomethyl[C]'));
-testCase.verifyEqual(map2('Oxidation[M]'), map1('Oxidation[M]'));
 end
 
 function testBuildModNameMassAndFromConfig(testCase)
