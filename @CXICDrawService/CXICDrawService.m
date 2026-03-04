@@ -67,13 +67,12 @@ classdef CXICDrawService < handle
                 'alpha', cfg.alpha, ...
                 'resFilterThres', cfg.result_filter_threshold));
             executor = CIMPProcessingExecutor(pipeline_cfg);
-            pipeline = CPeptideLevelPipeline(executor);
 
             fprintf('Drawing XIC...');
             for idx_psf = 1:length(msms_result.Peptides)
                 print_progress = print_progress.update_show(idx_psf);
                 rawIdentManager = obj.buildRawIdentManagerFromSpectrumList(msms_result.Peptides(idx_psf).spectrum_list);
-                pipeline.drawImpXicForBlock(rawIdentManager, pep_rtrange_map, dir_save, color_map, legend_map);
+                executor.drawImpXicForBlock(rawIdentManager, pep_rtrange_map, dir_save, color_map, legend_map);
             end
             print_progress.last_update();
             fprintf('done.\n');

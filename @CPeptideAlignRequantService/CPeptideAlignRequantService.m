@@ -96,12 +96,11 @@ classdef CPeptideAlignRequantService < handle
                 'align_strategy', align_strategy, ...
                 'align_options', align_options));
             align_executor = CIMPXICAlignRequantExecutor(align_cfg);
-            pipeline = CPeptideLevelPipeline([], align_executor);
 
-            [pep_rtrange_map, align_report] = pipeline.buildAlignedRtRangeMap( ...
+            [pep_rtrange_map, align_report] = align_executor.buildAlignedRtRangeMap( ...
                 cfg.filtered_res_file_path, rawIdentManagers);
 
-            pipeline.writeAlignmentReport(align_report, cfg.alignment_report_path);
+            align_executor.writeAlignmentReport(align_report, cfg.alignment_report_path);
 
             output_path = cfg.requant_output_path;
             report = CIMPQuantReport();
@@ -113,7 +112,6 @@ classdef CPeptideAlignRequantService < handle
                 'alpha', cfg.alpha, ...
                 'resFilterThres', cfg.result_filter_threshold));
             proc_executor = CIMPProcessingExecutor(proc_cfg);
-            proc_pipeline = CPeptideLevelPipeline(proc_executor);
 
             fprintf('Re-quantifying at peptide level (aligned)...')
             for i_pep = 1:length(msms_result.Peptides)
@@ -121,7 +119,7 @@ classdef CPeptideAlignRequantService < handle
                 peptide_sequence = msms_result.Peptides(i_pep).peptide_sequence;
                 cell_prot_name_pos = obj.m_pepProtService.get_protein_name_pos(peptide_sequence);
                 rawIdentManager = rawIdentManagers{i_pep};
-                block = proc_pipeline.requantifyPeptideBlock(cell_prot_name_pos, rawIdentManager, pep_rtrange_map);
+                block = proc_executor.requantifyPeptideBlock(cell_prot_name_pos, rawIdentManager, pep_rtrange_map);
                 report = report.append_block(block);
             end
             print_progress.last_update();

@@ -53,7 +53,6 @@ classdef CPeptideRequantService < handle
                 'alpha', cfg.alpha, ...
                 'resFilterThres', cfg.result_filter_threshold));
             executor = CIMPProcessingExecutor(pipeline_cfg);
-            pipeline = CPeptideLevelPipeline(executor);
 
             deps = struct( ...
                 'getProfilesFunc', @(dataset_name, spectrum_name) obj.getProfiles( ...
@@ -69,7 +68,7 @@ classdef CPeptideRequantService < handle
                 cell_prot_name_pos = pepProtService.get_protein_name_pos(peptide_sequence);
                 rawIdentManager = CPeptideRawIdentAssembler.buildFromSpectrumList( ...
                     msms_result.Peptides(idx_psf).spectrum_list, deps);
-                block = pipeline.requantifyPeptideBlock(cell_prot_name_pos, rawIdentManager, pep_rtrange_map);
+                block = executor.requantifyPeptideBlock(cell_prot_name_pos, rawIdentManager, pep_rtrange_map);
                 report_requant = report_requant.append_block(block);
             end
             print_progress.last_update();

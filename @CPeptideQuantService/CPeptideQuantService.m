@@ -47,7 +47,6 @@ classdef CPeptideQuantService < handle
                 'alpha', cfg.alpha, ...
                 'resFilterThres', cfg.result_filter_threshold));
             executor = CIMPProcessingExecutor(pipeline_cfg);
-            pipeline = CPeptideLevelPipeline(executor);
             stats_cleanup = onCleanup(@() CIMPQuantStats.rt_sorted_stats('flush', ...
                 CPathResolver.resolveFilePath(cfg.output_dir_path, 'rt_sorted_stats.mat', '')));
 
@@ -64,7 +63,7 @@ classdef CPeptideQuantService < handle
                 cell_prot_name_pos = pepProtService.get_protein_name_pos(peptide_sequence);
                 rawIdentManager = CPeptideRawIdentAssembler.buildFromSpectrumList( ...
                     msms_result.Peptides(idx_psf).spectrum_list, deps);
-                block = pipeline.quantifyPeptideBlock(cell_prot_name_pos, rawIdentManager);
+                block = executor.quantifyPeptideBlock(cell_prot_name_pos, rawIdentManager);
                 report = report.append_block(block);
             end
             print_progress.last_update();

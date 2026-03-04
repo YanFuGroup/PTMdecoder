@@ -60,7 +60,6 @@ classdef CNormalizationRequantService < handle
                 'alpha', msms_cfg.alpha, ...
                 'resFilterThres', msms_cfg.result_filter_threshold));
             executor = CIMPProcessingExecutor(pipeline_cfg);
-            pipeline = CPeptideLevelPipeline(executor);
 
             fprintf('Re-quantifying at peptide level...')
             rec_counter = 0;
@@ -93,7 +92,7 @@ classdef CNormalizationRequantService < handle
                         rawIdentManager.setStore(mgf_name, rawStore);
                     end
 
-                    block = pipeline.requantifyPeptideBlock({prot_name, -1}, rawIdentManager, pep_rtrange_map);
+                    block = executor.requantifyPeptideBlock({prot_name, -1}, rawIdentManager, pep_rtrange_map);
                     report_requant = report_requant.append_block(block);
                 end
             end

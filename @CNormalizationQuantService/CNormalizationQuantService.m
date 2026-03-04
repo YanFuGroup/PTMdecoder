@@ -62,14 +62,13 @@ classdef CNormalizationQuantService < handle
                 'alpha', msms_cfg.alpha, ...
                 'resFilterThres', msms_cfg.result_filter_threshold));
             executor = CIMPProcessingExecutor(pipeline_cfg);
-            pipeline = CPeptideLevelPipeline(executor);
             stats_cleanup = onCleanup(@() CIMPQuantStats.rt_sorted_stats('flush', ...
                 CPathResolver.resolveFilePath(msms_cfg.output_dir_path, 'rt_sorted_stats.mat', '')));
             report = CIMPQuantReport();
 
             fprintf('Quantifying %s...', msms_cfg.spec_dir_path);
             for i_list = 1:length(peptide_list)
-                block = pipeline.quantifyPeptideBlock({prot_list{i_list}, -1}, pep_quant{i_list});
+                block = executor.quantifyPeptideBlock({prot_list{i_list}, -1}, pep_quant{i_list});
                 report = report.append_block(block);
             end
             fprintf('done.\n');
