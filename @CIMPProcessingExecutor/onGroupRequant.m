@@ -28,14 +28,35 @@ if ~has_nonzero_imp
     return;
 end
 for i_imp = 1:length(imp_idx_nonzero)
-    rt_peaks = struct(...
+
+    if isResearchRtMergeEnabled()
+        rt_peaks = struct(...
+            'rt_start', xic_peak_rt_bounds(i_imp).rt_start, ...
+            'rt_end', xic_peak_rt_bounds(i_imp).rt_end, ...
+            'ratio', ratio_each_XIC_peak(i_imp), ...
+            'check_label', 2);
+
+        imp_idx = imp_idx_nonzero(i_imp);
+        if imp_idx <= numel(group.impRtRanges) && ~isempty(group.impRtRanges{imp_idx})
+            candidate_ranges = group.impRtRanges{imp_idx};
+            for i_peak = 1:numel(candidate_ranges)
+                candidate_peak = candidate_ranges(i_peak);
+                if isSameRtRange(candidate_peak, xic_peak_rt_bounds(i_imp))
+                    continue;
+                end
+                rt_peaks(end+1,1) = struct(...
+                    'rt_start', candidate_peak.rt_start, ...
+                    'rt_end', candidate_peak.rt_end, ...
+                    'ratio', candidate_peak.ratio, ...
+                    'check_label', 0); %#ok<AGROW>
+            end
+        end
+    else
+        rt_peaks = struct(...
         'rt_start', xic_peak_rt_bounds(i_imp).rt_start, ...
         'rt_end', xic_peak_rt_bounds(i_imp).rt_end, ...
         'ratio', ratio_each_XIC_peak(i_imp), ...
         'check_label', max_label(i_imp));
-
-    if isResearchRtMergeEnabled()
-        rt_peaks = [rt_peaks, group.impRtRanges{imp_idx_nonzero(i_imp)}];
     end
 
     imp_records(end+1,1) = CIMPQuantRecord(...
@@ -50,17 +71,11 @@ for i_imp = 1:length(imp_idx_nonzero)
 end
 end
 
-function tf = isResearchRtMergeEnabled()
-persistent cached_enabled has_cached_value
-if isempty(has_cached_value)
-    has_cached_value = false;
+function cached_enabled = isResearchRtMergeEnabled()
+env_val = strtrim(getenv('REQUANT_RT_PEAKS_MERGE_ON'));
+cached_enabled = any(strcmpi(env_val, {'1', 'true', 'yes', 'on'}));
 end
 
-if ~has_cached_value
-    env_val = strtrim(getenv('REQUANT_RT_PEAKS_MERGE_ON'));
-    cached_enabled = any(strcmpi(env_val, {'1', 'true', 'yes', 'on'}));
-    has_cached_value = true;
-end
-
-tf = cached_enabled;
+function tf = isSameRtRange(peak_a, peak_b)
+tf = peak_a.rt_start == peak_b.rt_start && peak_a.rt_end == peak_b.rt_end;
 end

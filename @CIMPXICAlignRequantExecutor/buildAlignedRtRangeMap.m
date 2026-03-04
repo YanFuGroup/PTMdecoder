@@ -33,7 +33,7 @@ if isempty(align_pairs)
     return;
 end
 
-fprintf('Aligning RT ranges for %d run pairs...', size(align_pairs, 1));
+fprintf('Aligning XIC candidates for %d run pairs...', size(align_pairs, 1));
 print_progress = CPrintProgress(length(rawIdentManagers));
 for idx_psf = 1:length(rawIdentManagers)
     print_progress = print_progress.update_show(idx_psf);

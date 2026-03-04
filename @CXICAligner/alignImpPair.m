@@ -129,6 +129,27 @@ if best_a_idx > 0 && best_b_idx > 0
         'rt_end', b_peak.rt_end, ...
         'ratio', data_b.ratio_each_XIC_peak(best_b_idx), ...
         'check_label', 2);
+
+    other_a_idx = setdiff(1:numel(data_a.xic_peak_rt_bounds), best_a_idx);
+    for idx = other_a_idx
+        candidate_peak = data_a.xic_peak_rt_bounds(idx);
+        rt_peak_a(end + 1) = struct( ...
+            'rt_start', candidate_peak.rt_start, ...
+            'rt_end', candidate_peak.rt_end, ...
+            'ratio', data_a.ratio_each_XIC_peak(idx), ...
+            'check_label', 0);
+    end
+
+    other_b_idx = setdiff(1:numel(data_b.xic_peak_rt_bounds), best_b_idx);
+    for idx = other_b_idx
+        candidate_peak = data_b.xic_peak_rt_bounds(idx);
+        rt_peak_b(end + 1) = struct( ...
+            'rt_start', candidate_peak.rt_start, ...
+            'rt_end', candidate_peak.rt_end, ...
+            'ratio', data_b.ratio_each_XIC_peak(idx), ...
+            'check_label', 0);
+    end
+
     stats.num_aligned = 1;
 end
 end
@@ -210,10 +231,17 @@ if isempty(imp_max_props)
     return;
 end
 
-sums = sum(area_imp_by_peak, 1);
+num_peaks = numel(xic_peak_rt_bounds);
+peak_total_areas = zeros(1, num_peaks);
+for idx_peak = 1:num_peaks
+    idx_start = xic_peak_idx_bounds(idx_peak).idx_start;
+    idx_end = xic_peak_idx_bounds(idx_peak).idx_end;
+    peak_total_areas(idx_peak) = CXICSignalUtils.calculate_area(...
+        xic_rt, xic_intensity_smoothed, idx_start, idx_end);
+end
 ratio_each_XIC_peak = zeros(size(area_imp_by_peak));
-valid_peaks = sums > 0;
-ratio_each_XIC_peak(:, valid_peaks) = area_imp_by_peak(:, valid_peaks) ./ sums(valid_peaks);
+valid_peaks = peak_total_areas > 0;
+ratio_each_XIC_peak(:, valid_peaks) = area_imp_by_peak(:, valid_peaks) ./ peak_total_areas(valid_peaks);
 
 is_ok = true;
 data.imp_max_props = imp_max_props;
