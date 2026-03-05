@@ -38,6 +38,8 @@ classdef CPeptideAlignRequantService < handle
             % Recognized align_options keys:
             %       - msms_res_path (1 x 1 char/string)
             %           input MSMS result path (default: cfg.msms_res_path or report_msms.txt)
+            %       - peptide_quant_res_path (1 x 1 char/string)
+            %           initial peptide quant result path (default: report_peptide_all.txt)
             %       - min_psm (1 x 1 double)
             %           minimum anchors/PSMs for alignment (passed to aligner)
             %       - num_bins (1 x 1 double)
@@ -54,6 +56,10 @@ classdef CPeptideAlignRequantService < handle
             %           max RT residual for candidate pairing (passed to aligner)
             %       - dead_time_min (1 x 1 double)
             %           minimum allowed RT start (passed to aligner)
+            %       - unaligned_imp_action (1 x 1 char/string)
+            %           behavior when no valid aligned pair is selected:
+            %             'drop' -> remove IMP from pep_rtrange_map (default)
+            %             'zero-label' -> keep peaks but set all check_label = 0
             %       unknown keys are ignored by this service and forwarded downstream
             cfg = obj.m_cfg;
             align_strategy = cfg.align_strategy_obj;
@@ -79,10 +85,39 @@ classdef CPeptideAlignRequantService < handle
                 CStructOptionUtils.get(align_options, 'msms_res_path', cfg.msms_res_path));
             msms_result = CMS2ResultIO.read(msms_res_path);
 
+            quant_output_path = CPathResolver.resolveFilePath(cfg.output_dir_path, 'report_peptide_all_primary.txt', ...
+                CStructOptionUtils.get(align_options, 'peptide_quant_res_path', ''));
+
             rawIdentManagers = cell(1, length(msms_result.Peptides));
             for i_pep = 1:length(msms_result.Peptides)
                 rawIdentManagers{i_pep} = obj.buildRawIdentManagerFromSpectrumList(msms_result.Peptides(i_pep).spectrum_list);
             end
+
+            proc_cfg = CIMPProcessingExecutorConfig(struct( ...
+                'ms12DatasetIO', obj.m_cMs12DatasetIO, ...
+                'ms1_tolerance', cfg.ms1_tolerance, ...
+                'minMSMSnum', cfg.min_MSMS_num, ...
+                'alpha', cfg.alpha, ...
+                'resFilterThres', 0));  % cfg.result_filter_threshold
+            proc_executor = CIMPProcessingExecutor(proc_cfg);
+
+            quant_report = CIMPQuantReport();
+            print_progress = CPrintProgress(length(msms_result.Peptides));
+            fprintf('Quantifying at peptide level before alignment...')
+            for i_pep = 1:length(msms_result.Peptides)
+                print_progress = print_progress.update_show(i_pep);
+                peptide_sequence = msms_result.Peptides(i_pep).peptide_sequence;
+                cell_prot_name_pos = obj.m_pepProtService.get_protein_name_pos(peptide_sequence);
+                rawIdentManager = rawIdentManagers{i_pep};
+                block = proc_executor.quantifyPeptideBlock(cell_prot_name_pos, rawIdentManager);
+                quant_report = quant_report.append_block(block);
+            end
+            print_progress.last_update();
+            fprintf('done.\n');
+
+            CIMPQuantResultIO.write(quant_report, quant_output_path);
+            % quant_report = CIMPQuantResultIO.read(quant_output_path);
+            base_pep_rtrange_map = quant_report.build_pep_rtrange_map();
 
             anchor_selector = CXICAlignAnchorSelector();
             aligner = CXICAligner(anchor_selector, align_options);
@@ -90,7 +125,6 @@ classdef CPeptideAlignRequantService < handle
                 'ms12DatasetIO', obj.m_cMs12DatasetIO, ...
                 'ms1_tolerance', cfg.ms1_tolerance, ...
                 'minMSMSnum', cfg.min_MSMS_num, ...
-                'alpha', cfg.alpha, ...
                 'resFilterThres', cfg.result_filter_threshold, ...
                 'aligner', aligner, ...
                 'align_strategy', align_strategy, ...
@@ -98,20 +132,13 @@ classdef CPeptideAlignRequantService < handle
             align_executor = CIMPXICAlignRequantExecutor(align_cfg);
 
             [pep_rtrange_map, align_report] = align_executor.buildAlignedRtRangeMap( ...
-                cfg.filtered_res_file_path, rawIdentManagers);
+                cfg.filtered_res_file_path, rawIdentManagers, base_pep_rtrange_map);
 
             align_executor.writeAlignmentReport(align_report, cfg.alignment_report_path);
 
             output_path = cfg.requant_output_path;
             report = CIMPQuantReport();
             print_progress = CPrintProgress(length(msms_result.Peptides));
-            proc_cfg = CIMPProcessingExecutorConfig(struct( ...
-                'ms12DatasetIO', obj.m_cMs12DatasetIO, ...
-                'ms1_tolerance', cfg.ms1_tolerance, ...
-                'minMSMSnum', cfg.min_MSMS_num, ...
-                'alpha', cfg.alpha, ...
-                'resFilterThres', cfg.result_filter_threshold));
-            proc_executor = CIMPProcessingExecutor(proc_cfg);
 
             fprintf('Re-quantifying at peptide level (aligned)...')
             for i_pep = 1:length(msms_result.Peptides)

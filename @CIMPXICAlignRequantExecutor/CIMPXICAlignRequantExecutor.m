@@ -5,7 +5,6 @@ classdef CIMPXICAlignRequantExecutor < handle
         m_ms12DatasetIO
         m_ms1_tolerance
         m_minMSMSnum
-        m_alpha
         m_resFilterThres
         m_aligner
         m_align_strategy
@@ -16,7 +15,7 @@ classdef CIMPXICAlignRequantExecutor < handle
 
     methods
         function obj = CIMPXICAlignRequantExecutor(ms12DatasetIO, ms1_tolerance, minMSMSnum, ...
-            alpha, resFilterThres, aligner, align_strategy, align_options)
+            resFilterThres, aligner, align_strategy, align_options)
             % Construct a quant-align-requant executor.
             % Input:
             %   ms12DatasetIO (CMS12DatasetIO)
@@ -25,8 +24,6 @@ classdef CIMPXICAlignRequantExecutor < handle
             %       MS1 tolerance settings
             %   minMSMSnum (1 x 1 double/int)
             %       Minimum MSMS count for XIC preprocessing
-            %   alpha (1 x 1 double)
-            %       Peak detection threshold factor
             %   resFilterThres (1 x 1 double)
             %       Ratio filter threshold
             %   aligner (CXICAligner)
@@ -59,7 +56,6 @@ classdef CIMPXICAlignRequantExecutor < handle
                 obj.m_ms12DatasetIO = cfg.ms12DatasetIO;
                 obj.m_ms1_tolerance = cfg.ms1_tolerance;
                 obj.m_minMSMSnum = cfg.minMSMSnum;
-                obj.m_alpha = cfg.alpha;
                 obj.m_resFilterThres = cfg.resFilterThres;
                 obj.m_aligner = cfg.aligner;
                 obj.m_align_strategy = cfg.align_strategy;
@@ -70,7 +66,6 @@ classdef CIMPXICAlignRequantExecutor < handle
             obj.m_ms12DatasetIO = ms12DatasetIO;
             obj.m_ms1_tolerance = ms1_tolerance;
             obj.m_minMSMSnum = minMSMSnum;
-            obj.m_alpha = alpha;
             obj.m_resFilterThres = resFilterThres;
             obj.m_aligner = aligner;
             obj.m_align_strategy = align_strategy;
@@ -82,7 +77,7 @@ classdef CIMPXICAlignRequantExecutor < handle
     end
 
     methods (Access=public)
-        [pep_rtrange_map, report] = buildAlignedRtRangeMap(obj, fdr_filtered_result_path, rawIdentManagers)
+        [pep_rtrange_map, report] = buildAlignedRtRangeMap(obj, fdr_filtered_result_path, rawIdentManagers, base_pep_rtrange_map)
 
         writeAlignmentReport(obj, report, output_path)
     end

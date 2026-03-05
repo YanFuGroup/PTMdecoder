@@ -39,6 +39,6 @@ classdef CXICAligner < handle
         key = pairKey(obj, ref_raw, target_raw)
 
         [rt_peak_a, rt_peak_b, stats] = alignImpPair(obj, ms12DatasetIO, raw_name_a, imp_info_a, ...
-            raw_name_b, imp_info_b, model, options, minMSMSnum, alpha, resFilterThres)
+            raw_name_b, imp_info_b, model, options, minMSMSnum, resFilterThres)
     end
 end

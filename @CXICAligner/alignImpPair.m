@@ -1,6 +1,16 @@
 function [rt_peak_a, rt_peak_b, stats] = alignImpPair(obj, ms12DatasetIO, raw_name_a, imp_info_a, ...
-    raw_name_b, imp_info_b, model, options, minMSMSnum, alpha, resFilterThres)
+    raw_name_b, imp_info_b, model, options, minMSMSnum, resFilterThres)
 % Jointly select a peak pair for one IMP across two runs.
+%
+% Function role:
+%   - Build candidate peak metrics for run A and run B under base-provided
+%     candidate RT intervals (candidateRtPeaks).
+%   - Evaluate all candidate peak pairs under alignment model constraints.
+%   - Return one selected peak (check_label=2) plus remaining candidates
+%     (check_label=0) for each run.
+%
+% Notes:
+%   - Candidate intervals MUST be provided through imp_info.candidateRtPeaks.
 % Input:
 %   obj (CXICAligner)
 %       Aligner instance
@@ -10,10 +20,16 @@ function [rt_peak_a, rt_peak_b, stats] = alignImpPair(obj, ms12DatasetIO, raw_na
 %       Raw name of run A
 %   imp_info_a (struct)
 %       IMP info for run A (impName, impMass, ratio, rts, intensity, charge, lowMzBound, highMzBound)
+%       Required extra field:
+%         - candidateRtPeaks (struct array)
+%             Candidate intervals from base quant map (rt_start/rt_end/...)
 %   raw_name_b (1 x 1 char/string)
 %       Raw name of run B
 %   imp_info_b (struct)
 %       IMP info for run B (impName, impMass, ratio, rts, intensity, charge, lowMzBound, highMzBound)
+%       Required extra field:
+%         - candidateRtPeaks (struct array)
+%             Candidate intervals from base quant map (rt_start/rt_end/...)
 %   model (struct)
 %       Alignment transform model (A -> B)
 %   options (struct, optional)
@@ -25,8 +41,6 @@ function [rt_peak_a, rt_peak_b, stats] = alignImpPair(obj, ms12DatasetIO, raw_na
 %           Min allowed RT (minutes) for peak start; earlier peaks are ignored.
 %   minMSMSnum (1 x 1 double/int, optional)
 %       Minimum MSMS count for XIC preprocessing
-%   alpha (1 x 1 double, optional)
-%       Peak detection threshold factor
 %   resFilterThres (1 x 1 double, optional)
 %       Ratio filter threshold
 % Output:
@@ -36,6 +50,8 @@ function [rt_peak_a, rt_peak_b, stats] = alignImpPair(obj, ms12DatasetIO, raw_na
 %       Selected peak info for run B
 %   stats (struct)
 %       Counters for aligned IMPs
+%       - num_aligned: 1 if one valid pair selected, else 0
+%       - num_total  : always 1 (current call unit)
 
 if nargin < 8
     options = obj.m_options;
@@ -43,15 +59,12 @@ end
 if nargin < 9 || isempty(minMSMSnum)
     minMSMSnum = 1;
 end
-if nargin < 10 || isempty(alpha)
-    alpha = 0.01;
-end
-if nargin < 11 || isempty(resFilterThres)
+if nargin < 10 || isempty(resFilterThres)
     resFilterThres = 0.01;
 end
 
-[data_a, ok_a] = compute_imp_peaks(ms12DatasetIO, raw_name_a, imp_info_a, minMSMSnum, alpha, resFilterThres);
-[data_b, ok_b] = compute_imp_peaks(ms12DatasetIO, raw_name_b, imp_info_b, minMSMSnum, alpha, resFilterThres);
+[data_a, ok_a] = compute_imp_peaks(ms12DatasetIO, raw_name_a, imp_info_a, minMSMSnum, resFilterThres);
+[data_b, ok_b] = compute_imp_peaks(ms12DatasetIO, raw_name_b, imp_info_b, minMSMSnum, resFilterThres);
 
 rt_peak_a = [];
 rt_peak_b = [];
@@ -137,7 +150,7 @@ if best_a_idx > 0 && best_b_idx > 0
             'rt_start', candidate_peak.rt_start, ...
             'rt_end', candidate_peak.rt_end, ...
             'ratio', data_a.ratio_each_XIC_peak(idx), ...
-            'check_label', 0);
+            'check_label', 0); %#ok<AGROW> 
     end
 
     other_b_idx = setdiff(1:numel(data_b.xic_peak_rt_bounds), best_b_idx);
@@ -147,7 +160,7 @@ if best_a_idx > 0 && best_b_idx > 0
             'rt_start', candidate_peak.rt_start, ...
             'rt_end', candidate_peak.rt_end, ...
             'ratio', data_b.ratio_each_XIC_peak(idx), ...
-            'check_label', 0);
+            'check_label', 0); %#ok<AGROW> 
     end
 
     stats.num_aligned = 1;
@@ -176,8 +189,17 @@ end
 end
 
 
-function [data, is_ok] = compute_imp_peaks(ms12DatasetIO, raw_name, imp_info, minMSMSnum, alpha, resFilterThres)
+function [data, is_ok] = compute_imp_peaks(ms12DatasetIO, raw_name, imp_info, minMSMSnum, resFilterThres)
 % Extract peak features for one IMP.
+%
+% Function role:
+%   - Prepare XIC/ratio context.
+%   - Project candidateRtPeaks into xic_rt indices.
+%   - Compute per-candidate metrics:
+%       * imp_max_props: max ratio_estimated in candidate interval
+%       * area_imp_by_peak: area of (ratio_estimated .* xic_intensity_smoothed)
+%       * ratio_each_XIC_peak: area_imp_by_peak / peak_total_area
+%   - Return metrics used by alignImpPair score calculation.
 % Input:
 %   ms12DatasetIO (CMS12DatasetIO)
 %       MS1/MS2 dataset IO
@@ -185,10 +207,11 @@ function [data, is_ok] = compute_imp_peaks(ms12DatasetIO, raw_name, imp_info, mi
 %       Raw name for XIC extraction
 %   imp_info (struct)
 %       IMP info (impName, impMass, ratio, rts, intensity, charge, lowMzBound, highMzBound)
+%       Required field:
+%         - candidateRtPeaks (struct array)
+%             Base quantification RT intervals used as alignment candidates.
 %   minMSMSnum (1 x 1 double/int)
 %       Minimum MSMS count for XIC preprocessing
-%   alpha (1 x 1 double)
-%       Peak detection threshold factor
 %   resFilterThres (1 x 1 double)
 %       Ratio filter threshold
 % Output:
@@ -210,42 +233,142 @@ if ~is_valid
     return;
 end
 
-xic_peak_idx_bounds = CXICSignalUtils.detect_xic_peaks(...
-    xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, alpha);
-if isempty(xic_peak_idx_bounds)
-    is_ok = false;
-    return;
+has_candidate_ranges = isfield(imp_info, 'candidateRtPeaks') && ~isempty(imp_info.candidateRtPeaks);
+if ~has_candidate_ranges
+    error('CXICAligner:MissingCandidateRtPeaks', ...
+        'alignImpPair requires imp_info.candidateRtPeaks and no longer supports detect_xic_peaks fallback.');
 end
 
-xic_ratio_estimated = CXICPeakUtils.calculate_kernel_ratio(...
-    xic_rt, rt_sorted, ratio_sorted, xic_peak_idx_bounds, true);
-xic_ratio_estimated = CXICPeakUtils.filter_and_normalize_peak_ratios(...
-    xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds, resFilterThres);
+[xic_peak_idx_bounds, xic_peak_rt_bounds, is_ok] = build_peak_bounds_from_candidates(...
+    xic_rt, imp_info.candidateRtPeaks);
+if ~is_ok
+    return;
+end
+[imp_max_props, area_imp_by_peak, ratio_each_XIC_peak] = ...
+    compute_metrics_on_candidate_ranges(...
+        xic_rt, xic_intensity_smoothed, rt_sorted, ratio_sorted, ...
+        xic_peak_idx_bounds, resFilterThres);
 
-[imp_max_props, ~, area_imp_by_peak, xic_peak_rt_bounds] = ...
-    CXICPeakUtils.compute_peak_features(...
-        xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds);
-
+% Get the non-zero area under XIC, index and xic_peak_rt_bounds
+% [imp_idx_nonzero, area_imp_final, xic_peak_rt_bounds] = ...
+%     CXICAreaUtils.filter_nonzero_xic(area_imp_final, xic_peak_rt_bounds);
+% if isempty(imp_idx_nonzero)
 if isempty(imp_max_props)
     is_ok = false;
     return;
 end
-
-num_peaks = numel(xic_peak_rt_bounds);
-peak_total_areas = zeros(1, num_peaks);
-for idx_peak = 1:num_peaks
-    idx_start = xic_peak_idx_bounds(idx_peak).idx_start;
-    idx_end = xic_peak_idx_bounds(idx_peak).idx_end;
-    peak_total_areas(idx_peak) = CXICSignalUtils.calculate_area(...
-        xic_rt, xic_intensity_smoothed, idx_start, idx_end);
+if size(area_imp_by_peak, 1) ~= 1
+    error('CXICAligner:UnexpectedImpCount', ...
+        'compute_imp_peaks expects single-IMP inputs in current align flow, but got %d IMPs.', size(area_imp_by_peak, 1));
 end
-ratio_each_XIC_peak = zeros(size(area_imp_by_peak));
-valid_peaks = peak_total_areas > 0;
-ratio_each_XIC_peak(:, valid_peaks) = area_imp_by_peak(:, valid_peaks) ./ peak_total_areas(valid_peaks);
+if size(area_imp_by_peak, 1) < 1
+    is_ok = false;
+    return;
+end
 
 is_ok = true;
 data.imp_max_props = imp_max_props;
 data.area_imp_by_peak = area_imp_by_peak;
 data.xic_peak_rt_bounds = xic_peak_rt_bounds;
 data.ratio_each_XIC_peak = ratio_each_XIC_peak;
+end
+
+function [xic_peak_idx_bounds, xic_peak_rt_bounds, is_ok] = build_peak_bounds_from_candidates(xic_rt, candidate_rt_peaks)
+% Map candidate RT intervals to index bounds on xic_rt.
+% Input:
+%   xic_rt (N x 1 double)
+%       XIC retention-time grid
+%   candidate_rt_peaks (struct array)
+%       Candidate intervals with fields rt_start/rt_end
+% Output:
+%   xic_peak_idx_bounds (struct array)
+%       Index bounds (idx_start/idx_end)
+%   xic_peak_rt_bounds (struct array)
+%       Sanitized RT bounds corresponding to index bounds
+%   is_ok (logical)
+%       True when at least one valid interval is projected
+xic_peak_idx_bounds = repmat(struct('idx_start', 0, 'idx_end', 0), 0, 1);
+xic_peak_rt_bounds = repmat(struct('rt_start', 0, 'rt_end', 0), 0, 1);
+
+for idx_peak = 1:numel(candidate_rt_peaks)
+    peak = candidate_rt_peaks(idx_peak);
+    if ~isfield(peak, 'rt_start') || ~isfield(peak, 'rt_end')
+        continue;
+    end
+    rt_start = peak.rt_start;
+    rt_end = peak.rt_end;
+    if isempty(rt_start) || isempty(rt_end) || rt_end < rt_start
+        continue;
+    end
+
+    idx_start = find(xic_rt >= rt_start, 1, 'first');
+    idx_end = find(xic_rt <= rt_end, 1, 'last');
+
+    if isempty(idx_start)
+        [~, idx_start] = min(abs(xic_rt - rt_start));
+    end
+    if isempty(idx_end)
+        [~, idx_end] = min(abs(xic_rt - rt_end));
+    end
+    if idx_end < idx_start
+        idx_end = idx_start;
+    end
+
+    xic_peak_idx_bounds(end+1,1) = struct('idx_start', idx_start, 'idx_end', idx_end); %#ok<AGROW>
+    xic_peak_rt_bounds(end+1,1) = struct('rt_start', rt_start, 'rt_end', rt_end); %#ok<AGROW>
+end
+
+is_ok = ~isempty(xic_peak_idx_bounds);
+end
+
+function [imp_max_props, area_imp_by_peak, ratio_each_XIC_peak] = compute_metrics_on_candidate_ranges(...
+    xic_rt, xic_intensity_smoothed, rt_sorted, ratio_sorted, xic_peak_idx_bounds, resFilterThres)
+% Compute candidate-peak metrics from kernel-estimated ratios.
+% Input:
+%   xic_rt/xic_intensity_smoothed
+%       XIC grid and smoothed intensity
+%   rt_sorted/ratio_sorted
+%       PSM RTs and ratio matrix used for kernel estimation
+%   xic_peak_idx_bounds
+%       Candidate peak index intervals
+%   resFilterThres
+%       Relative area filter threshold used during ratio filtering
+% Output:
+%   imp_max_props (K x P double)
+%       Max ratio_estimated per IMP per candidate interval
+%   area_imp_by_peak (K x P double)
+%       IMP-specific area under (ratio_estimated .* XIC) per interval
+%   ratio_each_XIC_peak (K x P double)
+%       IMP area divided by total XIC area for each candidate interval
+num_imp = size(ratio_sorted, 2);
+num_peaks = numel(xic_peak_idx_bounds);
+
+imp_max_props = zeros(num_imp, num_peaks);
+area_imp_by_peak = zeros(num_imp, num_peaks);
+ratio_each_XIC_peak = zeros(num_imp, num_peaks);
+
+xic_ratio_estimated = CXICPeakUtils.calculate_kernel_ratio(...
+    xic_rt, rt_sorted, ratio_sorted, xic_peak_idx_bounds, true);
+xic_ratio_estimated = CXICPeakUtils.filter_and_normalize_peak_ratios(...
+    xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds, resFilterThres);
+
+intensity_matrix = xic_ratio_estimated .* xic_intensity_smoothed;
+
+for idx_peak = 1:num_peaks
+    idx_start = xic_peak_idx_bounds(idx_peak).idx_start;
+    idx_end = xic_peak_idx_bounds(idx_peak).idx_end;
+    peak_total_area = CXICSignalUtils.calculate_area(xic_rt, xic_intensity_smoothed, idx_start, idx_end);
+    if peak_total_area <= 0
+        continue;
+    end
+
+    ratio_slice = xic_ratio_estimated(idx_start:idx_end, :);
+    imp_max_props(:, idx_peak) = max(ratio_slice, [], 1)';
+
+    for idx_imp = 1:num_imp
+        area_imp_by_peak(idx_imp, idx_peak) = CXICSignalUtils.calculate_area(...
+            xic_rt, intensity_matrix(:, idx_imp), idx_start, idx_end);
+        ratio_each_XIC_peak(idx_imp, idx_peak) = area_imp_by_peak(idx_imp, idx_peak) / peak_total_area;
+    end
+end
 end

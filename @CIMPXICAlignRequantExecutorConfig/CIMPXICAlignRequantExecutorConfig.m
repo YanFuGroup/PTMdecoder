@@ -5,7 +5,6 @@ classdef CIMPXICAlignRequantExecutorConfig
         ms12DatasetIO
         ms1_tolerance
         minMSMSnum
-        alpha
         resFilterThres
         aligner
         align_strategy
@@ -28,7 +27,6 @@ classdef CIMPXICAlignRequantExecutorConfig
             obj.ms12DatasetIO = cfg.ms12DatasetIO;
             obj.ms1_tolerance = cfg.ms1_tolerance;
             obj.minMSMSnum = cfg.minMSMSnum;
-            obj.alpha = cfg.alpha;
             obj.resFilterThres = cfg.resFilterThres;
             obj.aligner = cfg.aligner;
             obj.align_strategy = cfg.align_strategy;
@@ -46,9 +44,6 @@ classdef CIMPXICAlignRequantExecutorConfig
             end
             if ~isfield(cfg, 'minMSMSnum') || isempty(cfg.minMSMSnum)
                 cfg.minMSMSnum = 1;
-            end
-            if ~isfield(cfg, 'alpha') || isempty(cfg.alpha)
-                cfg.alpha = 0;
             end
             if ~isfield(cfg, 'resFilterThres') || isempty(cfg.resFilterThres)
                 cfg.resFilterThres = 0;
@@ -77,11 +72,6 @@ classdef CIMPXICAlignRequantExecutorConfig
             if ~isscalar(cfg.minMSMSnum) || ~isnumeric(cfg.minMSMSnum) || cfg.minMSMSnum < 1
                 error('CIMPXICAlignRequantExecutorConfig:InvalidMinMSMSnum', ...
                     'minMSMSnum must be a numeric scalar >= 1.');
-            end
-
-            if ~isscalar(cfg.alpha) || ~isnumeric(cfg.alpha) || cfg.alpha < 0
-                error('CIMPXICAlignRequantExecutorConfig:InvalidAlpha', ...
-                    'alpha must be a numeric scalar >= 0.');
             end
 
             if ~isscalar(cfg.resFilterThres) || ~isnumeric(cfg.resFilterThres) || cfg.resFilterThres < 0
