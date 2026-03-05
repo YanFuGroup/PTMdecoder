@@ -36,10 +36,9 @@ classdef CPTMdecoderWorkflowRunner < handle
             % Execute one workflow stage using registered executor.
             % Input:
             %   stage (struct)
-            %       stage struct with fields: name, action, config, enabled
+            %       stage struct with fields: name, config, enabled
             %       - stage.name is used as runtime dispatch key
             %       - stage.enabled is checked by caller run()
-            %       - stage.action is retained for compatibility tracing
             %       - stage.config is consumed by concrete stage executor
             if ~obj.m_stage_executor_registry.isKey(stage.name)
                 error('CPTMdecoderWorkflowRunner:UnknownStage', ...
@@ -72,7 +71,6 @@ classdef CPTMdecoderWorkflowRunner < handle
             %   stage (struct)
             %       stage struct
             %       - stage.name should be STAGE_MSMS_LEVEL
-            %       - stage.action should be ACTION_MSMS_ONLY
             %       - stage.config is MSMS config struct
             msms_cfg = stage.config;
             if isempty(msms_cfg)
@@ -90,7 +88,6 @@ classdef CPTMdecoderWorkflowRunner < handle
             %   stage (struct)
             %       stage struct
             %       - stage.name should be STAGE_PEPTIDE_QUANT
-            %       - stage.action should be ACTION_PEPTIDE_ONLY
             %       - stage.config is MSMS config struct
             msms_cfg = stage.config;
             if isempty(msms_cfg)
@@ -108,7 +105,6 @@ classdef CPTMdecoderWorkflowRunner < handle
             %   stage (struct)
             %       stage struct
             %       - stage.name should be STAGE_PEPTIDE_REQUANT
-            %       - stage.action should be ACTION_PEPTIDE_REQUANT
             %       - stage.config is MSMS config struct
             msms_cfg = stage.config;
             if isempty(msms_cfg)
@@ -126,7 +122,6 @@ classdef CPTMdecoderWorkflowRunner < handle
             %   stage (struct)
             %       stage struct
             %       - stage.name should be STAGE_PEPTIDE_ALIGN_REQUANT
-            %       - stage.action should be ACTION_PEPTIDE_ALIGN_REQUANT
             %       - stage.config is peptide align-requant config struct
             cfg = stage.config;
             if isempty(cfg)
@@ -144,7 +139,6 @@ classdef CPTMdecoderWorkflowRunner < handle
             %   stage (struct)
             %       stage struct
             %       - stage.name should be STAGE_NORM_PEPTIDE_QUANT
-            %       - stage.action should be ACTION_NORM_PEPTIDE_QUANT
             %       - stage.config is normalization quant config struct
             cfg = stage.config;
             if isempty(cfg)
@@ -162,7 +156,6 @@ classdef CPTMdecoderWorkflowRunner < handle
             %   stage (struct)
             %       stage struct
             %       - stage.name should be STAGE_NORM_PEPTIDE_REQUANT
-            %       - stage.action should be ACTION_NORM_PEPTIDE_REQUANT
             %       - stage.config is normalization requant config struct
             cfg = stage.config;
             if isempty(cfg)
@@ -180,7 +173,6 @@ classdef CPTMdecoderWorkflowRunner < handle
             %   stage (struct)
             %       stage struct
             %       - stage.name should be STAGE_SITE_LEVEL
-            %       - stage.action should be ACTION_SITE_SUMMARY
             %       - stage.config is site-level summary config struct
             site_cfg = stage.config;
             if isempty(site_cfg)
@@ -197,7 +189,6 @@ classdef CPTMdecoderWorkflowRunner < handle
             %   stage (struct)
             %       stage struct
             %       - stage.name should be STAGE_MERGE_TO_PAIR_LEVEL
-            %       - stage.action should be ACTION_MERGE_EACH_PAIR
             %       - stage.config is pair config cell array
             pair_cfgs = stage.config;
             if isempty(pair_cfgs)
@@ -216,7 +207,6 @@ classdef CPTMdecoderWorkflowRunner < handle
             %   stage (struct)
             %       stage struct
             %       - stage.name should be STAGE_MERGE_PAIRS_LEVEL
-            %       - stage.action should be ACTION_MERGE_PAIRS
             %       - stage.config is merge-pairs config struct
             cfg = stage.config;
             if isempty(cfg)
