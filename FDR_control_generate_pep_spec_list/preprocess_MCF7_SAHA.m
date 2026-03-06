@@ -39,25 +39,16 @@ for idx = 1:length(experimentNames)
 
     % select the unique identified spectra
     mgf_scan_strings = strcat({FDR_filtered_result.DatasetName}',' ',{FDR_filtered_result.Scan}');
-    is_result_selected = false(length(FDR_filtered_result),1);
-    for i_res = 1:length(FDR_filtered_result)
-        if sum(strcmp(mgf_scan_strings(i_res),mgf_scan_strings)) == 1
-            % set the marker to retain this unique element
-            is_result_selected(i_res) = true;
-        end
-    end
+    [~,~,group_idx] = unique(mgf_scan_strings,'stable');
+    group_counts = accumarray(group_idx,1);
+    is_result_selected = (group_counts(group_idx) == 1);
     unique_filtered_result = FDR_filtered_result(is_result_selected);
 
     % select the modified peptides
-    is_result_selected = false(length(unique_filtered_result),1);
-    for i_final = 1:length(unique_filtered_result)
-        if ~isequal(unique_filtered_result(i_final).modification,'-')...
-                && ~contains(unique_filtered_result(i_final).modification,'Oxidation')%...
+    modifications = {unique_filtered_result.modification}';
+    is_result_selected = ~strcmp(modifications,'-') & ~contains(modifications,'Oxidation');%...
 %                 && ~is_C_terminal_error_mod(unique_filtered_result(i_final).peptide, ...
 %                 unique_filtered_result(i_final).modification,unique_filtered_result(i_final).modificationlocation)
-            is_result_selected(i_final) = true;
-        end
-    end
     final_result = unique_filtered_result(is_result_selected);
 
     % sort the results by peptide sequence
