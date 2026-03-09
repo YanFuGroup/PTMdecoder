@@ -62,6 +62,7 @@ classdef CNormalizationQuantService < handle
                 'alpha', msms_cfg.alpha, ...
                 'resFilterThres', msms_cfg.result_filter_threshold));
             executor = CIMPProcessingExecutor(pipeline_cfg);
+            CIMPQuantStats.rt_sorted_stats('init');
             stats_cleanup = onCleanup(@() CIMPQuantStats.rt_sorted_stats('flush', ...
                 CPathResolver.resolveFilePath(msms_cfg.output_dir_path, 'rt_sorted_stats.mat', '')));
             report = CIMPQuantReport();

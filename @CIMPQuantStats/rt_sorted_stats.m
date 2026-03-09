@@ -16,11 +16,14 @@ end
 if nargin < 1 || isempty(action)
     error('rt_sorted_stats requires an action.');
 end
-if nargin < 2 || isempty(value)
+if (nargin < 2 || isempty(value)) && ~strcmpi(action, 'init')
     error('rt_sorted_stats requires a value.');
 end
 
 switch lower(action)
+    case 'init'
+        rt_sorted_counts = zeros(0, 1);
+        
     case 'record'
         rt_sorted_counts(end+1, 1) = value;
 

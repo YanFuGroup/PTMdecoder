@@ -47,6 +47,7 @@ classdef CPeptideQuantService < handle
                 'alpha', cfg.alpha, ...
                 'resFilterThres', cfg.result_filter_threshold));
             executor = CIMPProcessingExecutor(pipeline_cfg);
+            CIMPQuantStats.rt_sorted_stats('init');
             stats_cleanup = onCleanup(@() CIMPQuantStats.rt_sorted_stats('flush', ...
                 CPathResolver.resolveFilePath(cfg.output_dir_path, 'rt_sorted_stats.mat', '')));
 

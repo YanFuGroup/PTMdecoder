@@ -54,6 +54,9 @@ if ~is_valid
     return;
 end
 
+% Record rt_sorted length for offline analysis
+CIMPQuantStats.rt_sorted_stats('record', numel(rt_sorted));
+
 % Filter peaks by manual RT range
 [max_label, is_skip_vec, xic_peak_idx_bounds] = CXICPreprocessUtils.prepare_peak_ranges_from_imp_rt_range(...
     xic_rt, current_imp_rt_range, 1);
