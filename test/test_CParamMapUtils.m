@@ -76,3 +76,29 @@ function testParseQuotedListInvalidTypeError(testCase)
 testCase.verifyError(@() CParamMapUtils.parseQuotedList(123, ';'), ...
     'CParamMapUtils:InvalidQuotedListType');
 end
+
+function testGetOptionalLogicalParsesCommonValues(testCase)
+% TESTGETOPTIONALLOGICALPARSESCOMMONVALUES Parse logical-like values from map.
+
+param_map = containers.Map('KeyType', 'char', 'ValueType', 'any');
+param_map('flag_true') = 'true';
+param_map('flag_false') = '0';
+
+actual_true = CParamMapUtils.getOptionalLogical(param_map, 'flag_true', false);
+actual_false = CParamMapUtils.getOptionalLogical(param_map, 'flag_false', true);
+default_value = CParamMapUtils.getOptionalLogical(param_map, 'missing_key', true);
+
+testCase.verifyTrue(actual_true);
+testCase.verifyFalse(actual_false);
+testCase.verifyTrue(default_value);
+end
+
+function testGetOptionalLogicalInvalidValueError(testCase)
+% TESTGETOPTIONALLOGICALINVALIDVALUEERROR Invalid logical-like value should error.
+
+param_map = containers.Map('KeyType', 'char', 'ValueType', 'any');
+param_map('bad_flag') = 'not_a_boolean';
+
+testCase.verifyError(@() CParamMapUtils.getOptionalLogical(param_map, 'bad_flag', false), ...
+    'CParamMapUtils:InvalidLogicalParamValue');
+end

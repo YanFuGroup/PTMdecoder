@@ -73,5 +73,11 @@ classdef CPTMdecoderWorkflowParamKeys
         PARAM_PREFIX_LEFT_RIGHT_OUT = 'left_right_out_'
         PARAM_PREFIX_PAIR = 'pair_'
         PARAM_PREFIX_LEFT_RIGHT_NAME = 'left_right_name_'
+
+        PARAM_LOG_ENABLED = 'log_enabled'
+        PARAM_LOG_FILE_DIR = 'log_file_dir'
+        PARAM_LOG_FILE_LEVEL = 'log_file_level'
+        PARAM_LOG_TO_CONSOLE = 'log_to_console'
+        PARAM_LOG_CONSOLE_LEVEL = 'log_console_level'
     end
 end

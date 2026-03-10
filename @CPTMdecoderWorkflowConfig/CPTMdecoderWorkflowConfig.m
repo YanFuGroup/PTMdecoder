@@ -120,7 +120,6 @@ classdef CPTMdecoderWorkflowConfig
             if ~isfield(cfg, 'stages') || isempty(cfg.stages)
                 cfg.stages = {};
             end
-
             if ~iscell(cfg.stages)
                 error('CPTMdecoderWorkflowConfig:InvalidStages', ...
                     'stages must be a cell array of stage structs.');

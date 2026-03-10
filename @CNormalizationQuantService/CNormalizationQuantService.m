@@ -51,9 +51,9 @@ classdef CNormalizationQuantService < handle
                 'ms12DatasetIO', cMs12DatasetIO, ...
                 'ms1_tolerance', msms_cfg.ms1_tolerance);
 
-            fprintf('Reading %s...', msms_cfg.spec_dir_path);
+            CLogger.info('Reading %s...', msms_cfg.spec_dir_path);
             pep_quant = CPeptideRawIdentAssembler.buildFromFdrEntries(entries, peptide_list, pep_quant, deps);
-            fprintf('done.\n');
+            CLogger.info('Reading %s done.', msms_cfg.spec_dir_path);
 
             pipeline_cfg = CIMPProcessingExecutorConfig(struct( ...
                 'ms12DatasetIO', cMs12DatasetIO, ...
@@ -67,12 +67,12 @@ classdef CNormalizationQuantService < handle
                 CPathResolver.resolveFilePath(msms_cfg.output_dir_path, 'rt_sorted_stats.mat', '')));
             report = CIMPQuantReport();
 
-            fprintf('Quantifying %s...', msms_cfg.spec_dir_path);
+            CLogger.info('Quantifying %s...', msms_cfg.spec_dir_path);
             for i_list = 1:length(peptide_list)
                 block = executor.quantifyPeptideBlock({prot_list{i_list}, -1}, pep_quant{i_list});
                 report = report.append_block(block);
             end
-            fprintf('done.\n');
+            CLogger.info('Quantifying %s done.', msms_cfg.spec_dir_path);
 
             % TODO: Set the output path for peptide level results
             output_path = CPathResolver.resolveFilePath(msms_cfg.output_dir_path, cfg.output_file_name, '');

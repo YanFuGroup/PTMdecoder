@@ -45,7 +45,7 @@ classdef CPeptideRequantService < handle
             cMsFileMapper = CMsFileMapper(cfg.spec_dir_path);
 
             msms_result = CMS2ResultIO.read(each_PSM_results_path);
-            print_progress = CPrintProgress(length(msms_result.Peptides));
+            print_progress = CPrintProgress(length(msms_result.Peptides), 'peptide_requantification');
             pipeline_cfg = CIMPProcessingExecutorConfig(struct( ...
                 'ms12DatasetIO', cMs12DatasetIO, ...
                 'ms1_tolerance', cfg.ms1_tolerance, ...
@@ -64,7 +64,7 @@ classdef CPeptideRequantService < handle
                 'variableModNameMass', {variableModNameMass});
 
             report_requant = CIMPQuantReport();
-            fprintf('Re-quantifying at peptide level...')
+            CLogger.info('Re-quantifying at peptide level...');
             for idx_psf = 1:length(msms_result.Peptides)
                 print_progress = print_progress.update_show(idx_psf);
                 peptide_sequence = msms_result.Peptides(idx_psf).peptide_sequence;
@@ -75,7 +75,7 @@ classdef CPeptideRequantService < handle
                 report_requant = report_requant.append_block(block);
             end
             print_progress.last_update();
-            fprintf('done.\n');
+            CLogger.info('Peptide-level re-quantification done.');
 
             CIMPQuantResultIO.write(report_requant, output_path);
         end

@@ -25,11 +25,10 @@ neutralMass = CMS2MassCalculator.getNeutralPeptideTheoryMass(ctx, fixedPosMod);
 ctx.m_dPrecursorMass = neutralMass + 2.0;
 ctx.m_strSpecName = 'spec_trypsin_c_term_filter';
 
-[bSuccess, ~, massArrangement, warning_msg] = CMS2MassCalculator.getMassArrangement(ctx, fixedPosMod);
+[bSuccess, ~, massArrangement] = CMS2MassCalculator.getMassArrangement(ctx, fixedPosMod);
 
 testCase.verifyFalse(bSuccess);
 testCase.verifyEmpty(massArrangement);
-testCase.verifyTrue(contains(char(warning_msg), 'no feasible modification configurations'));
 end
 
 function testPpmVsDaToleranceBoundary(testCase)

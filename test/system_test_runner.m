@@ -1,6 +1,6 @@
 function system_test_runner()
     % SYSTEM_TEST_RUNNER Run end-to-end system tests and compare with golden outputs
-    fclose all;
+    fclose all;clear;clc;
 
     tic
 

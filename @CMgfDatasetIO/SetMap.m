@@ -7,25 +7,24 @@ function SetMap(obj)
 dataset_files = dir(fullfile(obj.m_strFoldname,'*.mgf'));
 dataset_names = {dataset_files.name}'; % Arrange file names in a column
 
-fprintf('%s%d\n','Total Number of Dataset:',length(dataset_files));
+CLogger.info('Total number of datasets: %d', length(dataset_files));
 
 % begin building up
 for i = 1:length(dataset_names) % Iterate over each spectral dataset
     filename = fullfile(obj.m_strFoldname,dataset_names{i,1});
-    fprintf('%s','Spectra: ');
     nSpec = 0;
     
     % load mgf map when existing a intermediate map file
     [mgfpath,mgfname] = fileparts(filename);
     mgf_mapfile = fullfile(mgfpath,[mgfname,'_MGF_map.mat']);
-    ct_prt = 0; % length of print string
     if exist(mgf_mapfile,"file")
         load(mgf_mapfile,'mgf_map')
         nSpec = mgf_map.Count;
+        CLogger.debug('Loaded existing MGF map: %s', mgf_mapfile);
     else
         fid = fopen(filename,'r');
         if 0>=fid
-            disp(['Failed to open dataset: ',filename,'!']);
+            CLogger.warn('Failed to open dataset: %s', filename);
             return
         end
 
@@ -39,8 +38,7 @@ for i = 1:length(dataset_names) % Iterate over each spectral dataset
                 nSpec = nSpec+1;
 
                 if mod(nSpec,2000) == 0
-                    fprintf(repmat('\b',1,ct_prt));
-                    ct_prt = fprintf('%d',nSpec);
+                    CLogger.progress(sprintf('MGF map %s', dataset_names{i,1}), nSpec, max(nSpec, 1));
                 end
 
                 % The starting position of the file corresponding to each spectrum is BEGIN IONS
@@ -68,8 +66,7 @@ for i = 1:length(dataset_names) % Iterate over each spectral dataset
     
     % save spectral index for each dataset
     obj.m_mapDatasetIdx(dataset_names{i,1}) = mgf_map;
-    fprintf(repmat('\b',1,ct_prt));
-    fprintf('%d\n',nSpec);
+    CLogger.info('Indexed dataset %s with %d spectra.', dataset_names{i,1}, nSpec);
 end
 
 end

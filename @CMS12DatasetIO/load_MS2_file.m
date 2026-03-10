@@ -26,14 +26,14 @@ end
 
 % check the TXT file
 if 0==exist(ms2_fullfile,'file')
-    disp([ms2_fullfile,': does not exist!']);
+    CLogger.warn('%s: does not exist!', ms2_fullfile);
     return;
 end
 
 % open the file
 fid=fopen(ms2_fullfile,'r');
 if -1==fid
-    disp(['can not open: ',ms2_fullfile]);
+    CLogger.warn('can not open: %s', ms2_fullfile);
     return;
 end
 
@@ -95,14 +95,12 @@ end
 MS2_datamode = str(len0+2);
 
 if 1==strcmp('P',MS2_datamode)% DataType can be Centroid starting with C, or Profile starting with P
-    fprintf(1,'MS2 is profile mode, convert to centroid mode first!\n');
+    CLogger.warn('MS2 is profile mode, convert to centroid mode first!');
     fclose(fid);
     return;
 end
 
-% for progress
-ct_prt = 0;
-fprintf(1,'MS2 scans: ');
+CLogger.info('Loading MS2 file: %s', ms2_fullfile);
 
 % start to process
 str = fgets(fid);
@@ -127,8 +125,7 @@ while 0==feof(fid)
         
         % progress
         fno = fno + 1;
-        fprintf(repmat('\b',[1,ct_prt]));
-        ct_prt = fprintf('%i',fno);
+        CLogger.progress('MS2 scans', fno, maxMS2num);
         
         % OrigiNumberOfPeaks
         str=fgets(fid);%#ok
@@ -279,9 +276,7 @@ while 0==feof(fid)
     end
 end
 fclose(fid);
-fprintf(repmat('\b',[1,ct_prt]));
-fprintf('%i',fno);
-fprintf(1,'\n');
+CLogger.info('MS2 scans loaded: %d', fno);
 
 %% save the MS2 info
 % filter the empty values, keep valid records

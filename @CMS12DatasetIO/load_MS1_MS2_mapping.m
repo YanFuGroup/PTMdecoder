@@ -15,7 +15,7 @@ success = 0;
 
 % Check input file
 if ~exist(ms2_fullfile, 'file')
-    fprintf('%s: does not exist!\n', ms2_fullfile);
+    CLogger.warn('%s: does not exist!', ms2_fullfile);
     return;
 end
 
@@ -32,11 +32,11 @@ end
 % Open file
 fid = fopen(ms2_fullfile, 'r');
 if fid == -1
-    fprintf('Cannot open: %s\n', ms2_fullfile);
+    CLogger.warn('Cannot open: %s', ms2_fullfile);
     return;
 end
 
-fprintf('Processing MS2 mapping: %s\n', dataname);
+CLogger.info('Processing MS2 mapping: %s', dataname);
 
 % Initialize variables
 % Estimate number of scans to pre-allocate. 1.5e5 is used in original code
@@ -110,7 +110,7 @@ MS2_index = MS2_index(1:scan_count, :);
 % Save to .mat file
 save(MS2_scanfile, 'MS2_index');
 
-fprintf('Finished. Found %d scans.\n', scan_count);
+CLogger.info('MS2 mapping finished. Found %d scans.', scan_count);
 
 success = 1;
 end

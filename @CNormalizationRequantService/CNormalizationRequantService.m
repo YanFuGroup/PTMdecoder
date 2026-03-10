@@ -50,9 +50,9 @@ classdef CNormalizationRequantService < handle
                 total_records = total_records + numel(report.blocks(idx_block).records);
             end
             if total_records == 0
-                fprintf(['Warning: The file "', checked_pep_path, '" is empty\n']);
+                CLogger.warn('The file "%s" is empty', checked_pep_path);
             end
-            print_progress = CPrintProgress(max(total_records, 1));
+            print_progress = CPrintProgress(max(total_records, 1), 'normalization_peptide_requantification');
             pipeline_cfg = CIMPProcessingExecutorConfig(struct( ...
                 'ms12DatasetIO', cMs12DatasetIO, ...
                 'ms1_tolerance', msms_cfg.ms1_tolerance, ...
@@ -61,7 +61,7 @@ classdef CNormalizationRequantService < handle
                 'resFilterThres', msms_cfg.result_filter_threshold));
             executor = CIMPProcessingExecutor(pipeline_cfg);
 
-            fprintf('Re-quantifying at peptide level...')
+            CLogger.info('Re-quantifying at peptide level...');
             rec_counter = 0;
             for idx_block = 1:numel(report.blocks)
                 prot_name = '';
@@ -98,7 +98,7 @@ classdef CNormalizationRequantService < handle
             end
 
             print_progress.last_update();
-            fprintf('done.\n');
+            CLogger.info('Normalization peptide-level re-quantification done.');
 
             CIMPQuantResultIO.write(report_requant, output_path);
         end

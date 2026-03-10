@@ -20,14 +20,14 @@ end
 
 % check the TXT file
 if 0==exist(ms1_fullfile,'file')
-    disp([ms1_fullfile,': does not exist!']);
+    CLogger.warn('%s: does not exist!', ms1_fullfile);
     return;
 end
 
 % open the TXT file
 fid = fopen(ms1_fullfile,'r');
 if -1==fid
-    disp([ms1_fullfile,': can not open!']);
+    CLogger.warn('%s: can not open!', ms1_fullfile);
     return;
 end
 
@@ -61,14 +61,12 @@ end
 MS1_datamode = str(len0+2);
 
 if 1==strcmp('P',MS1_datamode)% DataType can be Centroid starting with C, or Profile starting with P
-    fprintf(1,'MS1 is profile mode, convert to centroid mode first!\n');
+    CLogger.warn('MS1 is profile mode, convert to centroid mode first!');
     fclose(fid);
     return;
 end
 
-% for progress
-ct_prt = 0;% length of output characters
-fprintf(1,'MS1 scans: ');
+CLogger.info('Loading MS1 file: %s', ms1_fullfile);
 
 % start to process
 str = fgets(fid);
@@ -77,8 +75,7 @@ while 0==feof(fid)
     if 1==strcmp( str(1:len1),keyword1 )
         % progress
         fno = fno + 1;
-        fprintf(repmat('\b',[1,ct_prt]));% Use backspace to go back to the existing output
-        ct_prt = fprintf('%i',fno);% Output which one is being processed, progress prompt
+        CLogger.progress('MS1 scans', fno, maxMS1num);
 
         % 1.get the MS1 info
         % MS1 scan
@@ -153,9 +150,7 @@ while 0==feof(fid)
     end
 end
 fclose(fid);% close the TXT file
-fprintf(repmat('\b',[1,ct_prt]));
-fprintf('%i',fno);
-fprintf(1,'\n');
+CLogger.info('MS1 scans loaded: %d', fno);
 
 %% save the MS1 info
 % filter the empty values

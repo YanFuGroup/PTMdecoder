@@ -1,4 +1,4 @@
-function [ bSuccess,inxSites,massArrangement,warning_msg ] = getMassArrangement(ctx,fixedPosMod)
+function [ bSuccess,inxSites,massArrangement ] = getMassArrangement(ctx,fixedPosMod)
 % Calculate all possible arrangements of multiple modifications and return an ordered mass matrix
 % Inputs:
 %   ctx (struct)
@@ -13,10 +13,7 @@ function [ bSuccess,inxSites,massArrangement,warning_msg ] = getMassArrangement(
 %       Modification-site positions corresponding to massArrangement columns.
 %   massArrangement (M x S double)
 %       Candidate peptidoform mass arrangement matrix.
-%   warning_msg (1 x 1 char/string)
-%       Warning text for no-feasible/too-many-candidates scenarios.
 
-warning_msg = [];
 bSuccess = false;
 
 deltamass = ctx.m_dPrecursorMass - CMS2MassCalculator.getNeutralPeptideTheoryMass(ctx,fixedPosMod);
@@ -70,8 +67,8 @@ else
 
     if is_too_many_candidate
         massArrangement = [];
-        warning_msg = ['There are too many candidate peptidoforms for ',...
-            ctx.m_pepSeq, ' in ', ctx.m_strSpecName, '!\n'];
+        CLogger.debug(['There are too many candidate peptidoforms for ',...
+            ctx.m_pepSeq, ' in ', ctx.m_strSpecName, '!']);
         return
     end
 
@@ -102,11 +99,11 @@ else
 end
 
 if isempty(massArrangement)
-    warning_msg = ['There is no feasible modification configurations for ',...
-        ctx.m_pepSeq, ' in ', ctx.m_strSpecName, '!\n'];
+    CLogger.debug(['There is no feasible modification configurations for ',...
+        ctx.m_pepSeq, ' in ', ctx.m_strSpecName, '!']);
 elseif size(massArrangement,1) > 5000
-    warning_msg = ['There are too many candidate peptidoforms for ',...
-        ctx.m_pepSeq, ' in ', ctx.m_strSpecName, '!\n'];
+    CLogger.debug(['There are too many candidate peptidoforms for ',...
+        ctx.m_pepSeq, ' in ', ctx.m_strSpecName, '!']);
 else
     bSuccess = true;
 end

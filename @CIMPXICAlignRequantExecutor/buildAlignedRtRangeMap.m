@@ -69,8 +69,8 @@ if isempty(align_pairs)
     return;
 end
 
-fprintf('Aligning XIC candidates for %d run pairs...', size(align_pairs, 1));
-print_progress = CPrintProgress(length(rawIdentManagers));
+CLogger.info('Aligning XIC candidates for %d run pairs...', size(align_pairs, 1));
+print_progress = CPrintProgress(length(rawIdentManagers), 'align_xic_candidates');
 for idx_psf = 1:length(rawIdentManagers)
     print_progress = print_progress.update_show(idx_psf);
     rawIdentManager = rawIdentManagers{idx_psf};
@@ -117,7 +117,7 @@ for idx_psf = 1:length(rawIdentManagers)
 
         model_key = obj.m_aligner.pairKey(raw_a, raw_b);
         if ~obj.m_pair_models.isKey(model_key)
-            warning('No alignment model for pair (%s, %s). Skipping group alignment.', raw_a, raw_b);
+            CLogger.warn('No alignment model for pair (%s, %s). Skipping group alignment.', raw_a, raw_b);
             continue;
         end
         model = obj.m_pair_models(model_key);
@@ -163,7 +163,7 @@ for idx_psf = 1:length(rawIdentManagers)
     end
 end
 print_progress.last_update();
-fprintf('done.\n');
+CLogger.info('Aligning XIC candidates done.');
 
 pep_rtrange_map = state.pep_rtrange_map;
 report.summary = state;

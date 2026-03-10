@@ -38,7 +38,7 @@ classdef CPeptideQuantService < handle
 
             report = CIMPQuantReport();
             msms_result = CMS2ResultIO.read(each_PSM_results_path);
-            print_progress = CPrintProgress(length(msms_result.Peptides));
+            print_progress = CPrintProgress(length(msms_result.Peptides), 'IMP quantification');
 
             pipeline_cfg = CIMPProcessingExecutorConfig(struct( ...
                 'ms12DatasetIO', cMs12DatasetIO, ...
@@ -57,7 +57,7 @@ classdef CPeptideQuantService < handle
                 'fixedModNameMass', {fixedModNameMass}, ...
                 'variableModNameMass', {variableModNameMass});
 
-            fprintf('Quantifying at peptide level...')
+            CLogger.info('Quantifying at peptide level...');
             for idx_psf = 1:length(msms_result.Peptides)
                 print_progress = print_progress.update_show(idx_psf);
                 peptide_sequence = msms_result.Peptides(idx_psf).peptide_sequence;
@@ -68,7 +68,7 @@ classdef CPeptideQuantService < handle
                 report = report.append_block(block);
             end
             print_progress.last_update();
-            fprintf('done.\n');
+            CLogger.info('Peptide-level quantification done.');
 
             CIMPQuantResultIO.write(report, each_peptide_results_path);
         end

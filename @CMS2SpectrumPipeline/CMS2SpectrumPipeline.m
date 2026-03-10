@@ -103,6 +103,6 @@ classdef CMS2SpectrumPipeline
             obj.m_case_OLS_intens_weight = case_OLS_intens_weight;
         end
 
-        [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,warning_msg,is_X_not_full_column_rank] = processSpectrumWithContext(obj, peptideCtx, spectrumCtx);
+        [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,is_X_not_full_column_rank] = processSpectrumWithContext(obj, peptideCtx, spectrumCtx);
     end
 end

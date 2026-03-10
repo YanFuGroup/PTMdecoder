@@ -8,7 +8,7 @@ classdef CMS2MassCalculator
 
         theoryMz = calculateIonMz(ctx, fixedPosMod)
 
-        [bSuccess, inxSites, massArrangement, warning_msg] = getMassArrangement(ctx, fixedPosMod)
+        [bSuccess, inxSites, massArrangement] = getMassArrangement(ctx, fixedPosMod)
 
         vNonRedunTheoryIonMz = getNonRedunIons(ctx, inxSites, massArrangement, fixedPosMod)
     end

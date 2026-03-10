@@ -114,6 +114,32 @@ classdef CParamMapUtils
             value = CParamMapUtils.toNumber(raw_value, key_name, err_id_prefix);
         end
 
+        function value = getOptionalLogical(param_map, key_name, default_value, err_id_prefix)
+            % Get an optional logical parameter value from map.
+            % Input:
+            %   param_map (containers.Map)
+            %       parameter key-value map
+            %   key_name (1 x 1 char/string)
+            %       parameter key name
+            %   default_value (logical/numeric/char/string, optional)
+            %       default logical value if key not present;
+            %       if omitted, returns false when key missing/empty
+            %   err_id_prefix (1 x 1 char/string, optional)
+            %       error id prefix (default: CParamMapUtils)
+            % Output:
+            %   value (logical)
+            %       optional logical parameter value
+            if nargin < 4 || isempty(err_id_prefix)
+                err_id_prefix = 'CParamMapUtils';
+            end
+            if nargin < 3
+                default_value = false;
+            end
+
+            raw_value = CParamMapUtils.getOptional(param_map, key_name, default_value, err_id_prefix);
+            value = CParamMapUtils.toLogical(raw_value, key_name, err_id_prefix);
+        end
+
         function values = parseQuotedList(raw_value, delimiter)
             % Parse quoted values from a delimiter-separated string.
             % Input:
@@ -156,6 +182,7 @@ classdef CParamMapUtils
                 values = [values, token_groups{idx}{1}]; %#ok<AGROW>
             end
         end
+
     end
 
     methods (Static, Access = private)
@@ -178,6 +205,45 @@ classdef CParamMapUtils
                 error([err_id_prefix, ':InvalidNumericParamValue'], ...
                     'Param ''%s'' must be a finite numeric value.', key_name);
             end
+        end
+
+        function value = toLogical(raw_value, key_name, err_id_prefix)
+            % Convert raw value to logical scalar.
+            if islogical(raw_value)
+                if isempty(raw_value) || ~isscalar(raw_value)
+                    error([err_id_prefix, ':InvalidLogicalParam'], ...
+                        'Param ''%s'' must be a logical scalar.', key_name);
+                end
+                value = logical(raw_value);
+                return;
+            end
+
+            if isnumeric(raw_value)
+                if isempty(raw_value) || ~isscalar(raw_value)
+                    error([err_id_prefix, ':InvalidLogicalParam'], ...
+                        'Param ''%s'' must be a numeric/logical scalar.', key_name);
+                end
+                value = raw_value ~= 0;
+                return;
+            end
+
+            if isstring(raw_value) && isscalar(raw_value)
+                raw_value = char(raw_value);
+            end
+            if ischar(raw_value)
+                normalized = lower(strtrim(raw_value));
+                if any(strcmp(normalized, {'1', 'true', 'yes', 'on'}))
+                    value = true;
+                    return;
+                end
+                if any(strcmp(normalized, {'0', 'false', 'no', 'off'}))
+                    value = false;
+                    return;
+                end
+            end
+
+            error([err_id_prefix, ':InvalidLogicalParamValue'], ...
+                'Param ''%s'' must be logical or a logical-like string (1/0/true/false/yes/no/on/off).', key_name);
         end
     end
 end

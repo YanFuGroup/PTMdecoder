@@ -10,6 +10,9 @@ task_param_map = CWorkflowParamParser.parseFileToMap(param_file_path);
 cfg = struct();
 cfg.param_file_path = param_file_path;
 
+logger_cfg = buildLoggerConfigFromParamMap(task_param_map);
+CLogger.configure(logger_cfg);
+
 cfg.stages = {};
 
 msms_flags = CPTMdecoderWorkflowConfig.resolveMsmsWorkflowFlagsFromMap(task_param_map);
@@ -68,4 +71,40 @@ if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowParamKey
 end
 
 obj = CPTMdecoderWorkflowConfig(cfg);
+end
+
+
+function logger_cfg = buildLoggerConfigFromParamMap(task_param_map)
+% Build logger configuration struct from the parameter map.
+% Inputs:
+%   task_param_map (containers.Map)
+%       parameter key-value map
+% Output:
+%   logger_cfg (struct)
+%       logger config struct with fields:
+%       - enabled (logical)
+%       - file_path (char)
+%       - file_level (char)
+%       - to_console (logical)
+%       - console_level (char)
+
+timestamp = datestr(now, 'yyyymmdd_HHMMSS');
+log_file_name = sprintf('ptmdecoder_%s.log', timestamp);
+
+logger_cfg = struct();
+logger_cfg.enabled = CParamMapUtils.getOptionalLogical(task_param_map, ...
+    CPTMdecoderWorkflowParamKeys.PARAM_LOG_ENABLED, true, 'CPTMdecoderWorkflowConfig');
+configured_log_dir = CParamMapUtils.getOptional(task_param_map, ...
+    CPTMdecoderWorkflowParamKeys.PARAM_LOG_FILE_DIR, '', 'CPTMdecoderWorkflowConfig');
+if isempty(configured_log_dir)
+    logger_cfg.file_path = fullfile(pwd, log_file_name);
+else
+    logger_cfg.file_path = fullfile(char(configured_log_dir), log_file_name);
+end
+logger_cfg.file_level = upper(strtrim(char(CParamMapUtils.getOptional(task_param_map, ...
+    CPTMdecoderWorkflowParamKeys.PARAM_LOG_FILE_LEVEL, 'DEBUG', 'CPTMdecoderWorkflowConfig'))));
+logger_cfg.to_console = CParamMapUtils.getOptionalLogical(task_param_map, ...
+    CPTMdecoderWorkflowParamKeys.PARAM_LOG_TO_CONSOLE, true, 'CPTMdecoderWorkflowConfig');
+logger_cfg.console_level = upper(strtrim(char(CParamMapUtils.getOptional(task_param_map, ...
+    CPTMdecoderWorkflowParamKeys.PARAM_LOG_CONSOLE_LEVEL, 'INFO', 'CPTMdecoderWorkflowConfig'))));
 end

@@ -39,8 +39,8 @@ testCase.verifyEqual(obj.m_alpha, 0.2, 'AbsTol', 1e-12);
 testCase.verifyEqual(obj.m_resFilterThres, 0.05, 'AbsTol', 1e-12);
 end
 
-function testProcessSpectrumWithContextCatchPath(testCase)
-% TESTPROCESSSPECTRUMWITHCONTEXTCATCHPATH Validate processSpectrumWithContext returns safe failure payload on runtime exception
+function testProcessSpectrumWithContextExceptionPropagates(testCase)
+% TESTPROCESSSPECTRUMWITHCONTEXTEXCEPTIONPROPAGATES Validate processSpectrumWithContext propagates runtime exception to caller
 % Input:
 %   testCase (matlab.unittest.TestCase)
 % Output:
@@ -60,7 +60,7 @@ cfg = CMS2SpectrumPipelineConfig(struct( ...
     'grid_penalty_intens', 'intens_sum', ...
     'case_OLS_intens_weight', 'none'));
 
-% Intentionally provide invalid spectrum context to trigger try/catch path
+% Intentionally provide invalid spectrum context to trigger runtime exception
 obj = CMS2SpectrumPipeline('PEPTIDE', true, false, struct(), 'rawA', 'specA', ...
     containers.Map('KeyType','char','ValueType','double'), ...
     containers.Map('KeyType','char','ValueType','double'), cfg);
@@ -79,16 +79,6 @@ spectrumCtx = struct( ...
     'iCharge', [], ...
     'precursorMZ', []);
 
-[bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,warning_msg,is_X_not_full_column_rank] = ...
-    obj.processSpectrumWithContext(peptideCtx, spectrumCtx);
-
-testCase.verifyFalse(bSuccess);
-testCase.verifyEmpty(cstrIMP);
-testCase.verifyEmpty(abundance);
-testCase.verifyEmpty(ionTypePosCharge);
-testCase.verifyEmpty(ionIntens);
-testCase.verifyEmpty(frageff);
-testCase.verifyFalse(is_X_not_full_column_rank);
-testCase.verifyNotEmpty(warning_msg);
-testCase.verifyTrue(contains(char(warning_msg), '[CMS2]'));
+testCase.verifyError(@() obj.processSpectrumWithContext(peptideCtx, spectrumCtx), ...
+    'MATLAB:Containers:Map:IncorrectIndexing');
 end

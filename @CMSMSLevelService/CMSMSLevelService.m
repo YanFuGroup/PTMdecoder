@@ -64,9 +64,8 @@ classdef CMSMSLevelService < handle
                 error(['Can not open file: ',cfg.pep_spec_file_path]);
             end
             file_total_length = dir(cfg.pep_spec_file_path).bytes;
-            print_progress = CPrintProgress(file_total_length);
-            fprintf('Quantifying at PSM level...')
-            warning_message = [];
+            print_progress = CPrintProgress(file_total_length, 'MSMS level processing');
+            CLogger.info('Quantifying at PSM level...');
 
             CPathResolver.ensureDir(cfg.output_dir_path);
 
@@ -136,7 +135,7 @@ classdef CMSMSLevelService < handle
                             'iCharge', iCharge, ...
                             'precursorMZ', precursorMZ);
 
-                        [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,warning_msg,is_X_not_full_column_rank] = ...
+                        [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,is_X_not_full_column_rank] = ...
                             eachSpecPipeline.processSpectrumWithContext(peptideCtx, spectrumCtx);
                     catch ME
                         bSuccess = false;
@@ -146,10 +145,9 @@ classdef CMSMSLevelService < handle
                         ionIntens = [];
                         frageff = [];
                         is_X_not_full_column_rank = false;
-                        warning_msg = ['[CMS2] ', ME.identifier, ': ', ME.message, '\n'];
+                        CLogger.debug('Failed spectrum (%s/%s) - %s: %s', ...
+                            dataset_name, spec_name, ME.identifier, ME.message);
                     end
-
-                    warning_message = [warning_message, warning_msg]; %#ok<AGROW>
                     if bSuccess
                         if is_X_not_full_column_rank
                             fprintf(fo_may_FP,'%s\t%s\n',dataset_name,spec_name);
@@ -177,10 +175,7 @@ classdef CMSMSLevelService < handle
             fclose(fo_may_FP);
             fclose(fin);
             print_progress.last_update();
-            fprintf('done.\n');
-            if warning_message
-                fprintf(warning_message);
-            end
+            CLogger.info('MSMS-level quantification done.');
         end
     end
 

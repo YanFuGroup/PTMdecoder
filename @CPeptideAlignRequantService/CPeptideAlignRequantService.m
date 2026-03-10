@@ -102,8 +102,8 @@ classdef CPeptideAlignRequantService < handle
             proc_executor = CIMPProcessingExecutor(proc_cfg);
 
             quant_report = CIMPQuantReport();
-            print_progress = CPrintProgress(length(msms_result.Peptides));
-            fprintf('Quantifying at peptide level before alignment...')
+            print_progress = CPrintProgress(length(msms_result.Peptides), 'peptide_quant_before_alignment');
+            CLogger.info('Quantifying at peptide level before alignment...');
             for i_pep = 1:length(msms_result.Peptides)
                 print_progress = print_progress.update_show(i_pep);
                 peptide_sequence = msms_result.Peptides(i_pep).peptide_sequence;
@@ -113,7 +113,7 @@ classdef CPeptideAlignRequantService < handle
                 quant_report = quant_report.append_block(block);
             end
             print_progress.last_update();
-            fprintf('done.\n');
+            CLogger.info('Peptide-level quantification before alignment done.');
 
             CIMPQuantResultIO.write(quant_report, quant_output_path);
             % quant_report = CIMPQuantResultIO.read(quant_output_path);
@@ -138,9 +138,9 @@ classdef CPeptideAlignRequantService < handle
 
             output_path = cfg.requant_output_path;
             report = CIMPQuantReport();
-            print_progress = CPrintProgress(length(msms_result.Peptides));
+            print_progress = CPrintProgress(length(msms_result.Peptides), 'peptide_requant_aligned');
 
-            fprintf('Re-quantifying at peptide level (aligned)...')
+            CLogger.info('Re-quantifying at peptide level (aligned)...');
             for i_pep = 1:length(msms_result.Peptides)
                 print_progress = print_progress.update_show(i_pep);
                 peptide_sequence = msms_result.Peptides(i_pep).peptide_sequence;
@@ -150,7 +150,7 @@ classdef CPeptideAlignRequantService < handle
                 report = report.append_block(block);
             end
             print_progress.last_update();
-            fprintf('done.\n');
+            CLogger.info('Aligned peptide-level re-quantification done.');
 
             CIMPQuantResultIO.write(report, output_path);
         end

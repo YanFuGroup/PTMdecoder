@@ -26,7 +26,14 @@ classdef CPTMdecoderWorkflowRunner < handle
                 if ~stage.enabled
                     continue;
                 end
-                obj.executeStage(stage);
+                CLogger.info('Stage start: %s', stage.name);
+                try
+                    obj.executeStage(stage);
+                    CLogger.info('Stage end: %s (success)', stage.name);
+                catch ME
+                    CLogger.info('Stage end: %s (failed)', stage.name);
+                    CLogger.error(ME, 'Stage failed: %s (%s): %s', stage.name, ME.identifier, ME.message);
+                end
             end
         end
     end

@@ -50,7 +50,7 @@ classdef CXICDrawService < handle
             report = CIMPQuantResultIO.read(checked_pep_path);
             pep_rtrange_map = report.build_pep_rtrange_map();
             if isempty(pep_rtrange_map)
-                warning(['The checked peptide result file "', checked_pep_path, '" is empty!']);
+                CLogger.warn('The checked peptide result file "%s" is empty!', checked_pep_path);
             end
 
             CPathResolver.ensureDir(dir_save);
@@ -59,7 +59,7 @@ classdef CXICDrawService < handle
                 'report_msms.txt', cfg.msms_res_path);
             msms_result = CMS2ResultIO.read(each_PSM_results_path);
 
-            print_progress = CPrintProgress(length(msms_result.Peptides));
+            print_progress = CPrintProgress(length(msms_result.Peptides), 'draw_xic');
             pipeline_cfg = CIMPProcessingExecutorConfig(struct( ...
                 'ms12DatasetIO', obj.m_cMs12DatasetIO, ...
                 'ms1_tolerance', cfg.ms1_tolerance, ...
@@ -68,14 +68,14 @@ classdef CXICDrawService < handle
                 'resFilterThres', cfg.result_filter_threshold));
             executor = CIMPProcessingExecutor(pipeline_cfg);
 
-            fprintf('Drawing XIC...');
+            CLogger.info('Drawing XIC...');
             for idx_psf = 1:length(msms_result.Peptides)
                 print_progress = print_progress.update_show(idx_psf);
                 rawIdentManager = obj.buildRawIdentManagerFromSpectrumList(msms_result.Peptides(idx_psf).spectrum_list);
                 executor.drawImpXicForBlock(rawIdentManager, pep_rtrange_map, dir_save, color_map, legend_map);
             end
             print_progress.last_update();
-            fprintf('done.\n');
+            CLogger.info('Drawing XIC done.');
         end
     end
 
