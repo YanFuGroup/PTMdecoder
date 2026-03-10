@@ -14,6 +14,7 @@ function system_test_runner()
     msms_pep_site_paramFile = fullfile(testDataDir, 'msms_pep_site.param');
     pep_requant_paramFile = fullfile(testDataDir, 'requant_pep_site.param');
     align_requant_paramFile = fullfile(testDataDir, 'align_requant.param');
+    align_requant_merge_on_paramFile = fullfile(testDataDir, 'align_requant_merge_on.param');
     pairwise_paramFile = fullfile(testDataDir, 'pairwise.param');
     demo_paramFile = fullfile(testDataDir, 'demo.param');
     goldenDir = fullfile(currentDir, 'golden');
@@ -46,9 +47,6 @@ function system_test_runner()
 
     fprintf('Running pep-requant procedure...\n');
     main(pep_requant_paramFile);
-
-    fprintf('Running align-requant workflow procedure...\n');
-    main(align_requant_paramFile);
     
     fprintf('Running drawXIC test...\n');
     helper_test_draw_xic(projectDir, testDataDir, outputDir);
@@ -61,6 +59,20 @@ function system_test_runner()
 
     fprintf('Running report_msms_top1 generation test...\n');
     helper_test_report_msms_top1(projectDir, testDataDir, outputDir);
+
+    mergeFlagName = 'REQUANT_RT_PEAKS_MERGE_ON';
+    previousMergeFlag = getenv(mergeFlagName);
+    mergeFlagCleanup = onCleanup(@() setenv(mergeFlagName, previousMergeFlag));
+
+    fprintf('Running align-requant workflow procedure...\n');
+    setenv(mergeFlagName, '0');
+    main(align_requant_paramFile);
+
+    fprintf('Running align-requant workflow procedure with merged RT peaks on partial data...\n');
+    setenv(mergeFlagName, '1');
+    main(align_requant_merge_on_paramFile);
+
+    setenv(mergeFlagName, previousMergeFlag); % Restore original environment variable value
 
     fprintf('Run completed, start comparing results...\n');
     
