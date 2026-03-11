@@ -8,5 +8,8 @@ classdef CXICPreprocessUtils
 
         [max_label, is_skip_vec, xic_peak_idx_bounds] = ...
             prepare_peak_ranges_from_imp_rt_range(xic_rt, current_imp_rt_range, rt_error_tol)
+
+        [xic_peak_idx_bounds, xic_peak_rt_bounds, is_ok] = ...
+            build_peak_bounds_from_candidates(xic_rt, candidate_rt_peaks)
     end
 end

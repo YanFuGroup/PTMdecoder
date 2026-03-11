@@ -128,6 +128,49 @@ classdef test_CXICPeakUtils < matlab.unittest.TestCase
             testCase.verifyEqual(xic_peak_rt_bounds(2, 2).rt_end, 8);
         end
 
+        function testComputeMetricsOnCandidateRangesBasic(testCase)
+            xic_rt = (1:6)';
+            xic_intensity_smoothed = [0; 2; 2; 1; 1; 0];
+            rt_sorted = [2; 3; 4; 5];
+            ratio_sorted = [1; 1; 1; 1];
+            xic_peak_idx_bounds = [ ...
+                struct('idx_start', 2, 'idx_end', 3); ...
+                struct('idx_start', 4, 'idx_end', 5)];
+
+            [imp_max_props, area_imp_by_peak, ratio_each_XIC_peak] = ...
+                CXICPeakUtils.compute_metrics_on_candidate_ranges(...
+                    xic_rt, xic_intensity_smoothed, rt_sorted, ratio_sorted, ...
+                    xic_peak_idx_bounds, 0.01);
+
+            testCase.verifyEqual(size(imp_max_props), [1, 2]);
+            testCase.verifyEqual(size(area_imp_by_peak), [1, 2]);
+            testCase.verifyEqual(size(ratio_each_XIC_peak), [1, 2]);
+            testCase.verifyEqual(imp_max_props, [1, 1], 'AbsTol', 1e-10);
+            testCase.verifyEqual(area_imp_by_peak, [240, 120], 'AbsTol', 1e-10);
+            testCase.verifyEqual(ratio_each_XIC_peak, [1, 1], 'AbsTol', 1e-10);
+        end
+
+        function testComputeMetricsOnCandidateRangesKeepsZeroAreaPeakAtZero(testCase)
+            xic_rt = (1:5)';
+            xic_intensity_smoothed = [0; 0; 0; 3; 3];
+            rt_sorted = [4; 5];
+            ratio_sorted = [1; 1];
+            xic_peak_idx_bounds = [ ...
+                struct('idx_start', 1, 'idx_end', 3); ...
+                struct('idx_start', 4, 'idx_end', 5)];
+
+            [imp_max_props, area_imp_by_peak, ratio_each_XIC_peak] = ...
+                CXICPeakUtils.compute_metrics_on_candidate_ranges(...
+                    xic_rt, xic_intensity_smoothed, rt_sorted, ratio_sorted, ...
+                    xic_peak_idx_bounds, 0.01);
+
+            testCase.verifyEqual(imp_max_props(1, 1), 0, 'AbsTol', 1e-10);
+            testCase.verifyEqual(area_imp_by_peak(1, 1), 0, 'AbsTol', 1e-10);
+            testCase.verifyEqual(ratio_each_XIC_peak(1, 1), 0, 'AbsTol', 1e-10);
+            testCase.verifyGreaterThan(area_imp_by_peak(1, 2), 0);
+            testCase.verifyEqual(ratio_each_XIC_peak(1, 2), 1, 'AbsTol', 1e-10);
+        end
+
         function testSelectBestPeakPerImp(testCase)
             imp_max_props = [0.9, 0.2;
                              0.1, 0.8];

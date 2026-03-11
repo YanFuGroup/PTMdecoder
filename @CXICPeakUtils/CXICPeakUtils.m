@@ -9,6 +9,10 @@ classdef CXICPeakUtils
         [imp_max_props, peak_fwhms, area_imp_by_peak, xic_peak_rt_bounds] = ...
             compute_peak_features(xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds)
 
+        [imp_max_props, area_imp_by_peak, ratio_each_XIC_peak] = ...
+            compute_metrics_on_candidate_ranges(...
+                xic_rt, xic_intensity_smoothed, rt_sorted, ratio_sorted, xic_peak_idx_bounds, resFilterThres)
+
             xic_ratio_estimated = calculate_kernel_ratio(xic_rt, rt_sorted, ratio_sorted, xic_peak_idx_bounds, is_broadcast)
 
         idx_selected = select_best_peak_per_imp(imp_max_props, area_imp_by_peak)
