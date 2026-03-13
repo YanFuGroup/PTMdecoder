@@ -9,8 +9,10 @@ classdef CMS2Result < handle
         %   - spectrum_list: struct array
         %       - dataset_name: char/string
         %       - spectrum_name: char/string
+        %       - jaccard_stability: 1 x 1 double
         %       - peptidoform_list_str: cell array of strings (N x 1)
         %       - peptidoform_list_abun: double array (N x 1)
+        %       - peptidoform_list_support_freq: double array (N x 1)
         %       - peptidoform_num: int
         Peptides
     end
@@ -30,8 +32,8 @@ classdef CMS2Result < handle
 
         addPeptide(obj, sequence)
         addOrSelectPeptide(obj, sequence)
-        addSpectrum(obj, datasetName, spectrumName)
-        addPeptidoform(obj, peptidoform_str, relative_abundance)
+        addSpectrum(obj, datasetName, spectrumName, varargin)
+        addPeptidoform(obj, peptidoform_str, relative_abundance, varargin)
         compress(obj)
     end
 end

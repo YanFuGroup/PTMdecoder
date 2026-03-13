@@ -5,3 +5,5 @@ PTMdecoder_core_resources/
 FDR_control_generate_pep_spec_list/preprocess_repair.m
 temp_*
 *.mat
+.github/
+*.log

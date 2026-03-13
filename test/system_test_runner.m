@@ -74,7 +74,7 @@ function system_test_runner()
 
     setenv(mergeFlagName, previousMergeFlag); % Restore original environment variable value
 
-    fprintf('Run completed, start comparing results...\n');
+    fprintf('\nRun completed, start comparing results...\n');
     
     % Comparison section
     allMatch = compare_dir_recursive(goldenDir, goldenDir, outputDir);
@@ -231,7 +231,7 @@ function allMatch = compare_dir_recursive(currentDir, rootGoldenDir, rootOutputD
             if passed
                 fprintf('[Pass] %s\n', relativePath);
             else
-                fprintf('[Fail] %s content inconsistent!\n', relativePath);
+                fprintf('xFailx %s content inconsistent!\n', relativePath);
                 allMatch = false;
             end
         end

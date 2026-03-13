@@ -117,7 +117,7 @@ end
 end
 
 function testReadInvalidPeptideLineErrorId(testCase)
-% TESTREADINVALIDPEPTIDELINEERRORID Validate invalid peptide line raises fixed error id
+% TESTREADINVALIDPEPTIDELINEERRORID Validate invalid peptide line is logged with business tag
 
 testFile = fullfile(pwd, 'test_msms_res_invalid_peptide_temp.txt');
 testCase.addTeardown(@() deleteTestFile(testFile));
@@ -129,11 +129,12 @@ end
 fprintf(fid, 'P\n');
 fclose(fid);
 
-testCase.verifyError(@() CMS2ResultIO.read(testFile), 'CMS2ResultIO:InvalidPeptideLine');
+verifyLoggedErrorContains(testCase, @() CMS2ResultIO.read(testFile), ...
+    '[CMS2ResultIO:InvalidPeptideLine]');
 end
 
 function testReadInvalidSpectrumLineErrorId(testCase)
-% TESTREADINVALIDSPECTRUMLINEERRORID Validate invalid spectrum line raises fixed error id
+% TESTREADINVALIDSPECTRUMLINEERRORID Validate invalid spectrum line is logged with business tag
 
 testFile = fullfile(pwd, 'test_msms_res_invalid_spectrum_temp.txt');
 testCase.addTeardown(@() deleteTestFile(testFile));
@@ -146,11 +147,12 @@ fprintf(fid, 'P\tPEPTIDE_A\n');
 fprintf(fid, 'S\tDatasetOnly\n');
 fclose(fid);
 
-testCase.verifyError(@() CMS2ResultIO.read(testFile), 'CMS2ResultIO:InvalidSpectrumLine');
+verifyLoggedErrorContains(testCase, @() CMS2ResultIO.read(testFile), ...
+    '[CMS2ResultIO:InvalidSpectrumLine]');
 end
 
 function testReadBadLineErrorId(testCase)
-% TESTREADBADLINEERRORID Validate malformed peptidoform line raises fixed error id
+% TESTREADBADLINEERRORID Validate malformed peptidoform line is logged with business tag
 
 testFile = fullfile(pwd, 'test_msms_res_bad_line_temp.txt');
 testCase.addTeardown(@() deleteTestFile(testFile));
@@ -161,14 +163,15 @@ if fid < 0
 end
 fprintf(fid, 'P\tPEPTIDE_A\n');
 fprintf(fid, 'S\tDataset1\tSpec1\n');
-fprintf(fid, 'BAD\t123\textra\n');
+fprintf(fid, 'BAD\t123\tsupport=abc\n');
 fclose(fid);
 
-testCase.verifyError(@() CMS2ResultIO.read(testFile), 'CMS2ResultIO:InvalidPeptidoformLine');
+verifyLoggedErrorContains(testCase, @() CMS2ResultIO.read(testFile), ...
+    '[CMS2ResultIO:InvalidPeptidoformNamedField]');
 end
 
 function testReadEmptyFileErrorId(testCase)
-% TESTREADEMPTYFILEERRORID Validate empty file raises fixed error id
+% TESTREADEMPTYFILEERRORID Validate empty file is logged with business tag
 
 testFile = fullfile(pwd, 'test_msms_res_empty_temp.txt');
 testCase.addTeardown(@() deleteTestFile(testFile));
@@ -179,14 +182,36 @@ if fid < 0
 end
 fclose(fid);
 
-testCase.verifyError(@() CMS2ResultIO.read(testFile), 'CMS2ResultIO:EmptyFile');
+verifyLoggedErrorContains(testCase, @() CMS2ResultIO.read(testFile), ...
+    '[CMS2ResultIO:EmptyFile]');
 end
 
 function testReadOpenFileFailedErrorId(testCase)
-% TESTREADOPENFILEFAILEDERRORID Validate non-existing path raises fixed error id
+% TESTREADOPENFILEFAILEDERRORID Validate non-existing path is logged with business tag
 
 missingFile = fullfile(pwd, 'test_msms_res_missing_temp.txt');
-testCase.verifyError(@() CMS2ResultIO.read(missingFile), 'CMS2ResultIO:OpenFileFailed');
+verifyLoggedErrorContains(testCase, @() CMS2ResultIO.read(missingFile), ...
+    '[CMS2ResultIO:OpenFileFailed]');
+end
+
+
+function verifyLoggedErrorContains(testCase, funcHandle, expectedBusinessTag)
+% VERIFYLOGGEDERRORCONTAINS Verify CLogger error id and business tag in message
+% Input:
+%   testCase (matlab.unittest.TestCase)
+%   funcHandle (1 x 1 function_handle)
+%       function expected to raise CLogger.error
+%   expectedBusinessTag (1 x N char/string)
+%       business tag like [CMS2ResultIO:InvalidSpectrumLine]
+
+testCase.verifyError(funcHandle, 'CLogger:LoggedError');
+
+try
+    funcHandle();
+catch me
+    testCase.verifyTrue(contains(me.message, expectedBusinessTag), ...
+        ['Expected error message to contain business tag: ', expectedBusinessTag]);
+end
 end
 
 function deleteTestFile(testFile)
