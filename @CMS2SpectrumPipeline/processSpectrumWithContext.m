@@ -1,4 +1,4 @@
-function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,is_X_not_full_column_rank] = processSpectrumWithContext(obj, peptideCtx, spectrumCtx)
+function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,is_X_not_full_column_rank,solver_diag,noise_model_fit_inputs,stability_cache] = processSpectrumWithContext(obj, peptideCtx, spectrumCtx)
 % processSpectrumWithContext - Process one spectrum by explicit input contexts
 % Input:
 %   obj (CMS2SpectrumPipeline)
@@ -44,11 +44,46 @@ function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,is_X_not
 %       Fragment efficiency corresponding to ionTypePosCharge.
 %   is_X_not_full_column_rank (1 x 1 logical)
 %       Whether matrix X is rank-deficient during abundance solve.
+%   solver_diag (1 x 1 struct)
+%       Stage-1 solver diagnostics placeholder. Fields:
+%           is_X_not_full_column_rank (logical)
+%               Whether matrix X is rank-deficient during abundance solve.
+%           jaccard_stability (double)
+%               Jaccard stability of the solution (NaN if not computed).
+%           support_frequency (double array)
+%               Support frequency of each peptidoform (empty if not computed).
+%           reported_imp_indices (double array)
+%               Indices of peptidoforms reported as present (abundance > 0).
+%           num_successful_resamples (double)
+%               Number of successful resamples if stability estimation is performed.
+%   noise_model_fit_inputs (1 x 1 struct)
+%       Dataset-level Noise Fitting Inputs.
+%   stability_cache (1 x 1 struct)
+%       Stage-1 spectrum cache placeholder for stage-2 stability estimation.
 
 ionTypePosCharge = [];
 ionIntens = [];
 frageff = [];
 is_X_not_full_column_rank = false;
+solver_diag = struct( ...
+    'is_X_not_full_column_rank', false, ...
+    'jaccard_stability', NaN, ...
+    'support_frequency', [], ...
+    'reported_imp_indices', [], ...
+    'num_successful_resamples', 0);
+noise_model_fit_inputs = struct( ...
+    'filteredOutExpPeakCount', 0, ...
+    'filteredOutExpPeakSqSum', 0, ...
+    'matchedExpPeaks', zeros(0, 3), ...
+    'fittedMatchedPeakIntensities', zeros(0, 1));
+stability_cache = struct( ...
+    'vNonRedunTheoryIonMz', [], ...
+    'matchedExpPeaks', zeros(0, 3), ...
+    'massArrangement', [], ...
+    'abundance', [], ...
+    'fittedMatchedPeakIntensities', zeros(0, 1), ...
+    'cstrIMP', {{}}, ...
+    'solver_diag', solver_diag);
 
 obj.m_pepSeq = peptideCtx.pepSeq;
 obj.m_isProtN = peptideCtx.isProtN;
@@ -102,6 +137,10 @@ if isempty(matchedExpPeaks)
     else
         abundance = 1;
         cstrIMP = CMS2ResultIO.formatImpStrings(massArrangement,fixedPosMod,obj.m_variableModNameMass,inxSites,obj.m_pepSeq);
+        stability_cache.vNonRedunTheoryIonMz = vNonRedunTheoryIonMz;
+        stability_cache.massArrangement = massArrangement;
+        stability_cache.abundance = abundance;
+        stability_cache.cstrIMP = cstrIMP;
         return;
     end
 end
@@ -113,6 +152,12 @@ if size(massArrangement,1) == 1
     abundance = 1;
     cstrIMP = CMS2ResultIO.formatImpStrings(massArrangement,fixedPosMod,obj.m_variableModNameMass,inxSites,obj.m_pepSeq);
     bSuccess = true;
+    stability_cache.vNonRedunTheoryIonMz = vNonRedunTheoryIonMz;
+    stability_cache.matchedExpPeaks = matchedExpPeaks;
+    stability_cache.massArrangement = massArrangement;
+    stability_cache.abundance = abundance;
+    stability_cache.fittedMatchedPeakIntensities = zeros(size(matchedExpPeaks,1), 1);
+    stability_cache.cstrIMP = cstrIMP;
     return;
 end
 
@@ -133,5 +178,20 @@ abundance(abundance<obj.m_resFilterThres*max(abundance))=0;
 abundance=abundance/(sum(abundance)+eps);
 
 cstrIMP = CMS2ResultIO.formatImpStrings(massArrangement,fixedPosMod,obj.m_variableModNameMass,inxSites,obj.m_pepSeq);
+
+solver_diag.is_X_not_full_column_rank = is_X_not_full_column_rank;
+solver_diag.reported_imp_indices = find(abundance > 0);
+
+noise_model_fit_inputs.matchedExpPeaks = matchedExpPeaks;
+noise_model_fit_inputs.fittedMatchedPeakIntensities = zeros(size(matchedExpPeaks,1), 1);
+
+stability_cache.vNonRedunTheoryIonMz = vNonRedunTheoryIonMz;
+stability_cache.matchedExpPeaks = matchedExpPeaks;
+stability_cache.massArrangement = massArrangement;
+stability_cache.abundance = abundance;
+stability_cache.fittedMatchedPeakIntensities = zeros(size(matchedExpPeaks,1), 1);
+stability_cache.cstrIMP = cstrIMP;
+stability_cache.solver_diag = solver_diag;
+
 bSuccess = true;
 end

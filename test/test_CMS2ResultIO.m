@@ -59,6 +59,10 @@ testCase.verifyTrue(strcmp(p1.peptide_sequence, 'PEPTIDE_A'), 'Peptide A sequenc
 testCase.verifyEqual(length(p1.spectrum_list), 1, 'Peptide A should have 1 spectrum');
 testCase.verifyEqual(p1.spectrum_list(1).peptidoform_num, 2, 'SpecA1 count mismatch');
 testCase.verifyEqual(p1.spectrum_list(1).peptidoform_list_abun(2), 200, 'Abundance value mismatch');
+testCase.verifyTrue(isnan(p1.spectrum_list(1).jaccard_stability), ...
+    'Legacy S line should default jaccard_stability to NaN');
+testCase.verifyTrue(all(isnan(p1.spectrum_list(1).peptidoform_list_support_freq)), ...
+    'Legacy peptidoform lines should default support_frequency to NaN');
 
 % 3. Peptide B
 p2 = resultObj.Peptides(2);
@@ -81,13 +85,13 @@ testCase.addTeardown(@() deleteTestFile(testFile));
 % Build source result object
 src = CMS2Result();
 src.addOrSelectPeptide('PEPTIDE_A');
-src.addSpectrum('Dataset1', 'SpecA1');
-src.addPeptidoform('FormA1', 100);
-src.addPeptidoform('FormA2', 200);
+src.addSpectrum('Dataset1', 'SpecA1', struct('jaccard_stability', 0.85));
+src.addPeptidoform('FormA1', 100, struct('support_frequency', 0.90));
+src.addPeptidoform('FormA2', 200, struct('support_frequency', 0.60));
 
 src.addOrSelectPeptide('PEPTIDE_B');
-src.addSpectrum('Dataset2', 'SpecB1');
-src.addPeptidoform('FormB1', 300.5);
+src.addSpectrum('Dataset2', 'SpecB1', struct('jaccard_stability', NaN));
+src.addPeptidoform('FormB1', 300.5, struct('support_frequency', 0.75));
 
 src.compress();
 
@@ -112,8 +116,36 @@ for i = 1:length(src.Peptides)
         testCase.verifyEqual(dstSpec.peptidoform_num, srcSpec.peptidoform_num);
         testCase.verifyEqual(dstSpec.peptidoform_list_str, srcSpec.peptidoform_list_str);
         testCase.verifyEqual(dstSpec.peptidoform_list_abun, srcSpec.peptidoform_list_abun, 'AbsTol', 1e-12);
+        testCase.verifyEqual(dstSpec.jaccard_stability, srcSpec.jaccard_stability, 'AbsTol', 1e-12);
+        testCase.verifyEqual(dstSpec.peptidoform_list_support_freq, srcSpec.peptidoform_list_support_freq, 'AbsTol', 1e-12);
     end
 end
+end
+
+function testReadNamedFields(testCase)
+% TESTREADNAMEDFIELDS Validate named field parsing for jaccard/support
+
+testFile = fullfile(pwd, 'test_msms_res_named_fields_temp.txt');
+testCase.addTeardown(@() deleteTestFile(testFile));
+
+fid = fopen(testFile, 'w');
+if fid < 0
+    error('Could not create temp test file.');
+end
+
+fprintf(fid, 'P\tPEPTIDE_A\n');
+fprintf(fid, 'S\tDataset1\tSpecA1\tjaccard=0.125000\tunknown_key=abc\n');
+fprintf(fid, 'FormA1\t100\tsupport=0.333333\textra=ignored\n');
+fprintf(fid, 'FormA2\t200\n');
+fclose(fid);
+
+resultObj = CMS2ResultIO.read(testFile);
+spec = resultObj.Peptides(1).spectrum_list(1);
+
+testCase.verifyEqual(spec.jaccard_stability, 0.125, 'AbsTol', 1e-12);
+testCase.verifyEqual(spec.peptidoform_list_support_freq(1), 0.333333, 'AbsTol', 1e-12);
+testCase.verifyTrue(isnan(spec.peptidoform_list_support_freq(2)), ...
+    'Missing support field should default to NaN');
 end
 
 function testReadInvalidPeptideLineErrorId(testCase)
@@ -168,6 +200,24 @@ fclose(fid);
 
 verifyLoggedErrorContains(testCase, @() CMS2ResultIO.read(testFile), ...
     '[CMS2ResultIO:InvalidPeptidoformNamedField]');
+end
+
+function testReadInvalidSpectrumNamedFieldValue(testCase)
+% Validate invalid jaccard named value is logged with business tag
+
+testFile = fullfile(pwd, 'test_msms_res_invalid_spectrum_named_field_temp.txt');
+testCase.addTeardown(@() deleteTestFile(testFile));
+
+fid = fopen(testFile, 'w');
+if fid < 0
+    error('Could not create temp test file.');
+end
+fprintf(fid, 'P\tPEPTIDE_A\n');
+fprintf(fid, 'S\tDataset1\tSpec1\tjaccard=abc\n');
+fclose(fid);
+
+verifyLoggedErrorContains(testCase, @() CMS2ResultIO.read(testFile), ...
+    '[CMS2ResultIO:InvalidSpectrumNamedField]');
 end
 
 function testReadEmptyFileErrorId(testCase)

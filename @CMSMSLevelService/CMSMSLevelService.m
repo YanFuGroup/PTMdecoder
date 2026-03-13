@@ -135,7 +135,7 @@ classdef CMSMSLevelService < handle
                             'iCharge', iCharge, ...
                             'precursorMZ', precursorMZ);
 
-                        [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,is_X_not_full_column_rank] = ...
+                        [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,is_X_not_full_column_rank,~,~,~] = ...
                             eachSpecPipeline.processSpectrumWithContext(peptideCtx, spectrumCtx);
                     catch ME
                         bSuccess = false;
@@ -161,11 +161,15 @@ classdef CMSMSLevelService < handle
                             msms_result.addPeptide(pepSeq);
                             if_wrote_peptide = true;
                         end
-                        msms_result.addSpectrum(dataset_name,spec_name);
+
+                        spectrumMeta = struct('jaccard_stability', NaN);
+                        msms_result.addSpectrum(dataset_name, spec_name, spectrumMeta);
+
                         imp_idx_nonzero = find(abundance~=0);
                         for idx = 1:length(imp_idx_nonzero)
+                            peptidoformMeta = struct('support_frequency', NaN);
                             msms_result.addPeptidoform(cstrIMP{imp_idx_nonzero(idx)}, ...
-                                abundance(imp_idx_nonzero(idx)));
+                                abundance(imp_idx_nonzero(idx)), peptidoformMeta);
                         end
                     end
                 end
