@@ -71,7 +71,7 @@ classdef CLoggerCore < handle
             line = sprintf('[%s] [%s] %s', ts, upper(level), message);
 
             if level_rank >= obj.file_level_rank
-                obj.buffer{end + 1} = line; %#ok<AGROW>
+                obj.buffer{end + 1} = line;
                 if numel(obj.buffer) >= obj.buffer_size || strcmpi(level, 'ERROR')
                     obj.flush();
                 end

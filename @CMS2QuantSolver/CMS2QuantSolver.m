@@ -4,6 +4,12 @@ classdef CMS2QuantSolver
     methods (Static)
         [abundance, frageff, ionTypePosCharge, ionIntens, is_X_not_full_column_rank] = solve(vNonRedunTheoryIonMz, matchedExpPeaks, massArrangement, solver_cfg)
 
+        [reported_imp_mask, tau] = getReportedImpMask(abundance, relative_threshold)
+
+        jaccard = computeJaccardIndex(maskA, maskB)
+
+        perturbedMatchedExpPeaks = perturbMatchedPeaks(matchedExpPeaks, fittedMatchedPeakIntensities, noise_model, seed)
+
         penalty_factor = calculatePenaltyFactor(vNonRedunTheoryIonMz, matchedExpPeaks, lambda, case_penalty_intens, grid_penalty_intens)
 
         [X,ionTypePosCharge,ionIntens] = calculateX_FEV(vNonRedunTheoryIonMz, matchedExpPeaks, case_OLS_intens_weight)
