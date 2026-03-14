@@ -190,3 +190,78 @@ perturbed2 = CMS2QuantSolver.perturbMatchedPeaks(matched, yhat, noise_model, 123
 
 testCase.verifyEqual(perturbed1, perturbed2, 'AbsTol', 1e-12);
 end
+
+
+function testComputeFittedMatchedPeakIntensitiesPrimaryPath(testCase)
+% Validate primary path uses site-specific fragmentation efficiency
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
+
+v = [
+    100, 1, 1, 1, 0, 0, 1, 0;
+    200, 2, 2, 1, 0, 0, 0, 1;
+    300, 1, 2, 1, 0, 0, 1, 1
+];
+matched = [
+    1, 0.5, 50;
+    2, 0.4, 40
+];
+abundance = [0.6; 0.4];
+frageff = [0.8; 0.5];
+ionTypePosCharge = [
+    1, 1, 1;
+    2, 2, 1
+];
+
+fitted = CMS2QuantSolver.computeFittedMatchedPeakIntensities(v, matched, abundance, frageff, ionTypePosCharge);
+
+testCase.verifySize(fitted, [2, 1]);
+testCase.verifyGreaterThanOrEqual(fitted, zeros(2, 1));
+% fittedShape = [0.6*0.8; 0.4*0.5] = [0.48; 0.2]
+% expIntensities = [0.5; 0.4] (from matched(:,2))
+% c = (0.48*0.5 + 0.2*0.4) / (0.48^2 + 0.2^2) = 0.32 / 0.2704 = 1.18343195
+testCase.verifyEqual(fitted(1), 0.48 * (0.32 / 0.2704), 'AbsTol', 1e-6);
+testCase.verifyEqual(fitted(2), 0.20 * (0.32 / 0.2704), 'AbsTol', 1e-6);
+end
+
+function testComputeFittedMatchedPeakIntensitiesFallbackPath(testCase)
+% Validate fallback path uses global scaling regression when frageff is missing
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
+
+v = [
+    100, 1, 1, 1, 0, 0, 1, 0;
+    200, 2, 2, 1, 0, 0, 0, 1
+];
+matched = [
+    1, 0.8, 80;
+    2, 0.2, 20
+];
+abundance = [0.5; 0.5];
+
+fitted = CMS2QuantSolver.computeFittedMatchedPeakIntensities(v, matched, abundance);
+
+testCase.verifySize(fitted, [2, 1]);
+testCase.verifyGreaterThanOrEqual(fitted, zeros(2, 1));
+end
+
+function testComputeFittedMatchedPeakIntensitiesEmpty(testCase)
+% Validate empty input returns empty output safely
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
+
+v = [100, 1, 1, 1, 0, 0, 1, 0];
+matched = [];
+abundance = [1.0; 0.0];
+
+fitted = CMS2QuantSolver.computeFittedMatchedPeakIntensities(v, matched, abundance);
+
+testCase.verifyEmpty(fitted);
+end
+

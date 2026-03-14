@@ -10,6 +10,8 @@ classdef CMS2QuantSolver
 
         perturbedMatchedExpPeaks = perturbMatchedPeaks(matchedExpPeaks, fittedMatchedPeakIntensities, noise_model, seed)
 
+        fitted = computeFittedMatchedPeakIntensities(vNonRedunTheoryIonMz, matchedExpPeaks, abundance, frageff, ionTypePosCharge)
+
         penalty_factor = calculatePenaltyFactor(vNonRedunTheoryIonMz, matchedExpPeaks, lambda, case_penalty_intens, grid_penalty_intens)
 
         [X,ionTypePosCharge,ionIntens] = calculateX_FEV(vNonRedunTheoryIonMz, matchedExpPeaks, case_OLS_intens_weight)
