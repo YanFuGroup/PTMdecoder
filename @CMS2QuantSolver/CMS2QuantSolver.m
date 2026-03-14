@@ -4,6 +4,8 @@ classdef CMS2QuantSolver
     methods (Static)
         noise_model = estimateDatasetNoiseModel(noise_model_fit_inputs)
 
+        stability_diag = estimateStability(vNonRedunTheoryIonMz, matchedExpPeaks, massArrangement, solver_cfg, base_abundance, fittedMatchedPeakIntensities, noise_model, stability_options)
+
         [abundance, frageff, ionTypePosCharge, ionIntens, is_X_not_full_column_rank] = solve(vNonRedunTheoryIonMz, matchedExpPeaks, massArrangement, solver_cfg)
 
         [reported_imp_mask, tau] = getReportedImpMask(abundance, relative_threshold)

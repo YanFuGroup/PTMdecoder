@@ -265,3 +265,160 @@ fitted = CMS2QuantSolver.computeFittedMatchedPeakIntensities(v, matched, abundan
 testCase.verifyEmpty(fitted);
 end
 
+
+function testEstimateStabilityDeterministicPositiveSupportCase(testCase)
+% Validate deterministic zero-noise case where reported IMP support is strictly positive
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
+
+testCase.assumeNotEmpty(which('quadprog'), 'Optimization Toolbox (quadprog) is required for this test.');
+
+v = [
+    100, 1, 1, 1, 0, 1, 1, 0, 0;
+    200, 2, 2, 1, 0, 2, 0, 1, 0
+];
+matched = [
+    1, 0.6, 60;
+    2, 0.4, 40
+];
+massArrangement = [0; 1; 2];
+solver_cfg = struct('model',2,'method',1,'lambda',0.1, ...
+    'case_penalty_intens','intens_sum','grid_penalty_intens','intens_sum','case_OLS_intens_weight','none');
+
+% Third IMP is structural zero in baseline and should never be reported.
+base_abundance = [0.7; 0.3; 0];
+fitted = [60; 40];
+% Use zero perturbation noise to keep all successful resamples deterministic.
+noise_model = struct('sigma_base', 0.0, 'gamma', 0.0, 'tau_floor', 10);
+stability_options = struct('n_resamples', 5, 'random_seed', 1, 'relative_threshold', 0.01);
+
+stability_diag = CMS2QuantSolver.estimateStability( ...
+    v, matched, massArrangement, solver_cfg, base_abundance, fitted, noise_model, stability_options);
+
+testCase.verifyGreaterThanOrEqual(stability_diag.jaccard_stability, 0);
+testCase.verifyLessThanOrEqual(stability_diag.jaccard_stability, 1);
+testCase.verifyEqual(stability_diag.num_successful_resamples, 5);
+testCase.verifyEqual(stability_diag.reported_imp_indices, [1; 2]);
+testCase.verifyFalse(any(stability_diag.reported_imp_indices == 3));
+testCase.verifySize(stability_diag.support_frequency, [2, 1]);
+testCase.verifyGreaterThan(stability_diag.support_frequency, zeros(2, 1));
+testCase.verifyLessThanOrEqual(stability_diag.support_frequency, ones(2, 1));
+end
+
+
+function testEstimateStabilityNonZeroNoiseSupportCanBeZero(testCase)
+% Validate that with non-zero noise, a baseline-reported IMP can have zero support
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
+
+testCase.assumeNotEmpty(which('quadprog'), 'Optimization Toolbox (quadprog) is required for this test.');
+
+% IMP #2 is structurally unsupported by X (all zeros in IMP-2 column),
+% so it can be baseline-reported but still have zero support in resamples.
+v = [
+    100, 1, 1, 1, 0, 1, 1, 0;
+    200, 2, 2, 1, 0, 2, 1, 0
+];
+matched = [
+    1, 0.6, 60;
+    2, 0.4, 40
+];
+massArrangement = [0; 1];
+solver_cfg = struct('model',2,'method',1,'lambda',0.1, ...
+    'case_penalty_intens','intens_sum','grid_penalty_intens','intens_sum','case_OLS_intens_weight','none');
+
+base_abundance = [0.9; 0.1];
+fitted = [60; 40];
+noise_model = struct('sigma_base', 1.0, 'gamma', 0.05, 'tau_floor', 10);
+stability_options = struct('n_resamples', 6, 'random_seed', 7, 'relative_threshold', 0.01);
+
+stability_diag = CMS2QuantSolver.estimateStability( ...
+    v, matched, massArrangement, solver_cfg, base_abundance, fitted, noise_model, stability_options);
+
+testCase.verifyEqual(stability_diag.reported_imp_indices, [1; 2]);
+testCase.verifySize(stability_diag.support_frequency, [2, 1]);
+testCase.verifyGreaterThanOrEqual(stability_diag.support_frequency, zeros(2, 1));
+testCase.verifyLessThanOrEqual(stability_diag.support_frequency, ones(2, 1));
+testCase.verifyEqual(stability_diag.support_frequency(2), 0, 'AbsTol', 1e-12);
+end
+
+
+function testEstimateStabilitySeedReproducible(testCase)
+% Validate estimateStability is reproducible with fixed random_seed
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
+
+testCase.assumeNotEmpty(which('quadprog'), 'Optimization Toolbox (quadprog) is required for this test.');
+
+v = [
+    100, 1, 1, 1, 0, 1, 1, 0;
+    200, 2, 2, 1, 0, 2, 0, 1
+];
+matched = [
+    1, 0.6, 60;
+    2, 0.4, 40
+];
+massArrangement = [0; 1];
+solver_cfg = struct('model',2,'method',1,'lambda',0.1, ...
+    'case_penalty_intens','intens_sum','grid_penalty_intens','intens_sum','case_OLS_intens_weight','none');
+
+base_abundance = [0.7; 0.3];
+fitted = [60; 40];
+noise_model = struct('sigma_base', 2.0, 'gamma', 0.05, 'tau_floor', 10);
+stability_options = struct('n_resamples', 6, 'random_seed', 11, 'relative_threshold', 0.01);
+
+diag1 = CMS2QuantSolver.estimateStability( ...
+    v, matched, massArrangement, solver_cfg, base_abundance, fitted, noise_model, stability_options);
+diag2 = CMS2QuantSolver.estimateStability( ...
+    v, matched, massArrangement, solver_cfg, base_abundance, fitted, noise_model, stability_options);
+
+testCase.verifyEqual(diag1.jaccard_stability, diag2.jaccard_stability, 'AbsTol', 1e-12);
+testCase.verifyEqual(diag1.num_successful_resamples, diag2.num_successful_resamples);
+testCase.verifyEqual(diag1.reported_imp_indices, diag2.reported_imp_indices);
+testCase.verifyEqual(diag1.support_frequency, diag2.support_frequency, 'AbsTol', 1e-12);
+end
+
+
+function testEstimateStabilityTooManyFailuresThrows(testCase)
+% Validate estimateStability raises when failed resamples exceed half
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
+
+testCase.assumeNotEmpty(which('quadprog'), 'Optimization Toolbox (quadprog) is required for this test.');
+
+v = [
+    100, 1, 1, 1, 0, 1, 1, 0;
+    200, 2, 2, 1, 0, 2, 0, 1
+];
+matched = [
+    1, 0.6, 60;
+    2, 0.4, 40
+];
+massArrangement = [0; 1];
+solver_cfg_invalid = struct('model',99,'method',1,'lambda',0.1, ...
+    'case_penalty_intens','intens_sum','grid_penalty_intens','intens_sum','case_OLS_intens_weight','none');
+
+base_abundance = [0.7; 0.3];
+fitted = [60; 40];
+noise_model = struct('sigma_base', 2.0, 'gamma', 0.05, 'tau_floor', 10);
+stability_options = struct('n_resamples', 5, 'random_seed', 3, 'relative_threshold', 0.01);
+
+f = @() CMS2QuantSolver.estimateStability( ...
+    v, matched, massArrangement, solver_cfg_invalid, base_abundance, fitted, noise_model, stability_options);
+
+testCase.verifyError(f, 'CLogger:LoggedError');
+try
+    f();
+catch ME
+    testCase.verifyThat(string(ME.message), matlab.unittest.constraints.ContainsSubstring('CMS2QuantSolver:TooManyResampleFailures'));
+end
+end
+
