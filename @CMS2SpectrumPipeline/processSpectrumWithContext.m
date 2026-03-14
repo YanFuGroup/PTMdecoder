@@ -53,7 +53,7 @@ function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,is_X_not
 %           support_frequency (double array)
 %               Support frequency of each peptidoform (empty if not computed).
 %           reported_imp_indices (double array)
-%               Indices of peptidoforms reported as present (abundance > 0).
+%               Indices of peptidoforms reported as present (abundance >= tau).
 %           num_successful_resamples (double)
 %               Number of successful resamples if stability estimation is performed.
 %   noise_model_fit_inputs (1 x 1 struct)
@@ -174,13 +174,14 @@ solver_cfg = struct( ...
     CMS2QuantSolver.solve(vNonRedunTheoryIonMz, matchedExpPeaks, massArrangement, solver_cfg);
 
 % Final thresholding + normalization
-abundance(abundance<obj.m_resFilterThres*max(abundance))=0;
-abundance=abundance/(sum(abundance)+eps);
+[reported_imp_mask, ~] = CMS2QuantSolver.getReportedImpMask(abundance, obj.m_resFilterThres);
+abundance(~reported_imp_mask) = 0;
+abundance = abundance / (sum(abundance) + eps);
 
 cstrIMP = CMS2ResultIO.formatImpStrings(massArrangement,fixedPosMod,obj.m_variableModNameMass,inxSites,obj.m_pepSeq);
 
 solver_diag.is_X_not_full_column_rank = is_X_not_full_column_rank;
-solver_diag.reported_imp_indices = find(abundance > 0);
+solver_diag.reported_imp_indices = find(reported_imp_mask);
 
 noise_model_fit_inputs.matchedExpPeaks = matchedExpPeaks;
 noise_model_fit_inputs.fittedMatchedPeakIntensities = zeros(size(matchedExpPeaks,1), 1);

@@ -84,6 +84,51 @@ testCase.verifyEqual(reportedMask, logical([false; true; true]));
 end
 
 
+function testGetReportedImpMaskIncludesBoundaryAtTau(testCase)
+% Validate abundance exactly equal to tau is included (>= tau)
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
+
+abundance = [0.01; 0.5; 1.0];
+[reportedMask, tau] = CMS2QuantSolver.getReportedImpMask(abundance, 0.01);
+
+testCase.verifyEqual(tau, 0.01, 'AbsTol', 1e-12);
+testCase.verifyEqual(reportedMask, logical([true; true; true]));
+end
+
+
+function testGetReportedImpMaskExclude(testCase)
+% Validate abundance less than tau is excluded
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
+
+abundance = [0.01; 0.5; 1.0];
+[reportedMask, tau] = CMS2QuantSolver.getReportedImpMask(abundance, 0.1);
+
+testCase.verifyEqual(tau, 0.1, 'AbsTol', 1e-12);
+testCase.verifyEqual(reportedMask, logical([false; true; true]));
+end
+
+
+function testGetReportedImpMaskWithZeroThresholdKeepsNonNegative(testCase)
+% Validate zero threshold keeps all entries with abundance >= 0
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
+
+abundance = [0; 0.1; 0.3];
+[reportedMask, tau] = CMS2QuantSolver.getReportedImpMask(abundance, 0);
+
+testCase.verifyEqual(tau, 0, 'AbsTol', 1e-12);
+testCase.verifyEqual(reportedMask, logical([true; true; true]));
+end
+
+
 function testGetReportedImpMaskRejectsAllZero(testCase)
 % Validate all-zero abundance is rejected
 % Input:
