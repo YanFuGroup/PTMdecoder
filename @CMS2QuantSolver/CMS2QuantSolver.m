@@ -2,6 +2,8 @@ classdef CMS2QuantSolver
     % Static solver wrappers for MS2 quantification models
 
     methods (Static)
+        noise_model = estimateDatasetNoiseModel(noise_model_fit_inputs)
+
         [abundance, frageff, ionTypePosCharge, ionIntens, is_X_not_full_column_rank] = solve(vNonRedunTheoryIonMz, matchedExpPeaks, massArrangement, solver_cfg)
 
         [reported_imp_mask, tau] = getReportedImpMask(abundance, relative_threshold)
