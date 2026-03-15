@@ -8,15 +8,22 @@ function tests = test_CLogger
 tests = functiontests(localfunctions);
 end
 
-function teardown(~)
+function setupOnce(testCase)
+% SETUPONCE Save external logger configuration
+testCase.TestData.originalConfig = CLogger.getConfig();
+end
+
+function teardownOnce(testCase)
+% TEARDOWNONCE Restore external logger configuration after ALL tests pass
 CLogger.resetForTests();
+CLogger.configure(testCase.TestData.originalConfig);
 end
 
 function testWriteInfoAndWarn(testCase)
 % TESTWRITEINFOANDWARN Verify INFO/WARN entries are written to file.
 
 log_file = fullfile(tempdir, ['ptmdecoder_logger_test_', char(java.util.UUID.randomUUID()), '.log']);
-cleanup_log = onCleanup(@() deleteIfExists(log_file)); %#ok<NASGU>
+cleanup_log = onCleanup(@() deleteIfExists(log_file));
 
 cfg = struct('enabled', true, 'file_level', 'INFO', 'file_path', log_file, 'to_console', false, 'console_level', 'INFO', 'buffer_size', 1);
 CLogger.configure(cfg);
@@ -33,7 +40,7 @@ function testLevelFilterWarnOnly(testCase)
 % TESTLEVELFILTERWARNONLY Verify INFO is filtered when level is WARN.
 
 log_file = fullfile(tempdir, ['ptmdecoder_logger_test_', char(java.util.UUID.randomUUID()), '.log']);
-cleanup_log = onCleanup(@() deleteIfExists(log_file)); %#ok<NASGU>
+cleanup_log = onCleanup(@() deleteIfExists(log_file));
 
 cfg = struct('enabled', true, 'file_level', 'WARN', 'file_path', log_file, 'to_console', false, 'console_level', 'INFO', 'buffer_size', 1);
 CLogger.configure(cfg);
@@ -50,7 +57,7 @@ function testErrorLogsThenThrows(testCase)
 % TESTERRORLOGSTHENTHROWS Verify error API logs and then raises exception.
 
 log_file = fullfile(tempdir, ['ptmdecoder_logger_test_', char(java.util.UUID.randomUUID()), '.log']);
-cleanup_log = onCleanup(@() deleteIfExists(log_file)); %#ok<NASGU>
+cleanup_log = onCleanup(@() deleteIfExists(log_file));
 
 cfg = struct('enabled', true, 'file_level', 'INFO', 'file_path', log_file, 'to_console', false, 'console_level', 'INFO', 'buffer_size', 50);
 CLogger.configure(cfg);
@@ -65,7 +72,7 @@ function testErrorWithMExceptionRethrowsOriginal(testCase)
 % TESTERRORWITHMEXCEPTIONRETHROWSORIGINAL Verify original exception is rethrown.
 
 log_file = fullfile(tempdir, ['ptmdecoder_logger_test_', char(java.util.UUID.randomUUID()), '.log']);
-cleanup_log = onCleanup(@() deleteIfExists(log_file)); %#ok<NASGU>
+cleanup_log = onCleanup(@() deleteIfExists(log_file));
 
 cfg = struct('enabled', true, 'file_level', 'INFO', 'file_path', log_file, 'to_console', false, 'console_level', 'INFO', 'buffer_size', 50);
 CLogger.configure(cfg);
@@ -82,8 +89,7 @@ function testDebugGoesToFileWhenFileLevelIsDebug(testCase)
 % TESTDEBUGGOESTOFILEWHENFILELEVELISDEBUG Verify DEBUG is persisted when file level is DEBUG.
 
 log_file = fullfile(tempdir, ['ptmdecoder_logger_test_', char(java.util.UUID.randomUUID()), '.log']);
-cleanup_log = onCleanup(@() deleteIfExists(log_file)); %#ok<NASGU>
-
+cleanup_log = onCleanup(@() deleteIfExists(log_file));
 cfg = struct('enabled', true, 'file_level', 'DEBUG', 'file_path', log_file, 'to_console', false, 'console_level', 'INFO', 'buffer_size', 1);
 CLogger.configure(cfg);
 CLogger.debug('debug-msg-%d', 11);
@@ -96,7 +102,7 @@ function testBufferedFileWriteNeedsFlush(testCase)
 % TESTBUFFEREDFILEWRITENEEDSFLUSH Verify logs are persisted after manual flush under batching mode.
 
 log_file = fullfile(tempdir, ['ptmdecoder_logger_test_', char(java.util.UUID.randomUUID()), '.log']);
-cleanup_log = onCleanup(@() deleteIfExists(log_file)); %#ok<NASGU>
+cleanup_log = onCleanup(@() deleteIfExists(log_file));
 
 cfg = struct('enabled', true, 'file_level', 'INFO', 'file_path', log_file, 'to_console', false, 'console_level', 'INFO', 'buffer_size', 100);
 CLogger.configure(cfg);

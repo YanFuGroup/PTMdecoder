@@ -2,6 +2,10 @@ classdef CLogger
     % Lightweight logger facade for workflow/service diagnostics.
 
     methods (Static)
+        function cfg = getConfig()
+            cfg = CLogger.getCore().getConfig();
+        end
+
         function configure(cfg)
             core = CLogger.getCore();
             core.configure(cfg);

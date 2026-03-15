@@ -12,6 +12,17 @@ testDir = fileparts(mfilename('fullpath'));
 projectDir = fileparts(testDir); 
 addpath(projectDir);
 
+outputDir = fullfile(testDir, 'output');
+if ~exist(outputDir, 'dir')
+    mkdir(outputDir);
+end
+timestamp = datestr(now, 'yyyymmdd_HHMMSS');
+logPath = fullfile(outputDir, sprintf('ptmdecoder_test_%s.log', timestamp));
+
+logger_cfg = struct();
+logger_cfg.file_path = logPath;
+CLogger.configure(logger_cfg);
+
 fprintf('===================================================\n');
 fprintf('Running All Unit Tests\n');
 fprintf('===================================================\n\n');

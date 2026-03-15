@@ -19,6 +19,17 @@ classdef CLoggerCore < handle
             obj.resetDefaults();
         end
 
+        function cfg = getConfig(obj)
+            % Retrieve current runtime settings.
+            cfg = struct();
+            cfg.enabled = obj.enabled;
+            cfg.file_level = obj.file_level;
+            cfg.console_level = obj.console_level;
+            cfg.to_console = obj.to_console;
+            cfg.file_path = obj.file_path;
+            cfg.buffer_size = obj.buffer_size;
+        end
+
         function configure(obj, cfg)
             % Configure logger runtime settings.
             % Input:
