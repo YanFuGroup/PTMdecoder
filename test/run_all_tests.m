@@ -16,8 +16,10 @@ outputDir = fullfile(testDir, 'output');
 if ~exist(outputDir, 'dir')
     mkdir(outputDir);
 end
-timestamp = datestr(now, 'yyyymmdd_HHMMSS');
-logPath = fullfile(outputDir, sprintf('ptmdecoder_test_%s.log', timestamp));
+logPath = fullfile(outputDir, 'ptmdecoder_test.log');
+if exist(logPath, 'file')
+    delete(logPath);
+end
 
 logger_cfg = struct();
 logger_cfg.file_path = logPath;

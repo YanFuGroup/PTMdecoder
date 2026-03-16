@@ -85,7 +85,6 @@ testCase.verifyTrue(any(~isnan(allSupport)), ...
 
 clear svc res;
 delete(cleanupPath);
-clear classes;
 end
 
 
@@ -98,7 +97,7 @@ function testRunWithoutStabilityOptionsKeepsNaNAndWarns(testCase)
 
 projectRoot = fileparts(fileparts(mfilename('fullpath')));
 mockRoot = fullfile(projectRoot, 'test', 'mocks', 'service_orchestration');
-cleanupPath = setupServiceOrchestrationMocks(mockRoot); %#ok<NASGU>
+cleanupPath = setupServiceOrchestrationMocks(mockRoot);
 
 workDir = tempname;
 mkdir(workDir);
@@ -120,7 +119,7 @@ CLogger.configure(struct( ...
     'console_level', 'ERROR', ...
     'file_path', logPath, ...
     'buffer_size', 1));
-cleanupLogger = onCleanup(@() CLogger.resetForTests());
+cleanupLogger = onCleanup(@() configureSharedTestLogger());
 
 cfg = struct( ...
     'spec_dir_path', workDir, ...
@@ -178,7 +177,6 @@ testCase.verifyNotEmpty(strfind(logText, 'Missing stability options'));
 clear svc res;
 delete(cleanupLogger);
 delete(cleanupPath);
-clear classes;
 end
 
 
@@ -213,7 +211,7 @@ function cleanupHandle = setupServiceOrchestrationMocks(mockRoot)
 %       Cleanup handle that restores path and class cache.
 
 addpath(mockRoot, '-begin');
-clear classes;
+clearClassesAndRestoreSharedLogger();
 cleanupHandle = onCleanup(@teardownServiceOrchestrationMocks);
 end
 
@@ -228,4 +226,31 @@ mockRoot = fullfile(projectRoot, 'test', 'mocks', 'service_orchestration');
 if contains(path, [mockRoot, pathsep]) || endsWith(path, mockRoot) || startsWith(path, [mockRoot, pathsep])
     rmpath(mockRoot);
 end
+end
+
+
+function clearClassesAndRestoreSharedLogger()
+% Clear class cache and reconfigure shared test logger
+% Output:
+%   (none)
+
+clear classes;
+configureSharedTestLogger();
+end
+
+function configureSharedTestLogger()
+% CONFIGURESHAREDTESTLOGGER Configure shared test logger under test/output
+% Output:
+%   (none)
+
+projectRoot = fileparts(fileparts(mfilename('fullpath')));
+outputDir = fullfile(projectRoot, 'test', 'output');
+if ~exist(outputDir, 'dir')
+    mkdir(outputDir);
+end
+
+logPath = fullfile(outputDir, 'ptmdecoder_test.log');
+cfg = struct();
+cfg.file_path = logPath;
+CLogger.configure(cfg);
 end
