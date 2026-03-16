@@ -32,7 +32,7 @@ totalBackgroundCount = sum([noise_model_fit_inputs.filteredOutExpPeakCount]);
 totalBackgroundSqSum = sum([noise_model_fit_inputs.filteredOutExpPeakSqSum]);
 
 if totalBackgroundCount == 0
-    CLogger.warning('CMS2QuantSolver:estimateDatasetNoiseModel:NoBackground', 'Total background count is 0, setting sigma_base to eps.');
+    CLogger.warn('CMS2QuantSolver:estimateDatasetNoiseModel:NoBackground', 'Total background count is 0, setting sigma_base to eps.');
     sigma_base = eps;
 else
     sigma_base = sqrt(totalBackgroundSqSum / totalBackgroundCount);
@@ -59,7 +59,7 @@ for i = 1:numel(noise_model_fit_inputs)
     else
         % Fallback if it only has 2 columns (index, int)
         y = inputs_i.matchedExpPeaks(:, 2);
-        CLogger.warning('CMS2QuantSolver:estimateDatasetNoiseModel:MissingRawIntensity', ...
+        CLogger.warn('CMS2QuantSolver:estimateDatasetNoiseModel:MissingRawIntensity', ...
             sprintf('Spectrum %d lacks raw intensity as 3rd column. Using 2nd column as fallback.', i));
     end
     
@@ -86,7 +86,7 @@ all_q = vertcat(all_q_cell{:});
 
 % 4. Estimate gamma (Robust MAD)
 if isempty(all_q)
-    CLogger.warning('CMS2QuantSolver:estimateDatasetNoiseModel:NoHighSignals', 'No high signal peaks found across dataset. Setting gamma to 0.');
+    CLogger.warn('CMS2QuantSolver:estimateDatasetNoiseModel:NoHighSignals', 'No high signal peaks found across dataset. Setting gamma to 0.');
     gamma = 0;
 else
     % Robust scale estimate for high-signal relative residuals.

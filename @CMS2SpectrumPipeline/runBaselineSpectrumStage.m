@@ -1,5 +1,5 @@
-function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,is_X_not_full_column_rank,solver_diag,noise_model_fit_inputs,stability_cache] = processSpectrumWithContext(obj, peptideCtx, spectrumCtx)
-% processSpectrumWithContext - Process one spectrum by explicit input contexts
+function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,is_X_not_full_column_rank,solver_diag,noise_model_fit_inputs,stability_cache] = runBaselineSpectrumStage(obj, peptideCtx, spectrumCtx)
+% runBaselineSpectrumStage - Execute stage-1 baseline processing for one spectrum
 % Input:
 %   obj (CMS2SpectrumPipeline)
 %       Processor instance carrying static solver/config parameters.
@@ -124,6 +124,17 @@ vNonRedunTheoryIonMz = CMS2MassCalculator.getNonRedunIons(mass_ctx,inxSites,mass
 
 % Match and preprocess peaks on non-redundant ion space
 matchedExpPeaks = CMS2PeakMatcher.match(obj.m_expPeaks,vNonRedunTheoryIonMz,obj.m_ms2_tolerance);
+% Record noise model fitting inputs before post-match peptidoform filtering, 
+%   which may remove some matched peaks as they are not helpful for peptidoform discrimination.
+if ~isempty(matchedExpPeaks)
+    rawIntensityBeforeFilter = matchedExpPeaks(:,2);
+    normalizedBeforeFilter = rawIntensityBeforeFilter / (max(rawIntensityBeforeFilter) + eps);
+    filteredOutMask = normalizedBeforeFilter < obj.m_alpha;
+    filteredOutRawIntensity = rawIntensityBeforeFilter(filteredOutMask);
+    noise_model_fit_inputs.filteredOutExpPeakCount = numel(filteredOutRawIntensity);
+    noise_model_fit_inputs.filteredOutExpPeakSqSum = sum(filteredOutRawIntensity .^ 2);
+end
+% Apply alpha threshold to matched peaks for downstream processing
 matchedExpPeaks = CMS2PeakMatcher.processPeaks(matchedExpPeaks,obj.m_alpha);
 
 if isempty(matchedExpPeaks)
@@ -131,8 +142,9 @@ if isempty(matchedExpPeaks)
         cstrIMP = [];
         abundance = [];
         bSuccess = false;
-        CLogger.debug(['There is no non-redundant peak for discriminating the' ...
-            ' peptidoforms for ',obj.m_pepSeq, ' in ', obj.m_strSpecName, '!']);
+        CLogger.debug(['[CMS2SpectrumPipeline:runBaselineSpectrumStage] ', ...
+            'There is no non-redundant peak for discriminating peptidoforms for %s in %s.'], ...
+            obj.m_pepSeq, obj.m_strSpecName);
         return;
     else
         abundance = 1;
@@ -150,13 +162,17 @@ end
     matchedExpPeaks, massArrangement, vNonRedunTheoryIonMz);
 if size(massArrangement,1) == 1
     abundance = 1;
+    fittedMatchedPeakIntensities = CMS2QuantSolver.computeFittedMatchedPeakIntensities( ...
+        vNonRedunTheoryIonMz, matchedExpPeaks, abundance);
     cstrIMP = CMS2ResultIO.formatImpStrings(massArrangement,fixedPosMod,obj.m_variableModNameMass,inxSites,obj.m_pepSeq);
     bSuccess = true;
+    noise_model_fit_inputs.matchedExpPeaks = matchedExpPeaks;
+    noise_model_fit_inputs.fittedMatchedPeakIntensities = fittedMatchedPeakIntensities;
     stability_cache.vNonRedunTheoryIonMz = vNonRedunTheoryIonMz;
     stability_cache.matchedExpPeaks = matchedExpPeaks;
     stability_cache.massArrangement = massArrangement;
     stability_cache.abundance = abundance;
-    stability_cache.fittedMatchedPeakIntensities = zeros(size(matchedExpPeaks,1), 1);
+    stability_cache.fittedMatchedPeakIntensities = fittedMatchedPeakIntensities;
     stability_cache.cstrIMP = cstrIMP;
     return;
 end
@@ -173,6 +189,9 @@ solver_cfg = struct( ...
 [abundance, frageff, ionTypePosCharge, ionIntens, is_X_not_full_column_rank] = ...
     CMS2QuantSolver.solve(vNonRedunTheoryIonMz, matchedExpPeaks, massArrangement, solver_cfg);
 
+fittedMatchedPeakIntensities = CMS2QuantSolver.computeFittedMatchedPeakIntensities( ...
+    vNonRedunTheoryIonMz, matchedExpPeaks, abundance, frageff, ionTypePosCharge);
+
 % Final thresholding + normalization
 [reported_imp_mask, ~] = CMS2QuantSolver.getReportedImpMask(abundance, obj.m_resFilterThres);
 abundance(~reported_imp_mask) = 0;
@@ -184,13 +203,13 @@ solver_diag.is_X_not_full_column_rank = is_X_not_full_column_rank;
 solver_diag.reported_imp_indices = find(reported_imp_mask);
 
 noise_model_fit_inputs.matchedExpPeaks = matchedExpPeaks;
-noise_model_fit_inputs.fittedMatchedPeakIntensities = zeros(size(matchedExpPeaks,1), 1);
+noise_model_fit_inputs.fittedMatchedPeakIntensities = fittedMatchedPeakIntensities;
 
 stability_cache.vNonRedunTheoryIonMz = vNonRedunTheoryIonMz;
 stability_cache.matchedExpPeaks = matchedExpPeaks;
 stability_cache.massArrangement = massArrangement;
 stability_cache.abundance = abundance;
-stability_cache.fittedMatchedPeakIntensities = zeros(size(matchedExpPeaks,1), 1);
+stability_cache.fittedMatchedPeakIntensities = fittedMatchedPeakIntensities;
 stability_cache.cstrIMP = cstrIMP;
 stability_cache.solver_diag = solver_diag;
 

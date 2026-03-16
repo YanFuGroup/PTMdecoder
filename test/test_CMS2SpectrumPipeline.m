@@ -39,8 +39,8 @@ testCase.verifyEqual(obj.m_alpha, 0.2, 'AbsTol', 1e-12);
 testCase.verifyEqual(obj.m_resFilterThres, 0.05, 'AbsTol', 1e-12);
 end
 
-function testProcessSpectrumWithContextExceptionPropagates(testCase)
-% TESTPROCESSSPECTRUMWITHCONTEXTEXCEPTIONPROPAGATES Validate processSpectrumWithContext propagates runtime exception to caller
+function testRunBaselineSpectrumStageExceptionPropagates(testCase)
+%  Validate runBaselineSpectrumStage propagates runtime exception to caller
 % Input:
 %   testCase (matlab.unittest.TestCase)
 % Output:
@@ -79,6 +79,6 @@ spectrumCtx = struct( ...
     'iCharge', [], ...
     'precursorMZ', []);
 
-testCase.verifyError(@() obj.processSpectrumWithContext(peptideCtx, spectrumCtx), ...
+testCase.verifyError(@() obj.runBaselineSpectrumStage(peptideCtx, spectrumCtx), ...
     'MATLAB:Containers:Map:IncorrectIndexing');
 end
