@@ -44,6 +44,21 @@ cfg.enzyme_name = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflow
 cfg.enzyme_limits = str2num(CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_ENZYME_LIMIT_C_TERM_POSSIBLE_MOD, 'enzyme limit C-term possible modifications', 'CMSMSLevelServiceConfig')); %#ok<ST2NM>
 cfg.output_dir_path = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_OUTPUT_DIR_PATH, 'output directory path', 'CMSMSLevelServiceConfig');
 
+if task_param_map.isKey(CPTMdecoderWorkflowParamKeys.PARAM_N_RESAMPLES)
+    num_resamples = CParamMapUtils.getRequiredNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_N_RESAMPLES, 'number of stability resamples', 'CMSMSLevelServiceConfig');
+    if num_resamples <= 0 || num_resamples ~= floor(num_resamples)
+        error('CMSMSLevelServiceConfig:InvalidNResamples', ...
+            'Param ''n_resamples'' must be a positive integer.');
+    end
+
+    random_seed = CParamMapUtils.getOptionalNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_RANDOM_SEED, 42, 'CMSMSLevelServiceConfig');
+
+    cfg.stability_options = struct( ...
+        'n_resamples', num_resamples, ...
+        'random_seed', random_seed, ...
+        'relative_threshold', cfg.result_filter_threshold);
+end
+
 cfg.min_MSMS_num = CParamMapUtils.getOptionalNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MIN_MSMS_NUM, 1, 'CMSMSLevelServiceConfig');
 cfg.ion_types = [1,2];
 cfg.case_penalty_intens = 'intens_sum';

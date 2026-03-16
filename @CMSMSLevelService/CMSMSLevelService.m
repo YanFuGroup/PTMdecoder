@@ -225,12 +225,6 @@ classdef CMSMSLevelService < handle
             if isfield(cfg, 'stability_options') && isstruct(cfg.stability_options)
                 stability_options = cfg.stability_options;
                 has_stability_options = true;
-            elseif isfield(cfg, 'n_resamples') && isfield(cfg, 'random_seed') && isfield(cfg, 'relative_threshold')
-                stability_options = struct( ...
-                    'n_resamples', cfg.n_resamples, ...
-                    'random_seed', cfg.random_seed, ...
-                    'relative_threshold', cfg.relative_threshold);
-                has_stability_options = true;
             end
             
             noise_model = [];
@@ -260,9 +254,8 @@ classdef CMSMSLevelService < handle
                     end
                 end
             else
-                CLogger.warn(['[CMSMSLevelService:run] Missing stability options. ', ...
-                    'Expected cfg.stability_options or cfg.{n_resamples, random_seed, relative_threshold}. ', ...
-                    'Stage-2 stability is skipped.']);
+                CLogger.info(['[CMSMSLevelService:run] Stage-2 stability is disabled because cfg.stability_options is not configured. ', ...
+                    'Set n_resamples in the parameter file to enable Stage-2 stability.']);
             end
             
             if ~isempty(noise_model) && has_stability_options
