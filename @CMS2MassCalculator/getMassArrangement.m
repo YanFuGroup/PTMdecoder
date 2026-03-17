@@ -212,70 +212,121 @@ end
 all_res(all_res_idx+1:end,:) = [];
 end
 
+
 function [massArrangement, is_too_many_candidate]=getMassArrangementUsingComb(modComb,variModNameMass, ...
     eachSpecfinVariList,maxNumEachAA)
 % Expand each combination into site-level permutations of mass assignments.
 % Calculate all combinations of modification mass + modification sites (just the order of potential modifications on the sequence, not the actual positions)
 % Inputs:
-%   modComb (C x R double) - All possible modification combinations. Each row is one combination, the column order is consistent with the user-specified modification list
-%   variModNameMass (R x 3 cell) - a matrix of modification types and modification masses, consistent with the order of all modifications specified by the user
-%   eachSpecfinVariList (A x 3 cell) - a table of [amino acid, number of modification types with this specificity site, positions of this amino acid modification in the user-specified list]
-%   maxNumEachAA (A x 1 double/int) - the number of positions where various amino acids may be modified on the peptide sequence
+%   modComb (C x R double)
+%       All possible modification combinations. Each row is one combination, the column order is consistent with the user-specified modification list
+%   variModNameMass (R x 3 cell)
+%       a matrix of modification types and modification masses, consistent with the order of all modifications specified by the user
+%   eachSpecfinVariList (A x 3 cell)
+%       a table of [amino acid, number of modification types with this specificity site, positions of this amino acid modification in the user-specified list]
+%   maxNumEachAA (A x 1 double/int)
+%       the number of positions where various amino acids may be modified on the peptide sequence
 % Outputs:
-%   massArrangement (M x S double) - a matrix of various combinations of modification masses, each row is a case, each column is the mass shift at several possible modification sites, the columns are organized by amino acids (block matrix) and cannot be used directly, some processing is needed.
-%   is_too_many_candidate (1 x 1 logical) - whether there are too many candidate peptidoforms
+%   massArrangement (M x S double)
+%       a matrix of various combinations of modification masses, each row is a case, each column is the mass shift at several possible modification sites, the columns are organized by amino acids (block matrix) and cannot be used directly, some processing is needed.
+%   is_too_many_candidate (1 x 1 logical)
+%       whether there are too many candidate peptidoforms
 
 massArrangement=[];
 is_too_many_candidate = false;
+
 for idxComb=1:size(modComb,1)
     massArraEachComb=[];
+    
     for idxAA=1:size(eachSpecfinVariList,1)
         maxNumCurAA=maxNumEachAA(idxAA);
         modPosesVariList=eachSpecfinVariList{idxAA,3};
+        
         if maxNumCurAA==0
             continue;
-        else
-            massConfigH=zeros(1,maxNumCurAA);
-            % The indices of these existing modifications, in the order of the user-specified modification list
-            inx=find(modComb(idxComb,modPosesVariList)~=0);
-            tmp=0;
-            for j=1:length(inx)
-                if modComb(idxComb,modPosesVariList(inx(j)))>1
-                    for r=1:modComb(idxComb,modPosesVariList(inx(j)))
-                        tmp=tmp+1;
-                        massConfigH(1,tmp)=variModNameMass{modPosesVariList(inx(j)),3};
-                    end
-                elseif modComb(idxComb,modPosesVariList(inx(j)))==1
+        end
+        
+        % Extract the specific modification masses for the current amino acid
+        massConfigH=zeros(1,maxNumCurAA);
+        inx=find(modComb(idxComb,modPosesVariList)~=0);
+        tmp=0;
+        for j=1:length(inx)
+            if modComb(idxComb,modPosesVariList(inx(j)))>1
+                for r=1:modComb(idxComb,modPosesVariList(inx(j)))
                     tmp=tmp+1;
                     massConfigH(1,tmp)=variModNameMass{modPosesVariList(inx(j)),3};
                 end
+            elseif modComb(idxComb,modPosesVariList(inx(j)))==1
+                tmp=tmp+1;
+                massConfigH(1,tmp)=variModNameMass{modPosesVariList(inx(j)),3};
             end
         end
 
+        % Limit the maximum number of modifications on a single amino acid type
         if length(massConfigH)>10
             is_too_many_candidate = true;
             return
         end
 
-        massArraEachAA=perms(massConfigH);
-        massArraEachAA=unique(massArraEachAA,'rows');
-
-        if isempty(massArraEachComb)
-            massArraEachComb=massArraEachAA;
+        % =========================================================================
+        % Block 1: Generate valid permutations of modifications for the current sites
+        % =========================================================================
+        non_zero_mods = massConfigH(massConfigH ~= 0);
+        
+        if isempty(non_zero_mods)
+            % If no modifications apply, the site arrangement remains unmodified (zeros)
+            massArraEachAA = zeros(1, maxNumCurAA);
         else
-            tmpMassPailie=[];
-            for f=1:size(massArraEachComb,1)
-                for g=1:size(massArraEachAA,1)
-                    tmpMassPailie0=[massArraEachComb(f,:),massArraEachAA(g,:)];
-                    tmpMassPailie=[tmpMassPailie;tmpMassPailie0]; %#ok<AGROW>
+            % Step 1: Calculate unique permutations of the actual modification masses
+            non_zero_perms = unique(perms(non_zero_mods), 'rows');
+            
+            % Step 2: Determine all possible subsets of sites to distribute these modifications
+            pos_combinations = nchoosek(1:maxNumCurAA, length(non_zero_mods));
+            
+            num_perms = size(non_zero_perms, 1);
+            num_combs = size(pos_combinations, 1);
+            
+            % Step 3: Map permutations onto the selected site subsets
+            massArraEachAA = zeros(num_perms * num_combs, maxNumCurAA);
+            row_idx = 1;
+            
+            for c = 1:num_combs
+                for p = 1:num_perms
+                    massArraEachAA(row_idx, pos_combinations(c, :)) = non_zero_perms(p, :);
+                    row_idx = row_idx + 1;
                 end
             end
-            massArraEachComb=tmpMassPailie;
+            % Ensure the final arrangement matrix for this amino acid is unique
+            massArraEachAA = unique(massArraEachAA, 'rows'); 
+        end
+
+        % =========================================================================
+        % Block 2: Cartesian product of current site arrangements with cumulative results
+        % =========================================================================
+        if isempty(massArraEachComb)
+            % Initialize with the first processed amino acid type
+            massArraEachComb=massArraEachAA;
+        else
+            % Vectorized expansion to combine current arrangements with previous ones
+            N1 = size(massArraEachComb, 1);
+            N2 = size(massArraEachAA, 1);
+            
+            % Generate row indices for cross-joining
+            idx1 = repelem((1:N1)', N2); 
+            idx2 = repmat((1:N2)', N1, 1); 
+            
+            % Concatenate to form the updated combinatorial matrix
+            massArraEachComb = [massArraEachComb(idx1, :), massArraEachAA(idx2, :)];
         end
     end
-    massArrangement=[massArrangement;massArraEachComb]; %#ok<AGROW>
+    
+    % Append the arrangements of the current mass combination to the overall result
+    if ~isempty(massArraEachComb)
+        massArrangement=[massArrangement;massArraEachComb]; %#ok<AGROW>
+    end
 end
 end
+
 
 function [eachSpecfinVariList]=findVariableInSeq(variableModNameMass,pepSeq,isProtN,isProtC)
 % Group variable modifications by specificity (N-term, A..Z, C-term).
