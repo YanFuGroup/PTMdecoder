@@ -52,6 +52,8 @@ classdef CMSMSLevelService < handle
         function run(obj)
             % Run MSMS-level stage.
             cfg = obj.m_msms_cfg;
+            stage1_capacity = obj.estimateStage1RecordCapacity( ...
+                cfg.pep_spec_file_path, cfg.min_peptide_length, cfg.max_peptide_length);
             
             [fixedModNameMass, variableModNameMass] = CModificationRegistry.fromConfig(cfg);
             
@@ -86,19 +88,21 @@ classdef CMSMSLevelService < handle
                 filtered_peptide_count = 1;
             end
             filtered_spectrum_count = 0;
-            stage1_records = struct( ...
-                'dataset_name', {}, ...
-                'spec_name', {}, ...
-                'pepSeq', {}, ...
-                'bSuccess', {}, ...
-                'isShortcut', {}, ...
-                'is_X_not_full_column_rank', {}, ...
-                'abundance', {}, ...
-                'cstrIMP', {}, ...
-                'reported_imp_write_indices', {}, ...
-                'solver_diag', {}, ...
-                'noise_model_fit_inputs', {}, ...
-                'stability_cache', {});
+            stage1_record_template = struct( ...
+                'dataset_name', '', ...
+                'spec_name', '', ...
+                'pepSeq', '', ...
+                'bSuccess', false, ...
+                'isShortcut', false, ...
+                'is_X_not_full_column_rank', false, ...
+                'abundance', [], ...
+                'cstrIMP', {{}}, ...
+                'reported_imp_write_indices', [], ...
+                'solver_diag', struct(), ...
+                'noise_model_fit_inputs', struct(), ...
+                'stability_cache', struct());
+            stage1_records = repmat(stage1_record_template, stage1_capacity, 1);
+            stage1_record_count = 0;
             stage1_total_count = 0;
             stage1_success_count = 0;
             stage1_shortcut_count = 0;
@@ -228,8 +232,18 @@ classdef CMSMSLevelService < handle
                         imp_idx_nonzero = find(abundance~=0);
                         stage1_record.reported_imp_write_indices = imp_idx_nonzero;
                     end
-                    stage1_records(end + 1) = stage1_record;
+                    stage1_record_count = stage1_record_count + 1;
+                    if stage1_record_count > numel(stage1_records)
+                        growth_size = max(1024, numel(stage1_records));
+                        stage1_records(end + growth_size) = stage1_record_template;
+                    end
+                    stage1_records(stage1_record_count) = stage1_record;
                 end
+            end
+            if stage1_record_count == 0
+                stage1_records = stage1_records([]);
+            else
+                stage1_records = stage1_records(1:stage1_record_count);
             end
             
             CLogger.info(['[CMSMSLevelService:run] Stage-1 baseline collection done. ', ...
@@ -398,6 +412,46 @@ classdef CMSMSLevelService < handle
     end
     
     methods (Access = private)
+        function stage1_capacity = estimateStage1RecordCapacity(~, pep_spec_file_path, min_peptide_length, max_peptide_length)
+            % Estimate Stage-1 record capacity from text-level peptide/spectrum lines.
+            % Inputs:
+            %   pep_spec_file_path (1 x N char/string)
+            %       Path to peptide-spectrum relation file.
+            %   min_peptide_length (1 x 1 double)
+            %       Minimum eligible peptide length.
+            %   max_peptide_length (1 x 1 double)
+            %       Maximum eligible peptide length.
+            % Outputs:
+            %   stage1_capacity (1 x 1 double)
+            %       Upper-bound count of eligible spectrum lines.
+
+            fid = fopen(pep_spec_file_path, 'r');
+            if fid <= 0
+                error(['Can not open file: ', pep_spec_file_path]);
+            end
+
+            stage1_capacity = 0;
+            is_current_peptide_eligible = false;
+            while ~feof(fid)
+                strLine = fgetl(fid);
+                if ~ischar(strLine) || isempty(strtrim(strLine))
+                    continue;
+                end
+
+                str = regexp(strLine, '\t', 'split');
+                if numel(str) == 1 || isempty(str{2})
+                    pepSeq = str{1};
+                    pep_len = length(strtrim(pepSeq));
+                    is_current_peptide_eligible = pep_len >= min_peptide_length && pep_len <= max_peptide_length;
+                elseif is_current_peptide_eligible
+                    stage1_capacity = stage1_capacity + 1;
+                end
+            end
+
+            fclose(fid);
+        end
+
+
         function appendFragmentInformation(obj, ionTypePosCharge, ionIntens, frageff)
             if isempty(frageff)
                 % Skip the fragment information of this spectrum if it is empty
