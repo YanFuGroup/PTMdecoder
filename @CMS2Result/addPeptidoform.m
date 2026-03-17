@@ -7,13 +7,14 @@ function addPeptidoform(obj, peptidoform_str, relative_abundance, varargin)
 %   varargin{1} (optional, 1 x 1 struct)
 %       optional support frequency metadata
 %       - support_frequency (1 x 1 double)
-%       - abundance_mad (1 x 1 double, reserved for future use)
+%       - abundance_mad (1 x 1 double)
 
 if obj.CurrentPeptideIdx == 0 || obj.CurrentSpectrumIdx == 0
     error('CMS2Result:NoSpectrum', 'Cannot add peptidoform without peptide and spectrum context.');
 end
 
 support_frequency = NaN;
+abundance_mad = NaN;
 if nargin >= 4 && ~isempty(varargin{1})
     supportMeta = varargin{1};
     if ~isstruct(supportMeta)
@@ -22,6 +23,9 @@ if nargin >= 4 && ~isempty(varargin{1})
     end
     if isfield(supportMeta, 'support_frequency')
         support_frequency = supportMeta.support_frequency;
+    end
+    if isfield(supportMeta, 'abundance_mad')
+        abundance_mad = supportMeta.abundance_mad;
     end
 end
 
@@ -40,9 +44,11 @@ if newNum > currentLen
     obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_str{newNum + 50} = '';
     obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_abun(newNum + 50) = 0;
     obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_support_freq(newNum + 50) = NaN;
+    obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_abundance_mad(newNum + 50) = NaN;
 end
 
 obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_str{newNum} = peptidoform_str;
 obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_abun(newNum) = relative_abundance;
 obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_support_freq(newNum) = support_frequency;
+obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_abundance_mad(newNum) = abundance_mad;
 end

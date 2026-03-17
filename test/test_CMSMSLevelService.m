@@ -64,6 +64,7 @@ res = CMS2ResultIO.read(outPath);
 
 allJaccard = [];
 allSupport = [];
+allMad = [];
 for idxPep = 1:numel(res.Peptides)
     specs = res.Peptides(idxPep).spectrum_list;
     for idxSpec = 1:numel(specs)
@@ -71,6 +72,7 @@ for idxPep = 1:numel(res.Peptides)
         nImp = specs(idxSpec).peptidoform_num;
         if nImp > 0
             allSupport = [allSupport; specs(idxSpec).peptidoform_list_support_freq(1:nImp)']; %#ok<AGROW>
+            allMad = [allMad; specs(idxSpec).peptidoform_list_abundance_mad(1:nImp)']; %#ok<AGROW>
         end
     end
 end
@@ -83,6 +85,10 @@ testCase.verifyNotEmpty(allSupport, ...
     'Expected at least one peptidoform entry in report_msms output.');
 testCase.verifyTrue(any(~isnan(allSupport)), ...
     'Expected non-NaN support_frequency after stage-2 orchestration.');
+testCase.verifyNotEmpty(allMad, ...
+    'Expected at least one peptidoform abundance_mad entry in report_msms output.');
+testCase.verifyTrue(any(~isnan(allMad)), ...
+    'Expected non-NaN abundance_mad after stage-2 orchestration.');
 
 clear svc res;
 delete(cleanupPath);
@@ -152,6 +158,7 @@ res = CMS2ResultIO.read(outPath);
 
 allJaccard = [];
 allSupport = [];
+allMad = [];
 for idxPep = 1:numel(res.Peptides)
     specs = res.Peptides(idxPep).spectrum_list;
     for idxSpec = 1:numel(specs)
@@ -159,6 +166,7 @@ for idxPep = 1:numel(res.Peptides)
         nImp = specs(idxSpec).peptidoform_num;
         if nImp > 0
             allSupport = [allSupport; specs(idxSpec).peptidoform_list_support_freq(1:nImp)']; %#ok<AGROW>
+            allMad = [allMad; specs(idxSpec).peptidoform_list_abundance_mad(1:nImp)']; %#ok<AGROW>
         end
     end
 end
@@ -171,6 +179,10 @@ testCase.verifyNotEmpty(allSupport, ...
     'Expected at least one peptidoform entry in report_msms output.');
 testCase.verifyTrue(all(isnan(allSupport)), ...
     'Expected all support_frequency values to remain NaN without stability options.');
+testCase.verifyNotEmpty(allMad, ...
+    'Expected at least one peptidoform abundance_mad entry in report_msms output.');
+testCase.verifyTrue(all(isnan(allMad)), ...
+    'Expected all abundance_mad values to remain NaN without stability options.');
 
 logText = fileread(logPath);
 testCase.verifyNotEmpty(strfind(logText, 'Stage-2 stability is disabled because cfg.stability_options is not configured'));

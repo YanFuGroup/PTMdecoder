@@ -72,6 +72,10 @@ testCase.verifyEqual(length(keptSpec.peptidoform_list_support_freq), 60, ...
     'Support-frequency buffer should be trimmed to exact size');
 testCase.verifyTrue(all(isnan(keptSpec.peptidoform_list_support_freq)), ...
     'Support-frequency values should default to NaN when not provided');
+testCase.verifyEqual(length(keptSpec.peptidoform_list_abundance_mad), 60, ...
+    'Abundance-MAD buffer should be trimmed to exact size');
+testCase.verifyTrue(all(isnan(keptSpec.peptidoform_list_abundance_mad)), ...
+    'Abundance-MAD values should default to NaN when not provided');
 end
 
 function testMetadataStorage(testCase)
@@ -80,7 +84,7 @@ function testMetadataStorage(testCase)
 res = CMS2Result();
 res.addPeptide('PEPTIDE_META');
 res.addSpectrum('DatasetM', 'SpecM1', struct('jaccard_stability', 0.42));
-res.addPeptidoform('FormM1', 123.4, struct('support_frequency', 0.7));
+res.addPeptidoform('FormM1', 123.4, struct('support_frequency', 0.7, 'abundance_mad', 0.05));
 res.addPeptidoform('FormM2', 10.0, struct('abundance_mad', 0.2));
 
 res.compress();
@@ -88,6 +92,8 @@ res.compress();
 spec = res.Peptides(1).spectrum_list(1);
 testCase.verifyEqual(spec.jaccard_stability, 0.42, 'AbsTol', 1e-12);
 testCase.verifyEqual(spec.peptidoform_list_support_freq(1), 0.7, 'AbsTol', 1e-12);
+testCase.verifyEqual(spec.peptidoform_list_abundance_mad(1), 0.05, 'AbsTol', 1e-12);
 testCase.verifyTrue(isnan(spec.peptidoform_list_support_freq(2)), ...
     'Support-frequency should default to NaN when support_frequency field is not provided');
+testCase.verifyEqual(spec.peptidoform_list_abundance_mad(2), 0.2, 'AbsTol', 1e-12);
 end

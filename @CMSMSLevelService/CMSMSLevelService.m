@@ -148,7 +148,8 @@ classdef CMSMSLevelService < handle
                             'iCharge', iCharge, ...
                             'precursorMZ', precursorMZ);
                         
-                        [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,is_X_not_full_column_rank,solver_diag,noise_model_fit_inputs,stability_cache] = ...
+                        [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff, ...
+                            is_X_not_full_column_rank,solver_diag,noise_model_fit_inputs,stability_cache] = ...
                             eachSpecPipeline.runBaselineSpectrumStage(peptideCtx, spectrumCtx);
                     catch ME
                         bSuccess = false;
@@ -162,6 +163,7 @@ classdef CMSMSLevelService < handle
                             'is_X_not_full_column_rank', false, ...
                             'jaccard_stability', NaN, ...
                             'support_frequency', [], ...
+                            'abundance_mad', [], ...
                             'reported_imp_indices', [], ...
                             'num_successful_resamples', 0);
                         noise_model_fit_inputs = struct( ...
@@ -296,6 +298,7 @@ classdef CMSMSLevelService < handle
                         
                         rec.solver_diag.jaccard_stability = stability_diag.jaccard_stability;
                         rec.solver_diag.support_frequency = stability_diag.support_frequency;
+                        rec.solver_diag.abundance_mad = stability_diag.abundance_mad;
                         rec.solver_diag.reported_imp_indices = stability_diag.reported_imp_indices;
                         rec.solver_diag.num_successful_resamples = stability_diag.num_successful_resamples;
                         rec.stability_cache.solver_diag = rec.solver_diag;
@@ -326,17 +329,25 @@ classdef CMSMSLevelService < handle
                 msms_result.addSpectrum(rec.dataset_name, rec.spec_name, spectrumMeta);
                 
                 support_full = NaN(size(rec.abundance));
+                mad_full = NaN(size(rec.abundance));
                 reported_imp_indices = rec.solver_diag.reported_imp_indices;
                 support_frequency = rec.solver_diag.support_frequency;
+                abundance_mad = rec.solver_diag.abundance_mad;
                 if ~isempty(reported_imp_indices) && ~isempty(support_frequency)
                     valid_mask = reported_imp_indices >= 1 & reported_imp_indices <= numel(support_full);
                     support_full(reported_imp_indices(valid_mask)) = support_frequency(valid_mask);
+                end
+                if ~isempty(reported_imp_indices) && ~isempty(abundance_mad)
+                    valid_mask = reported_imp_indices >= 1 & reported_imp_indices <= numel(mad_full);
+                    mad_full(reported_imp_indices(valid_mask)) = abundance_mad(valid_mask);
                 end
                 
                 imp_idx_nonzero = rec.reported_imp_write_indices;
                 for idxImp = 1:length(imp_idx_nonzero)
                     imp_idx = imp_idx_nonzero(idxImp);
-                    peptidoformMeta = struct('support_frequency', support_full(imp_idx));
+                    peptidoformMeta = struct( ...
+                        'support_frequency', support_full(imp_idx), ...
+                        'abundance_mad', mad_full(imp_idx));
                     msms_result.addPeptidoform(rec.cstrIMP{imp_idx}, rec.abundance(imp_idx), peptidoformMeta);
                 end
             end

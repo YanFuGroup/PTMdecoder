@@ -6,9 +6,11 @@ function noise_model = estimateDatasetNoiseModel(noise_model_fit_inputs)
 %   noise_model_fit_inputs (1 x N struct)
 %       Struct array from first phase baseline solves. Required fields for each element: 
 %       - filteredOutExpPeakCount (1 x 1 double):
-%           Number of background peaks in normalized-intensity space.
+%           Number of background peaks from raw experimental peaks in
+%           normalized-intensity space.
 %       - filteredOutExpPeakSqSum (1 x 1 double):
-%           Sum of squared normalized intensities of background peaks.
+%           Sum of squared normalized intensities of background peaks from
+%           raw experimental peaks.
 %       - matchedExpPeaks (M x 3 double):
 %           Matrix of matched peaks (column 2 is normalized intensity).
 %       - fittedMatchedPeakIntensities (M x 1 double):

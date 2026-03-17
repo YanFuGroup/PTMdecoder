@@ -63,6 +63,9 @@ while(~feof(fin))
 
         peptidoformMeta = struct('support_frequency', parseNamedNumericFieldFromTokensFromIdx( ...
             tokens, 3, fieldKeys.peptidoform.support, strline, ...
+            'CMS2ResultIO:InvalidPeptidoformNamedField', NaN), ...
+            'abundance_mad', parseNamedNumericFieldFromTokensFromIdx( ...
+            tokens, 3, fieldKeys.peptidoform.mad, strline, ...
             'CMS2ResultIO:InvalidPeptidoformNamedField', NaN));
 
         resultObj.addPeptidoform(tokens{1}, abundance, peptidoformMeta);
@@ -82,7 +85,7 @@ function value = parseNamedNumericFieldFromTokensFromIdx(tokens, startIdx, targe
 %   startIdx (1 x 1 double)
 %       first token index to scan for named fields
 %   targetKey (1 x N char/string)
-%       expected named-field key (for example: "jaccard" or "support")
+%       expected named-field key (for example: "jaccard", "support", or "mad")
 %   rawLine (1 x N char/string)
 %       original raw line, used in error reporting
 %   errorId (1 x N char/string)

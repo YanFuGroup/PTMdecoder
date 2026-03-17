@@ -13,6 +13,7 @@ classdef CMS2Result < handle
         %       - peptidoform_list_str: cell array of strings (N x 1)
         %       - peptidoform_list_abun: double array (N x 1)
         %       - peptidoform_list_support_freq: double array (N x 1)
+        %       - peptidoform_list_abundance_mad: double array (N x 1)
         %       - peptidoform_num: int
         Peptides
     end

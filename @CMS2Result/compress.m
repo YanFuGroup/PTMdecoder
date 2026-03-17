@@ -20,6 +20,9 @@ for i = length(obj.Peptides):-1:1
                 if isfield(obj.Peptides(i).spectrum_list(j), 'peptidoform_list_support_freq')
                     obj.Peptides(i).spectrum_list(j).peptidoform_list_support_freq(num+1:end) = [];
                 end
+                if isfield(obj.Peptides(i).spectrum_list(j), 'peptidoform_list_abundance_mad')
+                    obj.Peptides(i).spectrum_list(j).peptidoform_list_abundance_mad(num+1:end) = [];
+                end
             end
         end
         if isempty(obj.Peptides(i).spectrum_list)

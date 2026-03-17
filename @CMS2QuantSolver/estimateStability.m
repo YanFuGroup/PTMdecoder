@@ -41,6 +41,7 @@ function stability_diag = estimateStability(vNonRedunTheoryIonMz, matchedExpPeak
 %       Fields:
 %       - jaccard_stability (1 x 1 double): mean Jaccard over successful resamples.
 %       - support_frequency (R x 1 double): support frequency for baseline reported IMPs.
+%       - abundance_mad (R x 1 double): abundance MAD over successful resamples.
 %       - reported_imp_indices (R x 1 double): baseline reported IMP indices.
 %       - num_successful_resamples (1 x 1 double): successful resample count.
 
@@ -63,6 +64,7 @@ if isempty(reported_imp_indices)
         'Baseline reported IMP set is empty; skip stability estimation for this spectrum.']);
 end
 support_counts = zeros(numel(reported_imp_indices), 1);
+resampled_abundance_reported = zeros(numel(reported_imp_indices), num_resamples);
 
 sum_jaccard = 0;
 num_successful_resamples = 0;
@@ -88,6 +90,7 @@ for idxResample = 1:num_resamples
             sum_jaccard = sum_jaccard + CMS2QuantSolver.computeJaccardIndex(base_reported_mask, resampled_reported_mask);
             if ~isempty(reported_imp_indices)
                 support_counts = support_counts + double(resampled_reported_mask(reported_imp_indices));
+                resampled_abundance_reported(:, num_successful_resamples + 1) = abundance_resampled(reported_imp_indices);
             end
             num_successful_resamples = num_successful_resamples + 1;
         end
@@ -117,14 +120,17 @@ end
 if num_successful_resamples > 0
     jaccard_stability = sum_jaccard / num_successful_resamples;
     support_frequency = support_counts / num_successful_resamples;
+    abundance_mad = computeAbundanceMad(resampled_abundance_reported(:, 1:num_successful_resamples));
 else
     jaccard_stability = NaN;
     support_frequency = NaN(size(support_counts));
+    abundance_mad = NaN(size(support_counts));
 end
 
 stability_diag = struct( ...
     'jaccard_stability', jaccard_stability, ...
     'support_frequency', support_frequency, ...
+    'abundance_mad', abundance_mad, ...
     'reported_imp_indices', reported_imp_indices, ...
     'num_successful_resamples', num_successful_resamples);
 
@@ -175,5 +181,24 @@ end
 base_seed = stability_options.random_seed;
 if ~isscalar(base_seed) || ~isnumeric(base_seed)
     CLogger.error('[CMS2QuantSolver:InvalidRandomSeed] random_seed must be a numeric scalar.');
+end
+end
+
+
+function abundance_mad = computeAbundanceMad(resampled_abundance_reported)
+% computeAbundanceMad - Compute per-IMP MAD on successful resample abundances
+% Inputs:
+%   resampled_abundance_reported (R x B_success double)
+%       Resampled abundance matrix on baseline reported IMP index space.
+% Outputs:
+%   abundance_mad (R x 1 double)
+%       Median absolute deviation for each baseline reported IMP.
+
+num_imp = size(resampled_abundance_reported, 1);
+abundance_mad = zeros(num_imp, 1);
+for idxImp = 1:num_imp
+    abundance_vec = resampled_abundance_reported(idxImp, :);
+    med_val = median(abundance_vec);
+    abundance_mad(idxImp) = median(abs(abundance_vec - med_val));
 end
 end

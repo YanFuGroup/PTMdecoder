@@ -346,6 +346,8 @@ testCase.verifyFalse(any(stability_diag.reported_imp_indices == 3));
 testCase.verifySize(stability_diag.support_frequency, [2, 1]);
 testCase.verifyGreaterThan(stability_diag.support_frequency, zeros(2, 1));
 testCase.verifyLessThanOrEqual(stability_diag.support_frequency, ones(2, 1));
+testCase.verifySize(stability_diag.abundance_mad, [2, 1]);
+testCase.verifyGreaterThanOrEqual(stability_diag.abundance_mad, zeros(2, 1));
 end
 
 
@@ -385,6 +387,8 @@ testCase.verifySize(stability_diag.support_frequency, [2, 1]);
 testCase.verifyGreaterThanOrEqual(stability_diag.support_frequency, zeros(2, 1));
 testCase.verifyLessThanOrEqual(stability_diag.support_frequency, ones(2, 1));
 testCase.verifyEqual(stability_diag.support_frequency(2), 0, 'AbsTol', 1e-12);
+testCase.verifySize(stability_diag.abundance_mad, [2, 1]);
+testCase.verifyGreaterThanOrEqual(stability_diag.abundance_mad, zeros(2, 1));
 end
 
 
@@ -423,6 +427,45 @@ testCase.verifyEqual(diag1.jaccard_stability, diag2.jaccard_stability, 'AbsTol',
 testCase.verifyEqual(diag1.num_successful_resamples, diag2.num_successful_resamples);
 testCase.verifyEqual(diag1.reported_imp_indices, diag2.reported_imp_indices);
 testCase.verifyEqual(diag1.support_frequency, diag2.support_frequency, 'AbsTol', 1e-12);
+testCase.verifyEqual(diag1.abundance_mad, diag2.abundance_mad, 'AbsTol', 1e-12);
+end
+
+
+function testEstimateStabilityZeroNoiseHasPerfectStability(testCase)
+% Validate zero-noise perturb-and-resolve yields perfect stability diagnostics
+% Inputs:
+%   testCase (matlab.unittest.TestCase)
+%       MATLAB unit test handle.
+% Outputs:
+%   (none)
+
+testCase.assumeNotEmpty(which('quadprog'), 'Optimization Toolbox (quadprog) is required for this test.');
+
+v = [
+    100, 1, 1, 1, 0, 1, 1, 0;
+    200, 2, 2, 1, 0, 2, 0, 1
+];
+matched = [
+    1, 0.6, 60;
+    2, 0.4, 40
+];
+massArrangement = [0; 1];
+solver_cfg = struct('model',2,'method',1,'lambda',0.1, ...
+    'case_penalty_intens','intens_sum','grid_penalty_intens','intens_sum','case_OLS_intens_weight','none');
+
+base_abundance = [0.7; 0.3];
+fitted = [0.6; 0.4];
+noise_model = struct('sigma_base', 0.0, 'gamma', 0.0, 'tau_floor', 0.1);
+stability_options = struct('n_resamples', 7, 'random_seed', 13, 'relative_threshold', 0.01);
+
+stability_diag = CMS2QuantSolver.estimateStability( ...
+    v, matched, massArrangement, solver_cfg, base_abundance, fitted, noise_model, stability_options);
+
+testCase.verifyEqual(stability_diag.num_successful_resamples, stability_options.n_resamples);
+testCase.verifyEqual(stability_diag.reported_imp_indices, [1; 2]);
+testCase.verifyEqual(stability_diag.jaccard_stability, 1, 'AbsTol', 1e-12);
+testCase.verifyEqual(stability_diag.support_frequency, ones(2, 1), 'AbsTol', 1e-12);
+testCase.verifyEqual(stability_diag.abundance_mad, zeros(2, 1), 'AbsTol', 1e-12);
 end
 
 

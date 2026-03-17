@@ -1,4 +1,6 @@
-function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,is_X_not_full_column_rank,solver_diag,noise_model_fit_inputs,stability_cache] = runBaselineSpectrumStage(obj, peptideCtx, spectrumCtx)
+function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff, ...
+    is_X_not_full_column_rank,solver_diag,noise_model_fit_inputs,stability_cache] = ...
+    runBaselineSpectrumStage(obj, peptideCtx, spectrumCtx)
 % runBaselineSpectrumStage - Execute stage-1 baseline processing for one spectrum
 % Input:
 %   obj (CMS2SpectrumPipeline)
@@ -52,6 +54,8 @@ function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,is_X_not
 %               Jaccard stability of the solution (NaN if not computed).
 %           support_frequency (double array)
 %               Support frequency of each peptidoform (empty if not computed).
+%           abundance_mad (double array)
+%               Abundance MAD of each peptidoform (empty if not computed).
 %           reported_imp_indices (double array)
 %               Indices of peptidoforms reported as present (abundance >= tau).
 %           num_successful_resamples (double)
@@ -69,6 +73,7 @@ solver_diag = struct( ...
     'is_X_not_full_column_rank', false, ...
     'jaccard_stability', NaN, ...
     'support_frequency', [], ...
+    'abundance_mad', [], ...
     'reported_imp_indices', [], ...
     'num_successful_resamples', 0);
 noise_model_fit_inputs = struct( ...
@@ -96,6 +101,18 @@ obj.m_strSpecName = spectrumCtx.specName;
 obj.m_expPeaks = spectrumCtx.expPeaks;
 obj.m_iCharge = spectrumCtx.iCharge;
 obj.m_dPrecursorMass = (spectrumCtx.precursorMZ - CConstant.pmass) * obj.m_iCharge;
+    
+% Record dataset-level background summary from raw experimental peaks in
+%   normalized-intensity space: low-intensity peaks below alpha are treated as
+%   background candidates for sigma_base fitting.
+if ~isempty(obj.m_expPeaks)
+    rawIntensity = obj.m_expPeaks(:,2);
+    rawIntensityNorm = rawIntensity / (max(rawIntensity) + eps);
+    filteredOutMask = rawIntensityNorm < obj.m_alpha;
+    filteredOutNormIntensity = rawIntensityNorm(filteredOutMask);
+    noise_model_fit_inputs.filteredOutExpPeakCount = numel(filteredOutNormIntensity);
+    noise_model_fit_inputs.filteredOutExpPeakSqSum = sum(filteredOutNormIntensity .^ 2);
+end
 
 % Build calculation context for mass-side modules
 mass_ctx = struct( ...
@@ -124,15 +141,6 @@ vNonRedunTheoryIonMz = CMS2MassCalculator.getNonRedunIons(mass_ctx,inxSites,mass
 
 % Match and preprocess peaks on non-redundant ion space
 matchedExpPeaks = CMS2PeakMatcher.match(obj.m_expPeaks,vNonRedunTheoryIonMz,obj.m_ms2_tolerance);
-% Record noise model fitting inputs before post-match peptidoform filtering, 
-%   which may remove some matched peaks as they are not helpful for peptidoform discrimination.
-if ~isempty(matchedExpPeaks)
-    normalizedBeforeFilter = matchedExpPeaks(:,2);
-    filteredOutMask = normalizedBeforeFilter < obj.m_alpha;
-    filteredOutNormIntensity = normalizedBeforeFilter(filteredOutMask);
-    noise_model_fit_inputs.filteredOutExpPeakCount = numel(filteredOutNormIntensity);
-    noise_model_fit_inputs.filteredOutExpPeakSqSum = sum(filteredOutNormIntensity .^ 2);
-end
 % Apply alpha threshold to matched peaks for downstream processing
 matchedExpPeaks = CMS2PeakMatcher.processPeaks(matchedExpPeaks,obj.m_alpha);
 
