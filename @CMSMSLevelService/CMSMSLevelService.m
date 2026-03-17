@@ -79,6 +79,13 @@ classdef CMSMSLevelService < handle
             strLine = fgetl(fin);
             str = regexp(strLine,'\t','split');
             pepSeq = str{1};
+            pep_len = length(strtrim(pepSeq));
+            is_current_peptide_eligible = pep_len >= cfg.min_peptide_length && pep_len <= cfg.max_peptide_length;
+            filtered_peptide_count = 0;
+            if ~is_current_peptide_eligible
+                filtered_peptide_count = 1;
+            end
+            filtered_spectrum_count = 0;
             stage1_records = struct( ...
                 'dataset_name', {}, ...
                 'spec_name', {}, ...
@@ -123,8 +130,17 @@ classdef CMSMSLevelService < handle
                 if length(str)==1 || isempty(str{2})
                     % a new peptide
                     pepSeq = str{1};
+                    pep_len = length(strtrim(pepSeq));
+                    is_current_peptide_eligible = pep_len >= cfg.min_peptide_length && pep_len <= cfg.max_peptide_length;
+                    if ~is_current_peptide_eligible
+                        filtered_peptide_count = filtered_peptide_count + 1;
+                    end
                 else
                     % a spectrum for an old peptide
+                    if ~is_current_peptide_eligible
+                        filtered_spectrum_count = filtered_spectrum_count + 1;
+                        continue;
+                    end
                     dataset_name = str{1};
                     spec_name = str{2};
                     [isProtN,isProtC] = pepProtService.getWhetherProtNC(pepSeq);
@@ -215,8 +231,12 @@ classdef CMSMSLevelService < handle
                 end
             end
             
-            CLogger.info('[CMSMSLevelService:run] Stage-1 baseline collection done. total=%d, success=%d, shortcut=%d.', ...
-                stage1_total_count, stage1_success_count, stage1_shortcut_count);
+            CLogger.info(['[CMSMSLevelService:run] Stage-1 baseline collection done. ', ...
+                'total=%d, success=%d, shortcut=%d, filtered_peptides=%d, filtered_spectra=%d, ', ...
+                'peptide_length_range=[%d,%d].'], ...
+                stage1_total_count, stage1_success_count, stage1_shortcut_count, ...
+                filtered_peptide_count, filtered_spectrum_count, ...
+                cfg.min_peptide_length, cfg.max_peptide_length);
             
             stability_options = struct();
             has_stability_options = false;

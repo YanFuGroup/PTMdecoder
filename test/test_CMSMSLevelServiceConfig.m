@@ -21,6 +21,8 @@ param_map = makeBaseParamMap();
 cfg = CMSMSLevelServiceConfig.fromParamMap(param_map);
 
 testCase.verifyFalse(isfield(cfg, 'stability_options'));
+testCase.verifyEqual(cfg.min_peptide_length, 7);
+testCase.verifyEqual(cfg.max_peptide_length, 40);
 end
 
 
@@ -95,6 +97,39 @@ testCase.verifyTrue(isfield(cfg, 'stability_options'));
 testCase.verifyEqual(cfg.stability_options.n_resamples, 12);
 testCase.verifyEqual(cfg.stability_options.random_seed, 7);
 testCase.verifyEqual(cfg.stability_options.relative_threshold, cfg.result_filter_threshold);
+end
+
+
+function testInvalidPeptideMinLengthThrowsError(testCase)
+% Verify non-integer peptide_min_length is rejected.
+% Inputs:
+%    testCase (matlab.unittest.TestCase)
+%        Test case context.
+% Outputs:
+%    (none)
+
+param_map = makeBaseParamMap();
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_PEPTIDE_MIN_LENGTH) = '2.5';
+
+f = @() CMSMSLevelServiceConfig.fromParamMap(param_map);
+testCase.verifyError(f, 'CMSMSLevelServiceConfig:InvalidMinPeptideLength');
+end
+
+
+function testInvalidPeptideLengthRangeThrowsError(testCase)
+% Verify peptide_min_length > peptide_max_length is rejected.
+% Inputs:
+%    testCase (matlab.unittest.TestCase)
+%        Test case context.
+% Outputs:
+%    (none)
+
+param_map = makeBaseParamMap();
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_PEPTIDE_MIN_LENGTH) = '41';
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_PEPTIDE_MAX_LENGTH) = '40';
+
+f = @() CMSMSLevelServiceConfig.fromParamMap(param_map);
+testCase.verifyError(f, 'CMSMSLevelServiceConfig:InvalidPeptideLengthRange');
 end
 
 
