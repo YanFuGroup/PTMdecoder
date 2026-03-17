@@ -110,6 +110,7 @@ classdef CMSMSLevelService < handle
                 'case_penalty_intens', cfg.case_penalty_intens, ...
                 'grid_penalty_intens', cfg.grid_penalty_intens, ...
                 'case_OLS_intens_weight', cfg.case_OLS_intens_weight));
+            eachSpecPipeline = CMS2SpectrumPipeline(fixedModNameMass, variableModNameMass, cms2_cfg);
             
             while ~feof(fin)
                 strLine = fgetl(fin);
@@ -127,9 +128,6 @@ classdef CMSMSLevelService < handle
                     dataset_name = str{1};
                     spec_name = str{2};
                     [isProtN,isProtC] = pepProtService.getWhetherProtNC(pepSeq);
-                    eachSpecPipeline = CMS2SpectrumPipeline(pepSeq,isProtN,isProtC, ...
-                        cMgfDatasetIO,dataset_name,spec_name,fixedModNameMass, ...
-                        variableModNameMass,cms2_cfg);
                     
                     try
                         [expPeaks,iCharge,precursorMZ] = cMgfDatasetIO.read_oneSpec(dataset_name,spec_name);

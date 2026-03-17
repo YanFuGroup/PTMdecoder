@@ -73,12 +73,12 @@ classdef test_CXICSignalUtils < matlab.unittest.TestCase
             
             stemName = 'test_raw';
             
-            % MS1 Index: [Scan, RT, PeakIndexStart, Baseline, InjTime]
-            % Scan 1, RT 10, Starts at idx 1
-            % Scan 2, RT 11, Starts at idx 3
-            ms1Index = [1, 10, 0, 0, 0; 
-                        2, 11, 2, 0, 0;
-                        3, 12, 4, 0, 0];
+            % MS1 Index: [Scan, RT, NextPeakRowIndex, Baseline, InjTime]
+            % The 3rd column follows production semantics in load_MS1_file:
+            % cumulative peak count + 1 (1-based next-row pointer).
+            ms1Index = [1, 10, 3, 0, 0; 
+                        2, 11, 5, 0, 0;
+                        3, 12, 7, 0, 0];
             
             % MS1 Peaks: [mz, intentisy]
             % Scan 1 peaks: [1000.0, 100], [1000.5, 50] (1000.5 is +1 isotope for z=2)
@@ -92,7 +92,7 @@ classdef test_CXICSignalUtils < matlab.unittest.TestCase
             
             ms1Peaks = [mz_mono, 100; mz_iso1, 50;
                         mz_mono, 200; mz_iso1, 80;
-                        mz_mono, 150,; mz_iso1, 60] ;
+                        mz_mono, 150; mz_iso1, 60];
                         
             ms1Data(stemName) = ms1Index;
             peaksData(stemName) = ms1Peaks;
@@ -109,11 +109,12 @@ classdef test_CXICSignalUtils < matlab.unittest.TestCase
             % Important: CConstant must be accessible.
             % If CConstant is missing, test will error.
             
-            [xic_rt, xic_intensity_smoothed, ~] = CXICSignalUtils.get_smoothed_xic(...
+            [xic_rt, xic_intensity_smoothed, xic_intensity_raw] = CXICSignalUtils.get_smoothed_xic(...
                 datasetIO, 'test_raw.mgf', low_mz, high_mz, charge);
             
             testCase.verifyEqual(length(xic_rt), 3);
             testCase.verifyEqual(length(xic_intensity_smoothed), 3);
+            testCase.verifyEqual(length(xic_intensity_raw), 3);
             % Check that data was extracted (intensity > 0)
             % The exact logic depends on CConstant.IPV filtering and cosine distance.
             % If filtering fails, it sets intensity to 0.

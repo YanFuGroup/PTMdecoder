@@ -90,23 +90,19 @@ stability_cache = struct( ...
     'cstrIMP', {{}}, ...
     'solver_diag', solver_diag);
 
-obj.m_pepSeq = peptideCtx.pepSeq;
-obj.m_isProtN = peptideCtx.isProtN;
-obj.m_isProtC = peptideCtx.isProtC;
-obj.m_fixedModNameMass = peptideCtx.fixedModNameMass;
-obj.m_variableModNameMass = peptideCtx.variableModNameMass;
-
-obj.m_strDatasetName = spectrumCtx.datasetName;
-obj.m_strSpecName = spectrumCtx.specName;
-obj.m_expPeaks = spectrumCtx.expPeaks;
-obj.m_iCharge = spectrumCtx.iCharge;
-obj.m_dPrecursorMass = (spectrumCtx.precursorMZ - CConstant.pmass) * obj.m_iCharge;
+pepSeq = peptideCtx.pepSeq;
+isProtN = peptideCtx.isProtN;
+isProtC = peptideCtx.isProtC;
+specName = spectrumCtx.specName;
+expPeaks = spectrumCtx.expPeaks;
+iCharge = spectrumCtx.iCharge;
+dPrecursorMass = (spectrumCtx.precursorMZ - CConstant.pmass) * iCharge;
     
 % Record dataset-level background summary from raw experimental peaks in
 %   normalized-intensity space: low-intensity peaks below alpha are treated as
 %   background candidates for sigma_base fitting.
-if ~isempty(obj.m_expPeaks)
-    rawIntensity = obj.m_expPeaks(:,2);
+if ~isempty(expPeaks)
+    rawIntensity = expPeaks(:,2);
     rawIntensityNorm = rawIntensity / (max(rawIntensity) + eps);
     filteredOutMask = rawIntensityNorm < obj.m_alpha;
     filteredOutNormIntensity = rawIntensityNorm(filteredOutMask);
@@ -116,16 +112,16 @@ end
 
 % Build calculation context for mass-side modules
 mass_ctx = struct( ...
-    'm_pepSeq', obj.m_pepSeq, ...
-    'm_isProtN', obj.m_isProtN, ...
-    'm_isProtC', obj.m_isProtC, ...
+    'm_pepSeq', pepSeq, ...
+    'm_isProtN', isProtN, ...
+    'm_isProtC', isProtC, ...
     'm_fixedModNameMass', {obj.m_fixedModNameMass}, ...
     'm_variableModNameMass', {obj.m_variableModNameMass}, ...
     'm_ms1_tolerance', obj.m_ms1_tolerance, ...
     'm_enzyme', obj.m_enzyme, ...
-    'm_dPrecursorMass', obj.m_dPrecursorMass, ...
-    'm_strSpecName', obj.m_strSpecName, ...
-    'm_iCharge', obj.m_iCharge, ...
+    'm_dPrecursorMass', dPrecursorMass, ...
+    'm_strSpecName', specName, ...
+    'm_iCharge', iCharge, ...
     'm_ionTypes', obj.m_ionTypes);
 
 % Enumerate feasible peptidoforms and corresponding non-redundant ions
@@ -140,7 +136,7 @@ end
 vNonRedunTheoryIonMz = CMS2MassCalculator.getNonRedunIons(mass_ctx,inxSites,massArrangement,fixedPosMod);
 
 % Match and preprocess peaks on non-redundant ion space
-matchedExpPeaks = CMS2PeakMatcher.match(obj.m_expPeaks,vNonRedunTheoryIonMz,obj.m_ms2_tolerance);
+matchedExpPeaks = CMS2PeakMatcher.match(expPeaks,vNonRedunTheoryIonMz,obj.m_ms2_tolerance);
 % Apply alpha threshold to matched peaks for downstream processing
 matchedExpPeaks = CMS2PeakMatcher.processPeaks(matchedExpPeaks,obj.m_alpha);
 
@@ -151,11 +147,11 @@ if isempty(matchedExpPeaks)
         bSuccess = false;
         CLogger.debug(['[CMS2SpectrumPipeline:runBaselineSpectrumStage] ', ...
             'There is no non-redundant peak for discriminating peptidoforms for %s in %s.'], ...
-            obj.m_pepSeq, obj.m_strSpecName);
+            pepSeq, specName);
         return;
     else
         abundance = 1;
-        cstrIMP = CMS2ResultIO.formatImpStrings(massArrangement,fixedPosMod,obj.m_variableModNameMass,inxSites,obj.m_pepSeq);
+        cstrIMP = CMS2ResultIO.formatImpStrings(massArrangement,fixedPosMod,obj.m_variableModNameMass,inxSites,pepSeq);
         solver_diag.jaccard_stability = 1;
         solver_diag.reported_imp_indices = 1;
         solver_diag.support_frequency = 1;
@@ -177,7 +173,7 @@ if size(massArrangement,1) == 1
     abundance = 1;
     fittedMatchedPeakIntensities = CMS2QuantSolver.computeFittedMatchedPeakIntensities( ...
         vNonRedunTheoryIonMz, matchedExpPeaks, abundance);
-    cstrIMP = CMS2ResultIO.formatImpStrings(massArrangement,fixedPosMod,obj.m_variableModNameMass,inxSites,obj.m_pepSeq);
+    cstrIMP = CMS2ResultIO.formatImpStrings(massArrangement,fixedPosMod,obj.m_variableModNameMass,inxSites,pepSeq);
     bSuccess = true;
     solver_diag.jaccard_stability = 1;
     solver_diag.reported_imp_indices = 1;
@@ -216,7 +212,7 @@ fittedMatchedPeakIntensities = CMS2QuantSolver.computeFittedMatchedPeakIntensiti
 abundance(~reported_imp_mask) = 0;
 abundance = abundance / (sum(abundance) + eps);
 
-cstrIMP = CMS2ResultIO.formatImpStrings(massArrangement,fixedPosMod,obj.m_variableModNameMass,inxSites,obj.m_pepSeq);
+cstrIMP = CMS2ResultIO.formatImpStrings(massArrangement,fixedPosMod,obj.m_variableModNameMass,inxSites,pepSeq);
 
 solver_diag.is_X_not_full_column_rank = is_X_not_full_column_rank;
 solver_diag.reported_imp_indices = find(reported_imp_mask);

@@ -1,17 +1,13 @@
 classdef CMS2SpectrumPipeline
-    properties
-        m_specName
-    end
-
     methods
-        function obj = CMS2SpectrumPipeline(varargin)
-            obj.m_specName = varargin{6};
+        function obj = CMS2SpectrumPipeline(fixedModNameMass, variableModNameMass, cfg) %#ok<INUSD>
         end
 
 
-        function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,is_X_not_full_column_rank,solver_diag,noise_model_fit_inputs,stability_cache] = runBaselineSpectrumStage(obj, peptideCtx, spectrumCtx) %#ok<INUSD>
+        function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,is_X_not_full_column_rank,solver_diag,noise_model_fit_inputs,stability_cache] = runBaselineSpectrumStage(~, ~, spectrumCtx)
+            specName = spectrumCtx.specName;
             bSuccess = true;
-            cstrIMP = {['IMP_', obj.m_specName, '_1']; ['IMP_', obj.m_specName, '_2']};
+            cstrIMP = {['IMP_', specName, '_1']; ['IMP_', specName, '_2']};
             abundance = [0.7; 0.3];
             ionTypePosCharge = [1, 1, 1; 2, 2, 1];
             ionIntens = [1.0; 0.8];
