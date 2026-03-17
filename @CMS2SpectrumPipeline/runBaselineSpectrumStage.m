@@ -156,10 +156,16 @@ if isempty(matchedExpPeaks)
     else
         abundance = 1;
         cstrIMP = CMS2ResultIO.formatImpStrings(massArrangement,fixedPosMod,obj.m_variableModNameMass,inxSites,obj.m_pepSeq);
+        solver_diag.jaccard_stability = 1;
+        solver_diag.reported_imp_indices = 1;
+        solver_diag.support_frequency = 1;
+        solver_diag.abundance_mad = 0;
+        solver_diag.num_successful_resamples = 0;
         stability_cache.vNonRedunTheoryIonMz = vNonRedunTheoryIonMz;
         stability_cache.massArrangement = massArrangement;
         stability_cache.abundance = abundance;
         stability_cache.cstrIMP = cstrIMP;
+        stability_cache.solver_diag = solver_diag;
         return;
     end
 end
@@ -173,6 +179,11 @@ if size(massArrangement,1) == 1
         vNonRedunTheoryIonMz, matchedExpPeaks, abundance);
     cstrIMP = CMS2ResultIO.formatImpStrings(massArrangement,fixedPosMod,obj.m_variableModNameMass,inxSites,obj.m_pepSeq);
     bSuccess = true;
+    solver_diag.jaccard_stability = 1;
+    solver_diag.reported_imp_indices = 1;
+    solver_diag.support_frequency = 1;
+    solver_diag.abundance_mad = 0;
+    solver_diag.num_successful_resamples = 0;
     noise_model_fit_inputs.matchedExpPeaks = matchedExpPeaks;
     noise_model_fit_inputs.fittedMatchedPeakIntensities = fittedMatchedPeakIntensities;
     stability_cache.vNonRedunTheoryIonMz = vNonRedunTheoryIonMz;
@@ -181,6 +192,7 @@ if size(massArrangement,1) == 1
     stability_cache.abundance = abundance;
     stability_cache.fittedMatchedPeakIntensities = fittedMatchedPeakIntensities;
     stability_cache.cstrIMP = cstrIMP;
+    stability_cache.solver_diag = solver_diag;
     return;
 end
 

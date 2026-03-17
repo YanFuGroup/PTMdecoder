@@ -311,10 +311,10 @@ classdef CMSMSLevelService < handle
                             rec.dataset_name, rec.spec_name, ME.identifier, ME.message);
                     end
                 end
-            end
-            
-            CLogger.info('[CMSMSLevelService:run] Stage-2 stability done. candidates=%d, success=%d, failed=%d.', ...
+
+                CLogger.info('[CMSMSLevelService:run] Stage-2 stability done. candidates=%d, success=%d, failed=%d.', ...
                 stage2_total_candidates, stage2_success_count, stage2_failed_count);
+            end
             
             msms_result = CMS2Result();
             for idxRecord = 1:numel(stage1_records)
@@ -334,12 +334,32 @@ classdef CMSMSLevelService < handle
                 support_frequency = rec.solver_diag.support_frequency;
                 abundance_mad = rec.solver_diag.abundance_mad;
                 if ~isempty(reported_imp_indices) && ~isempty(support_frequency)
-                    valid_mask = reported_imp_indices >= 1 & reported_imp_indices <= numel(support_full);
-                    support_full(reported_imp_indices(valid_mask)) = support_frequency(valid_mask);
+                    if numel(reported_imp_indices) ~= numel(support_frequency)
+                        CLogger.error(['[CMSMSLevelService:InconsistentSupportFrequencyLength] ', ...
+                            'reported_imp_indices length (%d) must equal support_frequency length (%d) for %s/%s.'], ...
+                            numel(reported_imp_indices), numel(support_frequency), rec.dataset_name, rec.spec_name);
+                    end
+                    out_of_range_mask = reported_imp_indices < 1 | reported_imp_indices > numel(support_full);
+                    if any(out_of_range_mask)
+                        CLogger.error(['[CMSMSLevelService:InvalidReportedImpIndex] ', ...
+                            'reported_imp_indices contains out-of-range entries for %s/%s.'], ...
+                            rec.dataset_name, rec.spec_name);
+                    end
+                    support_full(reported_imp_indices) = support_frequency;
                 end
                 if ~isempty(reported_imp_indices) && ~isempty(abundance_mad)
-                    valid_mask = reported_imp_indices >= 1 & reported_imp_indices <= numel(mad_full);
-                    mad_full(reported_imp_indices(valid_mask)) = abundance_mad(valid_mask);
+                    if numel(reported_imp_indices) ~= numel(abundance_mad)
+                        CLogger.error(['[CMSMSLevelService:InconsistentAbundanceMadLength] ', ...
+                            'reported_imp_indices length (%d) must equal abundance_mad length (%d) for %s/%s.'], ...
+                            numel(reported_imp_indices), numel(abundance_mad), rec.dataset_name, rec.spec_name);
+                    end
+                    out_of_range_mask = reported_imp_indices < 1 | reported_imp_indices > numel(mad_full);
+                    if any(out_of_range_mask)
+                        CLogger.error(['[CMSMSLevelService:InvalidReportedImpIndex] ', ...
+                            'reported_imp_indices contains out-of-range entries for %s/%s.'], ...
+                            rec.dataset_name, rec.spec_name);
+                    end
+                    mad_full(reported_imp_indices) = abundance_mad;
                 end
                 
                 imp_idx_nonzero = rec.reported_imp_write_indices;
