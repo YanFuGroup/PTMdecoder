@@ -77,9 +77,8 @@ function testGetReportedImpMaskUsesRelativeThreshold(testCase)
 %   (none)
 
 abundance = [0; 0.02; 1.0];
-[reportedMask, tau] = CMS2QuantSolver.getReportedImpMask(abundance, 0.01);
+reportedMask = CMS2QuantSolver.getReportedImpMask(abundance, 0.01);
 
-testCase.verifyEqual(tau, 0.01, 'AbsTol', 1e-12);
 testCase.verifyEqual(reportedMask, logical([false; true; true]));
 end
 
@@ -92,9 +91,8 @@ function testGetReportedImpMaskIncludesBoundaryAtTau(testCase)
 %   (none)
 
 abundance = [0.01; 0.5; 1.0];
-[reportedMask, tau] = CMS2QuantSolver.getReportedImpMask(abundance, 0.01);
+reportedMask = CMS2QuantSolver.getReportedImpMask(abundance, 0.01);
 
-testCase.verifyEqual(tau, 0.01, 'AbsTol', 1e-12);
 testCase.verifyEqual(reportedMask, logical([true; true; true]));
 end
 
@@ -107,9 +105,8 @@ function testGetReportedImpMaskExclude(testCase)
 %   (none)
 
 abundance = [0.01; 0.5; 1.0];
-[reportedMask, tau] = CMS2QuantSolver.getReportedImpMask(abundance, 0.1);
+reportedMask = CMS2QuantSolver.getReportedImpMask(abundance, 0.1);
 
-testCase.verifyEqual(tau, 0.1, 'AbsTol', 1e-12);
 testCase.verifyEqual(reportedMask, logical([false; true; true]));
 end
 
@@ -122,9 +119,8 @@ function testGetReportedImpMaskWithZeroThresholdKeepsNonNegative(testCase)
 %   (none)
 
 abundance = [0; 0.1; 0.3];
-[reportedMask, tau] = CMS2QuantSolver.getReportedImpMask(abundance, 0);
+reportedMask = CMS2QuantSolver.getReportedImpMask(abundance, 0);
 
-testCase.verifyEqual(tau, 0, 'AbsTol', 1e-12);
 testCase.verifyEqual(reportedMask, logical([true; true; true]));
 end
 
@@ -138,9 +134,8 @@ function testGetReportedImpMaskAllZeroReturnsAllFalse(testCase)
 
 abundance = [0; 0; 0];
 
-[reportedMask, tau] = CMS2QuantSolver.getReportedImpMask(abundance, 0.01);
+reportedMask = CMS2QuantSolver.getReportedImpMask(abundance, 0.01);
 
-testCase.verifyEqual(tau, 0, 'AbsTol', 1e-12);
 testCase.verifyEqual(reportedMask, false(3, 1));
 end
 
@@ -154,9 +149,8 @@ function testGetReportedImpMaskAllNegativeReturnsAllFalse(testCase)
 
 abundance = [-1; -0.1; -2];
 
-[reportedMask, tau] = CMS2QuantSolver.getReportedImpMask(abundance, 0.01);
+reportedMask = CMS2QuantSolver.getReportedImpMask(abundance, 0.01);
 
-testCase.verifyEqual(tau, 0, 'AbsTol', 1e-12);
 testCase.verifyEqual(reportedMask, false(3, 1));
 end
 

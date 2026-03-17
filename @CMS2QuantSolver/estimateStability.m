@@ -57,7 +57,7 @@ if size(matchedExpPeaks, 1) ~= numel(fittedMatchedPeakIntensities)
 end
 
 % Build baseline reported IMP set and initialize accumulators.
-[base_reported_mask, ~] = CMS2QuantSolver.getReportedImpMask(base_abundance, relative_threshold);
+base_reported_mask = CMS2QuantSolver.getReportedImpMask(base_abundance, relative_threshold);
 reported_imp_indices = find(base_reported_mask);
 if isempty(reported_imp_indices)
     CLogger.error(['[CMS2QuantSolver:InvalidBaselineReportedIMP] ', ...
@@ -82,7 +82,7 @@ for idxResample = 1:num_resamples
             matchedExpPeaks, fittedMatchedPeakIntensities, noise_model, base_seed + idxResample);
         abundance_resampled = CMS2QuantSolver.solve( ...
             vNonRedunTheoryIonMz, perturbedMatchedExpPeaks, massArrangement, solver_cfg);
-        [resampled_reported_mask, ~] = CMS2QuantSolver.getReportedImpMask(abundance_resampled, relative_threshold);
+        resampled_reported_mask = CMS2QuantSolver.getReportedImpMask(abundance_resampled, relative_threshold);
 
         if ~any(resampled_reported_mask)
             resample_failed = true;

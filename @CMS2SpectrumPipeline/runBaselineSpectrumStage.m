@@ -14,10 +14,6 @@ function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff, ...
 %               Whether peptide is protein N-terminal.
 %           isProtC (1 x 1 logical)
 %               Whether peptide is protein C-terminal.
-%           fixedModNameMass (1 x K cell)
-%               Fixed modification definition.
-%           variableModNameMass (1 x M cell)
-%               Variable modification definition.
 %   spectrumCtx (1 x 1 struct)
 %       Spectrum-side context for one processing call.
 %       Required fields:
@@ -208,7 +204,7 @@ fittedMatchedPeakIntensities = CMS2QuantSolver.computeFittedMatchedPeakIntensiti
     vNonRedunTheoryIonMz, matchedExpPeaks, abundance, frageff, ionTypePosCharge);
 
 % Final thresholding + normalization
-[reported_imp_mask, ~] = CMS2QuantSolver.getReportedImpMask(abundance, obj.m_resFilterThres);
+reported_imp_mask = CMS2QuantSolver.getReportedImpMask(abundance, obj.m_resFilterThres);
 abundance(~reported_imp_mask) = 0;
 abundance = abundance / (sum(abundance) + eps);
 

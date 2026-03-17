@@ -8,7 +8,7 @@ classdef CMS2QuantSolver
 
         [abundance, frageff, ionTypePosCharge, ionIntens, is_X_not_full_column_rank] = solve(vNonRedunTheoryIonMz, matchedExpPeaks, massArrangement, solver_cfg)
 
-        [reported_imp_mask, tau] = getReportedImpMask(abundance, relative_threshold)
+        reported_imp_mask = getReportedImpMask(abundance, relative_threshold)
 
         jaccard = computeJaccardIndex(maskA, maskB)
 
