@@ -22,6 +22,7 @@ classdef CMS2Result < handle
         CurrentPeptideIdx = 0;
         % TODO: Current spectrum index within the current peptide, not global
         CurrentSpectrumIdx = 0;
+        PeptideIndexMap
     end
 
     methods
@@ -29,6 +30,7 @@ classdef CMS2Result < handle
             % Constructor
             obj.Peptides = struct('peptide_sequence', {}, 'spectrum_list', {});
             obj.CurrentPeptideIdx = 0;
+            obj.PeptideIndexMap = containers.Map('KeyType', 'char', 'ValueType', 'int32');
         end
 
         addPeptide(obj, sequence)
@@ -36,5 +38,9 @@ classdef CMS2Result < handle
         addSpectrum(obj, datasetName, spectrumName, varargin)
         addPeptidoform(obj, peptidoform_str, relative_abundance, varargin)
         compress(obj)
+    end
+
+    methods (Access = private)
+        rebuildPeptideIndexMap(obj)
     end
 end

@@ -97,3 +97,45 @@ testCase.verifyTrue(isnan(spec.peptidoform_list_support_freq(2)), ...
     'Support-frequency should default to NaN when support_frequency field is not provided');
 testCase.verifyEqual(spec.peptidoform_list_abundance_mad(2), 0.2, 'AbsTol', 1e-12);
 end
+
+
+function testAddOrSelectPeptideIndexCache(testCase)
+% TESTADDORSELECTPEPTIDEINDEXCACHE Validate map-based peptide lookup behavior
+
+res = CMS2Result();
+
+res.addOrSelectPeptide('PEP_A');
+res.addSpectrum('Dataset1', 'SpecA1');
+res.addPeptidoform('PEP_A_FORM1', 1.0);
+
+res.addOrSelectPeptide('PEP_B');
+res.addSpectrum('Dataset1', 'SpecB1');
+res.addPeptidoform('PEP_B_FORM1', 1.0);
+
+% Select existing peptide and append one more spectrum.
+res.addOrSelectPeptide('PEP_A');
+res.addSpectrum('Dataset1', 'SpecA2');
+res.addPeptidoform('PEP_A_FORM2', 1.0);
+
+testCase.verifyEqual(length(res.Peptides), 2, ...
+    'Selecting existing peptide must not create duplicate peptide entries.');
+testCase.verifyEqual(length(res.Peptides(1).spectrum_list), 2, ...
+    'PEP_A should contain two spectra after selecting existing peptide.');
+testCase.verifyEqual(length(res.Peptides(2).spectrum_list), 1, ...
+    'PEP_B should keep one spectrum.');
+testCase.verifyTrue(strcmp(res.Peptides(1).spectrum_list(2).spectrum_name, 'SpecA2'), ...
+    'Second spectrum of PEP_A should be SpecA2.');
+
+% After compress, peptide index cache should remain consistent.
+res.compress();
+res.addOrSelectPeptide('PEP_A');
+res.addSpectrum('Dataset1', 'SpecA3');
+res.addPeptidoform('PEP_A_FORM3', 1.0);
+
+testCase.verifyEqual(length(res.Peptides), 2, ...
+    'compress should not alter peptide count in this case.');
+testCase.verifyEqual(length(res.Peptides(1).spectrum_list), 3, ...
+    'PEP_A should still be selectable correctly after compress.');
+testCase.verifyTrue(strcmp(res.Peptides(1).spectrum_list(3).spectrum_name, 'SpecA3'), ...
+    'Third spectrum of PEP_A should be SpecA3 after compress.');
+end

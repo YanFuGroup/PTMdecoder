@@ -38,4 +38,6 @@ if obj.CurrentPeptideIdx > 0
 else
     obj.CurrentSpectrumIdx = 0;
 end
+
+obj.rebuildPeptideIndexMap();
 end
