@@ -10,6 +10,7 @@ classdef CMS2SpectrumPipelineConfig
         ms2_tolerance
         alpha
         resFilterThres
+        max_mod_per_peptide
         ionTypes
         enzyme
         case_penalty_intens
@@ -36,6 +37,7 @@ classdef CMS2SpectrumPipelineConfig
             obj.ms2_tolerance = cfg.ms2_tolerance;
             obj.alpha = cfg.alpha;
             obj.resFilterThres = cfg.resFilterThres;
+            obj.max_mod_per_peptide = cfg.max_mod_per_peptide;
             obj.ionTypes = cfg.ionTypes;
             obj.enzyme = cfg.enzyme;
             obj.case_penalty_intens = cfg.case_penalty_intens;
@@ -66,6 +68,9 @@ classdef CMS2SpectrumPipelineConfig
             end
             if ~isfield(cfg, 'resFilterThres') || isempty(cfg.resFilterThres)
                 cfg.resFilterThres = 0;
+            end
+            if ~isfield(cfg, 'max_mod_per_peptide') || isempty(cfg.max_mod_per_peptide)
+                cfg.max_mod_per_peptide = 5;
             end
             if ~isfield(cfg, 'ionTypes') || isempty(cfg.ionTypes)
                 cfg.ionTypes = [1,2];
@@ -107,6 +112,11 @@ classdef CMS2SpectrumPipelineConfig
             if ~isscalar(cfg.resFilterThres) || ~isnumeric(cfg.resFilterThres) || cfg.resFilterThres < 0
                 error('CMS2SpectrumPipelineConfig:InvalidResFilterThres', ...
                     'resFilterThres must be a numeric scalar >= 0.');
+            end
+            if ~isscalar(cfg.max_mod_per_peptide) || ~isnumeric(cfg.max_mod_per_peptide) || ...
+                    cfg.max_mod_per_peptide <= 0 || cfg.max_mod_per_peptide ~= floor(cfg.max_mod_per_peptide)
+                error('CMS2SpectrumPipelineConfig:InvalidMaxModPerPeptide', ...
+                    'max_mod_per_peptide must be a positive integer scalar.');
             end
             if isempty(cfg.ionTypes) || ~isnumeric(cfg.ionTypes)
                 error('CMS2SpectrumPipelineConfig:InvalidIonTypes', 'ionTypes must be a numeric array.');

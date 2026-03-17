@@ -103,6 +103,60 @@ testCase.verifyTrue(any(abs(massArrangement(:) - 1.0) < 1e-10), ...
     'Expected variable modification mass 1.0 to appear in arrangement.');
 end
 
+
+function testMaxModPerPeptideFiltersCandidates(testCase)
+% TESTMAXMODPERPEPTIDEFILTERSCANDIDATES Validate over-limit candidates are removed while feasible ones remain
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
+
+ctx = baseCtx('AAA');
+ctx.m_enzyme = struct('name', 'none', 'limits', []);
+ctx.m_variableModNameMass = {
+    'VarA1', 'A', 1.0; ...
+    'VarA2', 'A', 2.0
+};
+fixedPosMod = {};
+neutralMass = CMS2MassCalculator.getNeutralPeptideTheoryMass(ctx, fixedPosMod);
+ctx.m_dPrecursorMass = neutralMass + 2.0;
+ctx.m_strSpecName = 'spec_max_mod_partial_filter';
+ctx.m_max_mod_per_peptide = 1;
+
+[bSuccess, ~, massArrangement] = CMS2MassCalculator.getMassArrangement(ctx, fixedPosMod);
+
+testCase.verifyTrue(bSuccess);
+testCase.verifyNotEmpty(massArrangement);
+modCount = sum(abs(massArrangement) > 1e-12, 2);
+testCase.verifyTrue(all(modCount <= 1), ...
+    'All candidates should satisfy max_mod_per_peptide=1.');
+end
+
+
+function testMaxModPerPeptideCanRejectAllCandidates(testCase)
+% TESTMAXMODPERPEPTIDECANREJECTALLCANDIDATES Validate all candidates are rejected when every arrangement exceeds limit
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
+
+ctx = baseCtx('AAA');
+ctx.m_enzyme = struct('name', 'none', 'limits', []);
+ctx.m_variableModNameMass = {
+    'VarA1', 'A', 1.0
+};
+fixedPosMod = {};
+neutralMass = CMS2MassCalculator.getNeutralPeptideTheoryMass(ctx, fixedPosMod);
+ctx.m_dPrecursorMass = neutralMass + 2.0;
+ctx.m_strSpecName = 'spec_max_mod_reject_all';
+ctx.m_max_mod_per_peptide = 1;
+
+[bSuccess, ~, massArrangement] = CMS2MassCalculator.getMassArrangement(ctx, fixedPosMod);
+
+testCase.verifyFalse(bSuccess);
+testCase.verifyEmpty(massArrangement);
+end
+
 function ctx = baseCtx(pepSeq)
 % BASECTX Build minimal context for CMS2MassCalculator tests
 
@@ -118,4 +172,5 @@ ctx.m_enzyme = struct('name', 'none', 'limits', []);
 ctx.m_strSpecName = 'spec';
 ctx.m_iCharge = 2;
 ctx.m_ionTypes = [1,2];
+ctx.m_max_mod_per_peptide = 5;
 end

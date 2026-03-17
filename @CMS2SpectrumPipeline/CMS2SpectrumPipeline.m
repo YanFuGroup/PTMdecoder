@@ -11,6 +11,7 @@ classdef CMS2SpectrumPipeline
         m_ms2_tolerance;
         m_alpha;
         m_resFilterThres;
+        m_max_mod_per_peptide;
         m_ionTypes;
         m_enzyme;
 
@@ -39,6 +40,7 @@ classdef CMS2SpectrumPipeline
             obj.m_ms2_tolerance = cfg.ms2_tolerance;
             obj.m_alpha = cfg.alpha;
             obj.m_resFilterThres = cfg.resFilterThres;
+            obj.m_max_mod_per_peptide = cfg.max_mod_per_peptide;
             obj.m_ionTypes = cfg.ionTypes;
             obj.m_enzyme = cfg.enzyme;
             obj.m_case_penalty_intens = cfg.case_penalty_intens;

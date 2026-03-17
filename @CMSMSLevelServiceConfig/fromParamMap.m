@@ -62,6 +62,7 @@ end
 cfg.min_MSMS_num = CParamMapUtils.getOptionalNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MIN_MSMS_NUM, 1, 'CMSMSLevelServiceConfig');
 cfg.min_peptide_length = CParamMapUtils.getOptionalNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_PEPTIDE_MIN_LENGTH, 7, 'CMSMSLevelServiceConfig');
 cfg.max_peptide_length = CParamMapUtils.getOptionalNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_PEPTIDE_MAX_LENGTH, 40, 'CMSMSLevelServiceConfig');
+cfg.max_mod_per_peptide = CParamMapUtils.getOptionalNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MAX_MOD_PER_PEPTIDE, 5, 'CMSMSLevelServiceConfig');
 
 if cfg.min_peptide_length <= 0 || cfg.min_peptide_length ~= floor(cfg.min_peptide_length)
     error('CMSMSLevelServiceConfig:InvalidMinPeptideLength', ...
@@ -74,6 +75,10 @@ end
 if cfg.min_peptide_length > cfg.max_peptide_length
     error('CMSMSLevelServiceConfig:InvalidPeptideLengthRange', ...
         'Param ''peptide_min_length'' must be less than or equal to ''peptide_max_length''.');
+end
+if cfg.max_mod_per_peptide <= 0 || cfg.max_mod_per_peptide ~= floor(cfg.max_mod_per_peptide)
+    error('CMSMSLevelServiceConfig:InvalidMaxModPerPeptide', ...
+        'Param ''max_mod_per_peptide'' must be a positive integer.');
 end
 
 cfg.ion_types = [1,2];

@@ -4,6 +4,7 @@ function [ bSuccess,inxSites,massArrangement ] = getMassArrangement(ctx,fixedPos
 %   ctx (struct)
 %       Required fields: m_pepSeq, m_isProtN, m_isProtC, m_variableModNameMass,
 %       m_ms1_tolerance, m_dPrecursorMass, m_enzyme, m_strSpecName.
+%       Optional fields: m_max_mod_per_peptide (default: 5).
 %   fixedPosMod (K x 3 cell)
 %       Fixed modification list [position, mod_name, mod_mass].
 % Outputs:
@@ -15,6 +16,10 @@ function [ bSuccess,inxSites,massArrangement ] = getMassArrangement(ctx,fixedPos
 %       Candidate peptidoform mass arrangement matrix.
 
 bSuccess = false;
+max_mod_per_peptide = 5;
+if isfield(ctx, 'm_max_mod_per_peptide') && ~isempty(ctx.m_max_mod_per_peptide)
+    max_mod_per_peptide = ctx.m_max_mod_per_peptide;
+end
 
 deltamass = ctx.m_dPrecursorMass - CMS2MassCalculator.getNeutralPeptideTheoryMass(ctx,fixedPosMod);
 
@@ -94,6 +99,17 @@ else
             %   is 14.015650), the PSM is absolutely wrong.
             %         massArrangement(massArrangement(:,idx_C_term_AA)>14.0266,:) = [];
             massArrangement(is_delete_C_term,:) = [];
+        end
+    end
+
+    if ~isempty(massArrangement)
+        mod_count_per_candidate = sum(abs(massArrangement) > 1e-12, 2);
+        keep_mask = mod_count_per_candidate <= max_mod_per_peptide;
+        if any(~keep_mask)
+            CLogger.debug(['[CMS2MassCalculator:getMassArrangement] Filtered %d/%d candidate peptidoforms ', ...
+                'by max_mod_per_peptide=%d for %s in %s.'], ...
+                sum(~keep_mask), numel(keep_mask), max_mod_per_peptide, ctx.m_pepSeq, ctx.m_strSpecName);
+            massArrangement = massArrangement(keep_mask, :);
         end
     end
 end

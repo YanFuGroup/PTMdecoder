@@ -36,6 +36,7 @@ classdef CPTMdecoderWorkflowParamKeys
         PARAM_MIN_MSMS_NUM = 'min_MSMS_num'
         PARAM_PEPTIDE_MIN_LENGTH = 'peptide_min_length'
         PARAM_PEPTIDE_MAX_LENGTH = 'peptide_max_length'
+        PARAM_MAX_MOD_PER_PEPTIDE = 'max_mod_per_peptide'
         PARAM_PEP_SPEC_FILE_PATH = 'pep_spec_file_path'
         PARAM_CHECKED_PEPTIDES_RES_PATH = 'checked_peptides_res_path'
         PARAM_MSMS_RES_PATH = 'msms_res_path'

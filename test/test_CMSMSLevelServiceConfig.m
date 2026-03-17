@@ -23,6 +23,7 @@ cfg = CMSMSLevelServiceConfig.fromParamMap(param_map);
 testCase.verifyFalse(isfield(cfg, 'stability_options'));
 testCase.verifyEqual(cfg.min_peptide_length, 7);
 testCase.verifyEqual(cfg.max_peptide_length, 40);
+testCase.verifyEqual(cfg.max_mod_per_peptide, 5);
 end
 
 
@@ -130,6 +131,39 @@ param_map(CPTMdecoderWorkflowParamKeys.PARAM_PEPTIDE_MAX_LENGTH) = '40';
 
 f = @() CMSMSLevelServiceConfig.fromParamMap(param_map);
 testCase.verifyError(f, 'CMSMSLevelServiceConfig:InvalidPeptideLengthRange');
+end
+
+
+function testExplicitMaxModPerPeptideIsRespected(testCase)
+% Verify explicit max_mod_per_peptide is preserved.
+% Inputs:
+%    testCase (matlab.unittest.TestCase)
+%        Test case context.
+% Outputs:
+%    (none)
+
+param_map = makeBaseParamMap();
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_MAX_MOD_PER_PEPTIDE) = '3';
+
+cfg = CMSMSLevelServiceConfig.fromParamMap(param_map);
+
+testCase.verifyEqual(cfg.max_mod_per_peptide, 3);
+end
+
+
+function testInvalidMaxModPerPeptideThrowsError(testCase)
+% Verify non-positive or non-integer max_mod_per_peptide is rejected.
+% Inputs:
+%    testCase (matlab.unittest.TestCase)
+%        Test case context.
+% Outputs:
+%    (none)
+
+param_map = makeBaseParamMap();
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_MAX_MOD_PER_PEPTIDE) = '2.5';
+
+f = @() CMSMSLevelServiceConfig.fromParamMap(param_map);
+testCase.verifyError(f, 'CMSMSLevelServiceConfig:InvalidMaxModPerPeptide');
 end
 
 
