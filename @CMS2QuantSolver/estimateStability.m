@@ -7,7 +7,8 @@ function stability_diag = estimateStability(vNonRedunTheoryIonMz, matchedExpPeak
 %       Matched peaks with fixed column semantics:
 %       col 1: ion index
 %       col 2: normalized intensity
-%       col 3: raw intensity
+%       col 3: compatibility raw-scale column restored from col 2
+%              using the input max(col3)/max(col2) ratio.
 %   massArrangement (M x S double)
 %       Candidate peptidoform mass arrangements. Size M must match length of base_abundance.
 %   solver_cfg (struct)
@@ -57,6 +58,10 @@ end
 % Build baseline reported IMP set and initialize accumulators.
 [base_reported_mask, ~] = CMS2QuantSolver.getReportedImpMask(base_abundance, relative_threshold);
 reported_imp_indices = find(base_reported_mask);
+if isempty(reported_imp_indices)
+    CLogger.error(['[CMS2QuantSolver:InvalidBaselineReportedIMP] ', ...
+        'Baseline reported IMP set is empty; skip stability estimation for this spectrum.']);
+end
 support_counts = zeros(numel(reported_imp_indices), 1);
 
 sum_jaccard = 0;
@@ -66,21 +71,40 @@ max_failed_resamples_threshold = floor(num_resamples / 2);
 
 % Perturb-and-resolve loop with failure-tolerant accounting.
 for idxResample = 1:num_resamples
+    resample_failed = false;
+    is_exception_failure = false;
+    exception_identifier = '';
+    exception_message = '';
     try
         perturbedMatchedExpPeaks = CMS2QuantSolver.perturbMatchedPeaks( ...
             matchedExpPeaks, fittedMatchedPeakIntensities, noise_model, base_seed + idxResample);
         abundance_resampled = CMS2QuantSolver.solve( ...
             vNonRedunTheoryIonMz, perturbedMatchedExpPeaks, massArrangement, solver_cfg);
         [resampled_reported_mask, ~] = CMS2QuantSolver.getReportedImpMask(abundance_resampled, relative_threshold);
-        sum_jaccard = sum_jaccard + CMS2QuantSolver.computeJaccardIndex(base_reported_mask, resampled_reported_mask);
-        if ~isempty(reported_imp_indices)
-            support_counts = support_counts + double(resampled_reported_mask(reported_imp_indices));
+
+        if ~any(resampled_reported_mask)
+            resample_failed = true;
+        else
+            sum_jaccard = sum_jaccard + CMS2QuantSolver.computeJaccardIndex(base_reported_mask, resampled_reported_mask);
+            if ~isempty(reported_imp_indices)
+                support_counts = support_counts + double(resampled_reported_mask(reported_imp_indices));
+            end
+            num_successful_resamples = num_successful_resamples + 1;
         end
-        num_successful_resamples = num_successful_resamples + 1;
     catch ME
+        resample_failed = true;
+        is_exception_failure = true;
+        exception_identifier = ME.identifier;
+        exception_message = ME.message;
+    end
+
+    if resample_failed
         num_failed_resamples = num_failed_resamples + 1;
-        CLogger.debug(['[CMS2QuantSolver:ResampleFailed] ', ...
-            'resample %d/%d failed: [%s] %s'], idxResample, num_resamples, ME.identifier, ME.message);
+        if is_exception_failure
+            CLogger.debug(['[CMS2QuantSolver:ResampleFailed] ', ...
+                'resample %d/%d failed: [%s] %s'], ...
+                idxResample, num_resamples, exception_identifier, exception_message);
+        end
         if num_failed_resamples > max_failed_resamples_threshold
             CLogger.error(['[CMS2QuantSolver:TooManyResampleFailures] ', ...
                 'Resample failures exceeded half of total runs (%d/%d).'], ...

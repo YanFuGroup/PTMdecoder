@@ -6,11 +6,11 @@ function noise_model = estimateDatasetNoiseModel(noise_model_fit_inputs)
 %   noise_model_fit_inputs (1 x N struct)
 %       Struct array from first phase baseline solves. Required fields for each element: 
 %       - filteredOutExpPeakCount (1 x 1 double):
-%           Number of background peaks.
+%           Number of background peaks in normalized-intensity space.
 %       - filteredOutExpPeakSqSum (1 x 1 double):
-%           Sum of squared intensities of background peaks.
-%       - matchedExpPeaks (M x K double):
-%           Matrix of matched peaks (column 3 is raw intensity).
+%           Sum of squared normalized intensities of background peaks.
+%       - matchedExpPeaks (M x 3 double):
+%           Matrix of matched peaks (column 2 is normalized intensity).
 %       - fittedMatchedPeakIntensities (M x 1 double):
 %           Reconstructed intensities (yhat).
 % Outputs:
@@ -52,16 +52,11 @@ for i = 1:numel(noise_model_fit_inputs)
         continue;
     end
     
-    % Check matchedExpPeaks dimensions
-    % Column 3 is historically the original raw intensity in Mixspec PTMdecoder
-    if size(inputs_i.matchedExpPeaks, 2) >= 3
-        y = inputs_i.matchedExpPeaks(:, 3);
-    else
-        % Fallback if it only has 2 columns (index, int)
-        y = inputs_i.matchedExpPeaks(:, 2);
-        CLogger.warn('CMS2QuantSolver:estimateDatasetNoiseModel:MissingRawIntensity', ...
-            sprintf('Spectrum %d lacks raw intensity as 3rd column. Using 2nd column as fallback.', i));
+    if size(inputs_i.matchedExpPeaks, 2) < 2
+        CLogger.error('CMS2QuantSolver:estimateDatasetNoiseModel:InvalidMatchedPeaks', ...
+            'matchedExpPeaks must contain normalized intensity in column 2.');
     end
+    y = inputs_i.matchedExpPeaks(:, 2);
     
     % Filter high signal peaks
     maskHigh = yhat > tau_floor;

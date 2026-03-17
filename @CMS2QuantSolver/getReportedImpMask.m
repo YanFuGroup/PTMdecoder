@@ -9,7 +9,7 @@ function [reported_imp_mask, tau] = getReportedImpMask(abundance, relative_thres
 %   reported_imp_mask (N x 1 logical)
 %       True for IMP entries that satisfy abundance >= tau.
 %   tau (1 x 1 double)
-%       Absolute threshold computed as relative_threshold * max(abundance).
+%       Absolute threshold. For non-positive max(abundance), tau is set to 0.
 
 if nargin < 2
 	CLogger.error('[CMS2QuantSolver:MissingRelativeThreshold] relative_threshold is required.');
@@ -34,8 +34,9 @@ end
 max_abundance = max(abundance);
 
 if max_abundance <= 0
-	CLogger.error(['[CMS2QuantSolver:InvalidMaxAbundance] ', ...
-		'max(abundance) must be positive for reported IMP selection.']);
+	tau = 0;
+	reported_imp_mask = false(size(abundance));
+	return;
 end
 
 tau = relative_threshold * max_abundance;

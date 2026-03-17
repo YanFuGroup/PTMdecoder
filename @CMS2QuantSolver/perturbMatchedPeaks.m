@@ -4,8 +4,10 @@ function perturbedMatchedExpPeaks = perturbMatchedPeaks(matchedExpPeaks, fittedM
 %   matchedExpPeaks (K x 3 double)
 %       Matched peaks with fixed column semantics:
 %       col 1: ion index
-%       col 2: normalized intensity
-%       col 3: raw intensity
+%       col 2: normalized intensity (primary for stability perturbation)
+%       col 3: compatibility raw-scale intensity.
+%              The output col 3 is reconstructed from col 2 using
+%              input-scale ratio max(col3)/(max(col2)+eps).
 %   fittedMatchedPeakIntensities (K x 1 double)
 %       Baseline fitted matched-peak intensities (yhat).
 %   noise_model (struct)
@@ -16,7 +18,8 @@ function perturbedMatchedExpPeaks = perturbMatchedPeaks(matchedExpPeaks, fittedM
 %       Random seed for deterministic perturbation.
 % Outputs:
 %   perturbedMatchedExpPeaks (K x 3 double)
-%       Perturbed matched peaks preserving row count and ion index.
+%       Perturbed matched peaks preserving row count and ion index,
+%       with col 3 restored to the input raw-intensity scale.
 
 if nargin < 4
     seed = [];
@@ -64,20 +67,26 @@ if num_rows == 0
     return;
 end
 
-raw_intensity = matchedExpPeaks(:, 3);
+y = matchedExpPeaks(:, 2);
 yhat = fittedMatchedPeakIntensities;
+input_norm_max = max(y);
+input_raw_max = max(matchedExpPeaks(:, 3));
+raw_scale = input_raw_max / (input_norm_max + eps);
+if ~isfinite(raw_scale) || raw_scale < 0
+    raw_scale = 0;
+end
 
 % Compute heteroscedastic noise components:
 % 1. Additive noise (eta): Baseline noise, scaled by sigma_base.
 % 2. Multiplicative noise (epsilon): Relative to signal strength, scaled by gamma * yhat.
 eta = noise_model.sigma_base * randn(num_rows, 1);
 epsilon = noise_model.gamma * randn(num_rows, 1);
-perturbed_raw = max(raw_intensity + eta + yhat .* epsilon, 0);
+perturbed_y = max(y + eta + yhat .* epsilon, 0);
 
 % Re-normalize intensities relative to the new maximum peak
-scale = max(perturbed_raw);
-perturbed_norm = perturbed_raw / (scale + eps);
+scale = max(perturbed_y);
+perturbed_norm = perturbed_y / (scale + eps);
 
 perturbedMatchedExpPeaks(:, 2) = perturbed_norm;
-perturbedMatchedExpPeaks(:, 3) = perturbed_raw;
+perturbedMatchedExpPeaks(:, 3) = perturbed_norm * raw_scale;
 end

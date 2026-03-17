@@ -129,8 +129,8 @@ testCase.verifyEqual(reportedMask, logical([true; true; true]));
 end
 
 
-function testGetReportedImpMaskRejectsAllZero(testCase)
-% Validate all-zero abundance is rejected
+function testGetReportedImpMaskAllZeroReturnsAllFalse(testCase)
+% Validate all-zero abundance returns all false without throwing
 % Input:
 %   testCase (matlab.unittest.TestCase)
 % Output:
@@ -138,18 +138,15 @@ function testGetReportedImpMaskRejectsAllZero(testCase)
 
 abundance = [0; 0; 0];
 
-f = @() CMS2QuantSolver.getReportedImpMask(abundance, 0.01);
-testCase.verifyError(f, 'CLogger:LoggedError');
-try
-    f();
-catch ME
-    testCase.verifyThat(string(ME.message), matlab.unittest.constraints.ContainsSubstring('CMS2QuantSolver:InvalidMaxAbundance'));
-end
+[reportedMask, tau] = CMS2QuantSolver.getReportedImpMask(abundance, 0.01);
+
+testCase.verifyEqual(tau, 0, 'AbsTol', 1e-12);
+testCase.verifyEqual(reportedMask, false(3, 1));
 end
 
 
-function testGetReportedImpMaskRejectsAllNegative(testCase)
-% Validate all-negative abundance is rejected
+function testGetReportedImpMaskAllNegativeReturnsAllFalse(testCase)
+% Validate all-negative abundance returns all false without throwing
 % Input:
 %   testCase (matlab.unittest.TestCase)
 % Output:
@@ -157,13 +154,10 @@ function testGetReportedImpMaskRejectsAllNegative(testCase)
 
 abundance = [-1; -0.1; -2];
 
-f = @() CMS2QuantSolver.getReportedImpMask(abundance, 0.01);
-testCase.verifyError(f, 'CLogger:LoggedError');
-try
-    f();
-catch ME
-    testCase.verifyThat(string(ME.message), matlab.unittest.constraints.ContainsSubstring('CMS2QuantSolver:InvalidMaxAbundance'));
-end
+[reportedMask, tau] = CMS2QuantSolver.getReportedImpMask(abundance, 0.01);
+
+testCase.verifyEqual(tau, 0, 'AbsTol', 1e-12);
+testCase.verifyEqual(reportedMask, false(3, 1));
 end
 
 
@@ -208,6 +202,8 @@ testCase.verifyEqual(perturbed(:,1), matched(:,1));
 testCase.verifyGreaterThanOrEqual(perturbed(:,3), zeros(size(perturbed,1),1));
 testCase.verifyGreaterThanOrEqual(perturbed(:,2), zeros(size(perturbed,1),1));
 testCase.verifyLessThanOrEqual(perturbed(:,2), ones(size(perturbed,1),1));
+expectedScale = max(matched(:,3)) / (max(matched(:,2)) + eps);
+testCase.verifyEqual(perturbed(:,3), perturbed(:,2) * expectedScale, 'AbsTol', 1e-12);
 
 if any(perturbed(:,3) > 0)
     testCase.verifyEqual(max(perturbed(:,2)), 1, 'AbsTol', 1e-12);
@@ -334,9 +330,9 @@ solver_cfg = struct('model',2,'method',1,'lambda',0.1, ...
 
 % Third IMP is structural zero in baseline and should never be reported.
 base_abundance = [0.7; 0.3; 0];
-fitted = [60; 40];
+fitted = [0.6; 0.4];
 % Use zero perturbation noise to keep all successful resamples deterministic.
-noise_model = struct('sigma_base', 0.0, 'gamma', 0.0, 'tau_floor', 10);
+noise_model = struct('sigma_base', 0.0, 'gamma', 0.0, 'tau_floor', 0.1);
 stability_options = struct('n_resamples', 5, 'random_seed', 1, 'relative_threshold', 0.01);
 
 stability_diag = CMS2QuantSolver.estimateStability( ...
@@ -377,8 +373,8 @@ solver_cfg = struct('model',2,'method',1,'lambda',0.1, ...
     'case_penalty_intens','intens_sum','grid_penalty_intens','intens_sum','case_OLS_intens_weight','none');
 
 base_abundance = [0.9; 0.1];
-fitted = [60; 40];
-noise_model = struct('sigma_base', 1.0, 'gamma', 0.05, 'tau_floor', 10);
+fitted = [0.6; 0.4];
+noise_model = struct('sigma_base', 0.02, 'gamma', 0.05, 'tau_floor', 0.1);
 stability_options = struct('n_resamples', 6, 'random_seed', 7, 'relative_threshold', 0.01);
 
 stability_diag = CMS2QuantSolver.estimateStability( ...
@@ -414,8 +410,8 @@ solver_cfg = struct('model',2,'method',1,'lambda',0.1, ...
     'case_penalty_intens','intens_sum','grid_penalty_intens','intens_sum','case_OLS_intens_weight','none');
 
 base_abundance = [0.7; 0.3];
-fitted = [60; 40];
-noise_model = struct('sigma_base', 2.0, 'gamma', 0.05, 'tau_floor', 10);
+fitted = [0.6; 0.4];
+noise_model = struct('sigma_base', 0.02, 'gamma', 0.05, 'tau_floor', 0.1);
 stability_options = struct('n_resamples', 6, 'random_seed', 11, 'relative_threshold', 0.01);
 
 diag1 = CMS2QuantSolver.estimateStability( ...
@@ -452,8 +448,8 @@ solver_cfg_invalid = struct('model',99,'method',1,'lambda',0.1, ...
     'case_penalty_intens','intens_sum','grid_penalty_intens','intens_sum','case_OLS_intens_weight','none');
 
 base_abundance = [0.7; 0.3];
-fitted = [60; 40];
-noise_model = struct('sigma_base', 2.0, 'gamma', 0.05, 'tau_floor', 10);
+fitted = [0.6; 0.4];
+noise_model = struct('sigma_base', 0.02, 'gamma', 0.05, 'tau_floor', 0.1);
 stability_options = struct('n_resamples', 5, 'random_seed', 3, 'relative_threshold', 0.01);
 
 f = @() CMS2QuantSolver.estimateStability( ...
@@ -464,6 +460,44 @@ try
     f();
 catch ME
     testCase.verifyThat(string(ME.message), matlab.unittest.constraints.ContainsSubstring('CMS2QuantSolver:TooManyResampleFailures'));
+end
+end
+
+
+function testEstimateStabilityEmptyBaselineReportedSetThrows(testCase)
+% Validate baseline empty reported IMP set is a hard failure
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
+
+testCase.assumeNotEmpty(which('quadprog'), 'Optimization Toolbox (quadprog) is required for this test.');
+
+v = [
+    100, 1, 1, 1, 0, 1, 1, 0;
+    200, 2, 2, 1, 0, 2, 0, 1
+];
+matched = [
+    1, 0.6, 60;
+    2, 0.4, 40
+];
+massArrangement = [0; 1];
+solver_cfg = struct('model',2,'method',1,'lambda',0.1, ...
+    'case_penalty_intens','intens_sum','grid_penalty_intens','intens_sum','case_OLS_intens_weight','none');
+
+base_abundance = [0; 0];
+fitted = [0.6; 0.4];
+noise_model = struct('sigma_base', 0.02, 'gamma', 0.05, 'tau_floor', 0.1);
+stability_options = struct('n_resamples', 5, 'random_seed', 3, 'relative_threshold', 0.01);
+
+f = @() CMS2QuantSolver.estimateStability( ...
+    v, matched, massArrangement, solver_cfg, base_abundance, fitted, noise_model, stability_options);
+
+testCase.verifyError(f, 'CLogger:LoggedError');
+try
+    f();
+catch ME
+    testCase.verifyThat(string(ME.message), matlab.unittest.constraints.ContainsSubstring('CMS2QuantSolver:InvalidBaselineReportedIMP'));
 end
 end
 

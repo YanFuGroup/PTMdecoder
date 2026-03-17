@@ -127,12 +127,11 @@ matchedExpPeaks = CMS2PeakMatcher.match(obj.m_expPeaks,vNonRedunTheoryIonMz,obj.
 % Record noise model fitting inputs before post-match peptidoform filtering, 
 %   which may remove some matched peaks as they are not helpful for peptidoform discrimination.
 if ~isempty(matchedExpPeaks)
-    rawIntensityBeforeFilter = matchedExpPeaks(:,2);
-    normalizedBeforeFilter = rawIntensityBeforeFilter / (max(rawIntensityBeforeFilter) + eps);
+    normalizedBeforeFilter = matchedExpPeaks(:,2);
     filteredOutMask = normalizedBeforeFilter < obj.m_alpha;
-    filteredOutRawIntensity = rawIntensityBeforeFilter(filteredOutMask);
-    noise_model_fit_inputs.filteredOutExpPeakCount = numel(filteredOutRawIntensity);
-    noise_model_fit_inputs.filteredOutExpPeakSqSum = sum(filteredOutRawIntensity .^ 2);
+    filteredOutNormIntensity = normalizedBeforeFilter(filteredOutMask);
+    noise_model_fit_inputs.filteredOutExpPeakCount = numel(filteredOutNormIntensity);
+    noise_model_fit_inputs.filteredOutExpPeakSqSum = sum(filteredOutNormIntensity .^ 2);
 end
 % Apply alpha threshold to matched peaks for downstream processing
 matchedExpPeaks = CMS2PeakMatcher.processPeaks(matchedExpPeaks,obj.m_alpha);
