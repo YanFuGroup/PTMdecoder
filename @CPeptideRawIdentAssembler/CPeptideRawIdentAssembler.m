@@ -34,6 +34,7 @@ classdef CPeptideRawIdentAssembler
             modNameMass = [deps.fixedModNameMass; deps.variableModNameMass];
 
             for idx_spec = 1:length(spectrum_list)
+
                 dataset_name = spectrum_list(idx_spec).dataset_name;
                 spectrum_name = spectrum_list(idx_spec).spectrum_name;
                 peptidoform_strs = spectrum_list(idx_spec).peptidoform_list_str;

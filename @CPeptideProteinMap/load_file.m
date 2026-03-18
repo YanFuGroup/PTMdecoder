@@ -1,6 +1,6 @@
 function load_file(obj, filePath)
     % load_file reads and parses the tab-delimited file
-    % Input:
+    % Inputs:
     %   obj (CPeptideProteinMap)
     %       Peptide->protein mapping instance
     %   filePath (1 x 1 char/string)
@@ -37,7 +37,16 @@ function load_file(obj, filePath)
     
     % Iterate through each row to populate the mapping
     numRows = height(tbl);
+    lastPct = -1;
     for i = 1:numRows
+        if numRows > 0
+            currentPct = floor(double(i) / double(numRows) * 100);
+            if i == 1 || currentPct > lastPct || i == numRows
+                CLogger.progress('peptide_protein_map_load', i, numRows);
+                lastPct = currentPct;
+            end
+        end
+
         % Get the content from the original data cells
         pepCell = tbl{i, pepColIdx};
         protCell = tbl{i, protColIdx};
@@ -74,5 +83,9 @@ function load_file(obj, filePath)
         else
             obj.m_map(pepStr) = protList;
         end
+    end
+
+    if numRows > 0 && lastPct < 100
+        CLogger.progress('peptide_protein_map_load', numRows, numRows);
     end
 end

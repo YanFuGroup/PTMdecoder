@@ -99,7 +99,9 @@ classdef CPeptideAlignRequantService < handle
             rawIdentManagers = cell(1, length(msms_result.Peptides));
             base_groups_by_peptide = cell(1, length(msms_result.Peptides));
             prot_name_pos_by_peptide = cell(1, length(msms_result.Peptides));
+            print_progress = CPrintProgress(length(msms_result.Peptides), 'build_raw_ident_for_alignment');
             for i_pep = 1:length(msms_result.Peptides)
+                print_progress = print_progress.update_show(i_pep);
                 rawIdentManager = obj.buildRawIdentManagerFromSpectrumList(msms_result.Peptides(i_pep).spectrum_list);
                 rawIdentManagers{i_pep} = rawIdentManager;
                 base_groups_by_peptide{i_pep} = proc_executor.buildBaseGroups(rawIdentManager);
@@ -107,6 +109,7 @@ classdef CPeptideAlignRequantService < handle
                 peptide_sequence = msms_result.Peptides(i_pep).peptide_sequence;
                 prot_name_pos_by_peptide{i_pep} = obj.m_pepProtService.get_protein_name_pos(peptide_sequence);
             end
+            print_progress.last_update();
 
             quant_report = CIMPQuantReport();
             print_progress = CPrintProgress(length(msms_result.Peptides), 'peptide_quant_before_alignment');

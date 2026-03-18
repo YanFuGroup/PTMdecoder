@@ -156,3 +156,37 @@ catch ME
     verifyTrue(testCase, contains(ME.message, 'Cannot find the peptide'));
 end
 end
+
+
+function testLoadFile_MergeDuplicatePeptideRows(testCase)
+% TESTLOADFILE_MERGEDUPLICATEPEPTIDEROWS Validate duplicate peptide rows are merged stably
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
+fileName = 'temp_service_res_duplicate_rows.txt';
+cleanupObj = onCleanup(@() localDeleteIfExists(fileName));
+
+content = sprintf('peptide\tprotein\nDUP\tP1\nDUP\tP2,P1\nDUP\tP3\n');
+fid = fopen(fileName, 'w');
+fprintf(fid, '%s', content);
+fclose(fid);
+
+mapper = CPeptideProteinMap(fileName);
+protList = mapper.get_proteins('DUP');
+
+verifyEqual(testCase, protList, {'P1','P2','P3'});
+clear cleanupObj;
+end
+
+
+function localDeleteIfExists(fileName)
+% LOCALDELETEIFEXISTS Delete file safely for test cleanup
+% Input:
+%   fileName (1 x 1 char/string)
+% Output:
+%   (none)
+if exist(fileName, 'file')
+    delete(fileName);
+end
+end

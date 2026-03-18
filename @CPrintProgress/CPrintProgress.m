@@ -36,7 +36,7 @@ classdef CPrintProgress
             end
         end
 
-        function last_update(obj)
+        function obj = last_update(obj)
             % Update the last time
             if obj.m_total_step <= 0
                 return;
