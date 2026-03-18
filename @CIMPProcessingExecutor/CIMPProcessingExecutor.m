@@ -31,9 +31,11 @@ classdef CIMPProcessingExecutor < handle
     end
 
     methods (Access=public)
+        base_groups = buildBaseGroups(obj, rawIdentManager)
+
         % Main quantification/re-quantification/drawing methods
-        block = quantifyPeptideBlock(obj, prot_names_pos, rawIdentManager)
-        block = requantifyPeptideBlock(obj, prot_names_pos, rawIdentManager, pep_rtrange_map)
+        block = quantifyPeptideBlock(obj, prot_names_pos, rawIdentManager, base_groups)
+        block = requantifyPeptideBlock(obj, prot_names_pos, rawIdentManager, pep_rtrange_map, base_groups)
         drawImpXicForBlock(obj, rawIdentManager, pep_rtrange_map, dir_save, color_map, legend_map)
     end
 

@@ -1,5 +1,5 @@
 function [pep_rtrange_map, report] = buildAlignedRtRangeMap(obj, ...
-    fdr_filtered_result_path, rawIdentManagers, base_pep_rtrange_map)
+    fdr_filtered_result_path, rawIdentManagers, base_pep_rtrange_map, base_groups_by_peptide)
 % Build aligned RT range map using alignment models on top of base quant ranges.
 %
 % Function role:
@@ -23,6 +23,10 @@ function [pep_rtrange_map, report] = buildAlignedRtRangeMap(obj, ...
 %       Key format: CIMPQuantRecord.build_id(imp_name, charge, raw_name)
 %       Value: struct array with fields rt_start/rt_end/ratio/check_label.
 %       This map defines the candidate RT interval universe for alignment.
+%   base_groups_by_peptide (1 x N cell, optional)
+%       Prebuilt CIMPGroup arrays for each peptide.
+%       When provided, align executor reuses grouped contexts and skips
+%       building raw IMP maps from rawIdentManagers again.
 % Output:
 %   pep_rtrange_map (containers.Map)
 %       Updated RT map after alignment and unaligned policy handling.
@@ -41,8 +45,15 @@ end
 if nargin < 4 || isempty(base_pep_rtrange_map)
     error('buildAlignedRtRangeMap requires base_pep_rtrange_map from initial quantification.');
 end
+if nargin < 5
+    base_groups_by_peptide = [];
+end
 if ~isa(base_pep_rtrange_map, 'containers.Map')
     error('buildAlignedRtRangeMap requires base_pep_rtrange_map to be a containers.Map.');
+end
+if ~isempty(base_groups_by_peptide) && numel(base_groups_by_peptide) ~= numel(rawIdentManagers)
+    error('CIMPXICAlignRequantExecutor:InvalidBaseGroupsByPeptide', ...
+        'base_groups_by_peptide must match rawIdentManagers in length.');
 end
 
 raw_names = obj.getRawNamesFromRawIdentManagers(rawIdentManagers);
@@ -73,8 +84,12 @@ CLogger.info('Aligning XIC candidates for %d run pairs...', size(align_pairs, 1)
 print_progress = CPrintProgress(length(rawIdentManagers), 'align_xic_candidates');
 for idx_psf = 1:length(rawIdentManagers)
     print_progress = print_progress.update_show(idx_psf);
-    rawIdentManager = rawIdentManagers{idx_psf};
-    raw_imps_map = obj.buildRawImpsMap(rawIdentManager);
+    if ~isempty(base_groups_by_peptide)
+        raw_imps_map = obj.buildRawImpsMapFromBaseGroups(base_groups_by_peptide{idx_psf});
+    else
+        rawIdentManager = rawIdentManagers{idx_psf};
+        raw_imps_map = obj.buildRawImpsMap(rawIdentManager);
+    end
 
     for idx_pair = 1:size(align_pairs, 1)
         raw_a = align_pairs{idx_pair, 1};
@@ -83,14 +98,14 @@ for idx_psf = 1:length(rawIdentManagers)
         if ~isKey(raw_imps_map, raw_a) || ~isKey(raw_imps_map, raw_b)
             if isKey(raw_imps_map, raw_a)
                 a_items = raw_imps_map(raw_a);
-                [state.pep_rtrange_map, applied_a] = applyUnalignedForImpKeys(...
-                    state.pep_rtrange_map, a_items.keys, raw_a, unaligned_action);
+                [state.pep_rtrange_map, applied_a] = applyUnalignedForBaseKeys(...
+                    state.pep_rtrange_map, collectBaseKeys(a_items), unaligned_action);
                 state.num_unaligned_action_applied = state.num_unaligned_action_applied + applied_a;
             end
             if isKey(raw_imps_map, raw_b)
                 b_items = raw_imps_map(raw_b);
-                [state.pep_rtrange_map, applied_b] = applyUnalignedForImpKeys(...
-                    state.pep_rtrange_map, b_items.keys, raw_b, unaligned_action);
+                [state.pep_rtrange_map, applied_b] = applyUnalignedForBaseKeys(...
+                    state.pep_rtrange_map, collectBaseKeys(b_items), unaligned_action);
                 state.num_unaligned_action_applied = state.num_unaligned_action_applied + applied_b;
             end
             state.num_missing_raw_pair = state.num_missing_raw_pair + 1;
@@ -98,19 +113,17 @@ for idx_psf = 1:length(rawIdentManagers)
         end
         a_items = raw_imps_map(raw_a);
         b_items = raw_imps_map(raw_b);
-        a_keys = a_items.keys;
-        b_keys = b_items.keys;
-        shared_keys = intersect(a_keys, b_keys);
-        shared_keys = filterSharedKeysByBaseMap(shared_keys, raw_a, raw_b, base_pep_rtrange_map);
+        [shared_entries, unaligned_a_keys, unaligned_b_keys] = ...
+            buildPairProcessingPlan(a_items, b_items, base_pep_rtrange_map);
 
-        [state.pep_rtrange_map, applied_a] = applyUnalignedForImpKeys(...
-            state.pep_rtrange_map, setdiff(a_keys, shared_keys), raw_a, unaligned_action);
+        [state.pep_rtrange_map, applied_a] = applyUnalignedForBaseKeys(...
+            state.pep_rtrange_map, unaligned_a_keys, unaligned_action);
         state.num_unaligned_action_applied = state.num_unaligned_action_applied + applied_a;
-        [state.pep_rtrange_map, applied_b] = applyUnalignedForImpKeys(...
-            state.pep_rtrange_map, setdiff(b_keys, shared_keys), raw_b, unaligned_action);
+        [state.pep_rtrange_map, applied_b] = applyUnalignedForBaseKeys(...
+            state.pep_rtrange_map, unaligned_b_keys, unaligned_action);
         state.num_unaligned_action_applied = state.num_unaligned_action_applied + applied_b;
 
-        if isempty(shared_keys)
+        if isempty(shared_entries)
             state.num_missing_raw_pair = state.num_missing_raw_pair + 1;
             continue;
         end
@@ -122,12 +135,12 @@ for idx_psf = 1:length(rawIdentManagers)
         end
         model = obj.m_pair_models(model_key);
 
-        for idx_key = 1:numel(shared_keys)
-            imp_key = shared_keys{idx_key};
-            item_a = a_items(imp_key);
-            item_b = b_items(imp_key);
-            key_a = CIMPQuantRecord.build_id(item_a.impName, item_a.charge, raw_a);
-            key_b = CIMPQuantRecord.build_id(item_b.impName, item_b.charge, raw_b);
+        for idx_key = 1:numel(shared_entries)
+            shared_entry = shared_entries(idx_key);
+            item_a = shared_entry.item_a;
+            item_b = shared_entry.item_b;
+            key_a = shared_entry.key_a;
+            key_b = shared_entry.key_b;
             item_a.candidateRtPeaks = base_pep_rtrange_map(key_a);
             item_b.candidateRtPeaks = base_pep_rtrange_map(key_b);
 
@@ -214,65 +227,73 @@ switch unaligned_action
 end
 end
 
-function [pep_rtrange_map, applied_total] = applyUnalignedForImpKeys(pep_rtrange_map, imp_keys, raw_name, unaligned_action)
+function [pep_rtrange_map, applied_total] = applyUnalignedForBaseKeys(pep_rtrange_map, base_keys, unaligned_action)
 applied_total = 0;
-for idx_key = 1:numel(imp_keys)
-    [imp_name, imp_charge, ok] = parseImpKey(imp_keys{idx_key});
-    if ~ok
-        continue;
-    end
-    key = CIMPQuantRecord.build_id(imp_name, imp_charge, raw_name);
+for idx_key = 1:numel(base_keys)
+    key = base_keys{idx_key};
     [pep_rtrange_map, applied] = applyUnalignedAction(pep_rtrange_map, key, unaligned_action);
     applied_total = applied_total + applied;
 end
 end
 
-function [imp_name, imp_charge, is_ok] = parseImpKey(imp_key)
-imp_name = '';
-imp_charge = NaN;
-is_ok = false;
 
-split_keys = strsplit(imp_key, '|');
-if numel(split_keys) < 2
-    return;
+function base_keys = collectBaseKeys(item_map)
+item_keys = item_map.keys;
+base_keys = cell(numel(item_keys), 1);
+for idx_key = 1:numel(item_keys)
+    item = item_map(item_keys{idx_key});
+    base_keys{idx_key} = getItemBaseKey(item);
 end
-imp_name = split_keys{1};
-imp_charge = str2double(split_keys{2});
-if isnan(imp_charge)
-    return;
-end
-is_ok = true;
 end
 
-function filtered_shared_keys = filterSharedKeysByBaseMap(shared_keys, raw_a, raw_b, base_pep_rtrange_map)
-% Filter shared IMP keys to those present in base map for both runs.
-% Input:
-%   shared_keys (cell)
-%       Shared imp keys in 'impName|charge' format
-%   raw_a/raw_b (1 x 1 char/string)
-%       Run names of current pair
-%   base_pep_rtrange_map (containers.Map)
-%       Base RT range map
-% Output:
-%   filtered_shared_keys (cell)
-%       Keys with both raw_a and raw_b entries in base map
-filtered_shared_keys = cell(0, 1);
-for idx_key = 1:numel(shared_keys)
-    imp_key = shared_keys{idx_key};
-    split_keys = strsplit(imp_key, '|');
-    if numel(split_keys) < 2
-        continue;
-    end
-    imp_name = split_keys{1};
-    imp_charge = str2double(split_keys{2});
-    if isnan(imp_charge)
+function [shared_entries, unaligned_a_keys, unaligned_b_keys] = ...
+    buildPairProcessingPlan(a_items, b_items, base_pep_rtrange_map)
+shared_entries = repmat(struct('item_a', [], 'item_b', [], 'key_a', '', 'key_b', ''), 0, 1);
+unaligned_a_keys = cell(0, 1);
+unaligned_b_keys = cell(0, 1);
+
+a_keys = a_items.keys;
+b_keys = b_items.keys;
+
+for idx_key = 1:numel(a_keys)
+    imp_key = a_keys{idx_key};
+    item_a = a_items(imp_key);
+    key_a = getItemBaseKey(item_a);
+
+    if ~isKey(b_items, imp_key)
+        unaligned_a_keys{end + 1, 1} = key_a; %#ok<AGROW>
         continue;
     end
 
-    key_a = CIMPQuantRecord.build_id(imp_name, imp_charge, raw_a);
-    key_b = CIMPQuantRecord.build_id(imp_name, imp_charge, raw_b);
+    item_b = b_items(imp_key);
+    key_b = getItemBaseKey(item_b);
     if base_pep_rtrange_map.isKey(key_a) && base_pep_rtrange_map.isKey(key_b)
-        filtered_shared_keys{end+1, 1} = imp_key; %#ok<AGROW>
+        shared_entries(end + 1, 1) = struct( ...
+            'item_a', item_a, ...
+            'item_b', item_b, ...
+            'key_a', key_a, ...
+            'key_b', key_b); %#ok<AGROW>
+    else
+        unaligned_a_keys{end + 1, 1} = key_a; %#ok<AGROW>
+        unaligned_b_keys{end + 1, 1} = key_b; %#ok<AGROW>
     end
 end
+
+for idx_key = 1:numel(b_keys)
+    imp_key = b_keys{idx_key};
+    if isKey(a_items, imp_key)
+        continue;
+    end
+    item_b = b_items(imp_key);
+    unaligned_b_keys{end + 1, 1} = getItemBaseKey(item_b); %#ok<AGROW>
+end
+end
+
+
+function base_key = getItemBaseKey(item)
+if ~isfield(item, 'baseKey') || isempty(item.baseKey)
+    error('CIMPXICAlignRequantExecutor:MissingItemBaseKey', ...
+        'imp_info must contain precomputed baseKey for alignment processing.');
+end
+base_key = item.baseKey;
 end

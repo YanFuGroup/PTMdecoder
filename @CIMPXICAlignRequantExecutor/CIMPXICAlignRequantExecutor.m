@@ -77,13 +77,15 @@ classdef CIMPXICAlignRequantExecutor < handle
     end
 
     methods (Access=public)
-        [pep_rtrange_map, report] = buildAlignedRtRangeMap(obj, fdr_filtered_result_path, rawIdentManagers, base_pep_rtrange_map)
+        [pep_rtrange_map, report] = buildAlignedRtRangeMap(obj, fdr_filtered_result_path, rawIdentManagers, base_pep_rtrange_map, base_groups_by_peptide)
 
         writeAlignmentReport(obj, report, output_path)
     end
 
     methods (Access=private)
         raw_imps_map = buildRawImpsMap(obj, rawIdentManager)
+
+        raw_imps_map = buildRawImpsMapFromBaseGroups(obj, base_groups)
 
         raw_names = getRawNamesFromRawIdentManagers(obj, rawIdentManagers)
     end

@@ -1,4 +1,4 @@
-function block = quantifyPeptideBlock(obj, prot_names_pos, rawIdentManager)
+function block = quantifyPeptideBlock(obj, prot_names_pos, rawIdentManager, base_groups)
 % Build a quantification block for one peptide
 % Input:
 %   obj (CIMPProcessingExecutor)
@@ -7,16 +7,20 @@ function block = quantifyPeptideBlock(obj, prot_names_pos, rawIdentManager)
 %       protein name and start position pairs
 %   rawIdentManager (CIMPRawIdentManager)
 %       per-raw identification store manager
+%   base_groups (CIMPGroup array, optional)
+%       prebuilt grouped contexts for this peptide
 % Output:
 %   block (CIMPQuantBlock or empty)
 %       protein block with IMP records, empty if no records
 
-imp_records = CIMPQuantRecord.empty(0,1);
-[raw_names, raw_ident_stores] = rawIdentManager.getEntries();
+if nargin < 4 || isempty(base_groups)
+    base_groups = obj.buildBaseGroups(rawIdentManager);
+end
 
-groupAggregator = CIMPGroupAggregator(obj.m_ms1_tolerance);
-imp_records = groupAggregator.aggregate(raw_names, raw_ident_stores, [], ...
-    @(state, group) obj.onGroupQuant(state, group), imp_records);
+imp_records = CIMPQuantRecord.empty(0,1);
+for idx_group = 1:numel(base_groups)
+    imp_records = obj.onGroupQuant(imp_records, base_groups(idx_group));
+end
 
 if isempty(imp_records)
     block = CIMPQuantBlock.empty(0,1);

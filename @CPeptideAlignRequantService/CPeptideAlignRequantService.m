@@ -88,11 +88,6 @@ classdef CPeptideAlignRequantService < handle
             quant_output_path = CPathResolver.resolveFilePath(cfg.output_dir_path, 'report_peptide_all_primary.txt', ...
                 CStructOptionUtils.get(align_options, 'peptide_quant_res_path', ''));
 
-            rawIdentManagers = cell(1, length(msms_result.Peptides));
-            for i_pep = 1:length(msms_result.Peptides)
-                rawIdentManagers{i_pep} = obj.buildRawIdentManagerFromSpectrumList(msms_result.Peptides(i_pep).spectrum_list);
-            end
-
             proc_cfg = CIMPProcessingExecutorConfig(struct( ...
                 'ms12DatasetIO', obj.m_cMs12DatasetIO, ...
                 'ms1_tolerance', cfg.ms1_tolerance, ...
@@ -101,15 +96,27 @@ classdef CPeptideAlignRequantService < handle
                 'resFilterThres', 0));  % cfg.result_filter_threshold
             proc_executor = CIMPProcessingExecutor(proc_cfg);
 
+            rawIdentManagers = cell(1, length(msms_result.Peptides));
+            base_groups_by_peptide = cell(1, length(msms_result.Peptides));
+            prot_name_pos_by_peptide = cell(1, length(msms_result.Peptides));
+            for i_pep = 1:length(msms_result.Peptides)
+                rawIdentManager = obj.buildRawIdentManagerFromSpectrumList(msms_result.Peptides(i_pep).spectrum_list);
+                rawIdentManagers{i_pep} = rawIdentManager;
+                base_groups_by_peptide{i_pep} = proc_executor.buildBaseGroups(rawIdentManager);
+
+                peptide_sequence = msms_result.Peptides(i_pep).peptide_sequence;
+                prot_name_pos_by_peptide{i_pep} = obj.m_pepProtService.get_protein_name_pos(peptide_sequence);
+            end
+
             quant_report = CIMPQuantReport();
             print_progress = CPrintProgress(length(msms_result.Peptides), 'peptide_quant_before_alignment');
             CLogger.info('Quantifying at peptide level before alignment...');
             for i_pep = 1:length(msms_result.Peptides)
                 print_progress = print_progress.update_show(i_pep);
-                peptide_sequence = msms_result.Peptides(i_pep).peptide_sequence;
-                cell_prot_name_pos = obj.m_pepProtService.get_protein_name_pos(peptide_sequence);
+                cell_prot_name_pos = prot_name_pos_by_peptide{i_pep};
                 rawIdentManager = rawIdentManagers{i_pep};
-                block = proc_executor.quantifyPeptideBlock(cell_prot_name_pos, rawIdentManager);
+                block = proc_executor.quantifyPeptideBlock(...
+                    cell_prot_name_pos, rawIdentManager, base_groups_by_peptide{i_pep});
                 quant_report = quant_report.append_block(block);
             end
             print_progress.last_update();
@@ -132,7 +139,7 @@ classdef CPeptideAlignRequantService < handle
             align_executor = CIMPXICAlignRequantExecutor(align_cfg);
 
             [pep_rtrange_map, align_report] = align_executor.buildAlignedRtRangeMap( ...
-                cfg.filtered_res_file_path, rawIdentManagers, base_pep_rtrange_map);
+                cfg.filtered_res_file_path, rawIdentManagers, base_pep_rtrange_map, base_groups_by_peptide);
 
             align_executor.writeAlignmentReport(align_report, cfg.alignment_report_path);
 
@@ -143,10 +150,10 @@ classdef CPeptideAlignRequantService < handle
             CLogger.info('Re-quantifying at peptide level (aligned)...');
             for i_pep = 1:length(msms_result.Peptides)
                 print_progress = print_progress.update_show(i_pep);
-                peptide_sequence = msms_result.Peptides(i_pep).peptide_sequence;
-                cell_prot_name_pos = obj.m_pepProtService.get_protein_name_pos(peptide_sequence);
+                cell_prot_name_pos = prot_name_pos_by_peptide{i_pep};
                 rawIdentManager = rawIdentManagers{i_pep};
-                block = proc_executor.requantifyPeptideBlock(cell_prot_name_pos, rawIdentManager, pep_rtrange_map);
+                block = proc_executor.requantifyPeptideBlock(...
+                    cell_prot_name_pos, rawIdentManager, pep_rtrange_map, base_groups_by_peptide{i_pep});
                 report = report.append_block(block);
             end
             print_progress.last_update();
