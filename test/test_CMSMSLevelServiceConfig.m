@@ -101,6 +101,43 @@ testCase.verifyEqual(cfg.stability_options.relative_threshold, cfg.result_filter
 end
 
 
+function testNResamplesDefaultsParallelOff(testCase)
+% Verify stability parallel switch defaults to off when omitted.
+% Inputs:
+%    testCase (matlab.unittest.TestCase)
+%        Test case context.
+% Outputs:
+%    (none)
+
+param_map = makeBaseParamMap();
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_N_RESAMPLES) = '5';
+
+cfg = CMSMSLevelServiceConfig.fromParamMap(param_map);
+
+testCase.verifyTrue(isfield(cfg, 'stability_options'));
+testCase.verifyFalse(cfg.stability_options.use_parallel);
+end
+
+
+function testNResamplesCanEnableParallel(testCase)
+% Verify stability parallel switch can be enabled from param map.
+% Inputs:
+%    testCase (matlab.unittest.TestCase)
+%        Test case context.
+% Outputs:
+%    (none)
+
+param_map = makeBaseParamMap();
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_N_RESAMPLES) = '5';
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_STABILITY_PARALLEL_ON) = '1';
+
+cfg = CMSMSLevelServiceConfig.fromParamMap(param_map);
+
+testCase.verifyTrue(isfield(cfg, 'stability_options'));
+testCase.verifyTrue(cfg.stability_options.use_parallel);
+end
+
+
 function testInvalidPeptideMinLengthThrowsError(testCase)
 % Verify non-integer peptide_min_length is rejected.
 % Inputs:

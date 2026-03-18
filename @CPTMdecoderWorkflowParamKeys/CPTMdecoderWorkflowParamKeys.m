@@ -30,6 +30,7 @@ classdef CPTMdecoderWorkflowParamKeys
         PARAM_RESULT_FILTER_THRESHOLD = 'result_filter_threshold'
         PARAM_N_RESAMPLES = 'n_resamples'
         PARAM_RANDOM_SEED = 'random_seed'
+        PARAM_STABILITY_PARALLEL_ON = 'stability_parallel_on'
         PARAM_ENZYME_NAME = 'enzyme_name'
         PARAM_ENZYME_LIMIT_C_TERM_POSSIBLE_MOD = 'enzyme_limit_C_term_possible_mod'
         PARAM_OUTPUT_DIR_PATH = 'output_dir_path'

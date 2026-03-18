@@ -59,7 +59,6 @@ classdef CMSMSLevelService < handle
             
             cMgfDatasetIO = CMgfDatasetIO(cfg.spec_dir_path);
             pepProtService = CPepProtService(cfg.fasta_file_path, cfg.regular_express, cfg.filtered_res_file_path);
-            cMsFileMapper = CMsFileMapper(cfg.spec_dir_path); %#ok<NASGU>
             
             fin = fopen(cfg.pep_spec_file_path,'r');
             if 0>=fin
@@ -259,9 +258,12 @@ classdef CMSMSLevelService < handle
                 stability_options = cfg.stability_options;
                 has_stability_options = true;
             end
+            stage2_use_parallel = false;
+            if has_stability_options && isfield(stability_options, 'use_parallel')
+                stage2_use_parallel = logical(stability_options.use_parallel);
+            end
             
             noise_model = [];
-            stage2_total_candidates = 0;
             stage2_success_count = 0;
             stage2_failed_count = 0;
             
@@ -299,15 +301,21 @@ classdef CMSMSLevelService < handle
                     'case_penalty_intens', cfg.case_penalty_intens, ...
                     'grid_penalty_intens', cfg.grid_penalty_intens, ...
                     'case_OLS_intens_weight', cfg.case_OLS_intens_weight);
-                
-                for idxRecord = 1:numel(stage1_records)
+
+                stage2_candidate_mask = arrayfun(@(rec) rec.bSuccess && ~rec.isShortcut, stage1_records);
+                stage2_candidate_indices = find(stage2_candidate_mask);
+                stage2_total_candidates = numel(stage2_candidate_indices);
+
+                stage2_job_template = struct( ...
+                    'idxRecord', 0, ...
+                    'dataset_name', '', ...
+                    'spec_name', '', ...
+                    'cache', struct());
+                stage2_job_count = 0;
+                stage2_jobs = repmat(stage2_job_template, stage2_total_candidates, 1);
+                for idxCandidate = 1:stage2_total_candidates
+                    idxRecord = stage2_candidate_indices(idxCandidate);
                     rec = stage1_records(idxRecord);
-                    if ~(rec.bSuccess && ~rec.isShortcut)
-                        continue;
-                    end
-                    
-                    stage2_total_candidates = stage2_total_candidates + 1;
-                    
                     cache = rec.stability_cache;
                     if isempty(cache.vNonRedunTheoryIonMz) || isempty(cache.matchedExpPeaks) || isempty(cache.massArrangement) || isempty(cache.abundance)
                         stage2_failed_count = stage2_failed_count + 1;
@@ -315,31 +323,66 @@ classdef CMSMSLevelService < handle
                             rec.dataset_name, rec.spec_name);
                         continue;
                     end
-                    
-                    try
-                        stability_diag = CMS2QuantSolver.estimateStability( ...
-                            cache.vNonRedunTheoryIonMz, ...
-                            cache.matchedExpPeaks, ...
-                            cache.massArrangement, ...
-                            solver_cfg, ...
-                            cache.abundance, ...
-                            cache.fittedMatchedPeakIntensities, ...
-                            noise_model, ...
-                            stability_options);
-                        
+
+                    stage2_job_count = stage2_job_count + 1;
+                    stage2_jobs(stage2_job_count) = struct( ...
+                        'idxRecord', idxRecord, ...
+                        'dataset_name', rec.dataset_name, ...
+                        'spec_name', rec.spec_name, ...
+                        'cache', cache);
+                end
+                if stage2_job_count == 0
+                    stage2_jobs = stage2_jobs([]);
+                else
+                    stage2_jobs = stage2_jobs(1:stage2_job_count);
+                end
+
+                can_use_parfor = stage2_use_parallel && obj.canUseStabilityParfor();
+                if stage2_use_parallel && ~can_use_parfor
+                    CLogger.warn(['[CMSMSLevelService:run] Stage-2 parallel is requested but unavailable; ', ...
+                        'fallback to serial execution.']);
+                end
+
+                stage2_result_template = struct( ...
+                    'ok', false, ...
+                    'idxRecord', 0, ...
+                    'stability_diag', struct(), ...
+                    'dataset_name', '', ...
+                    'spec_name', '', ...
+                    'error_identifier', '', ...
+                    'error_message', '');
+                stage2_results = repmat(stage2_result_template, numel(stage2_jobs), 1);
+
+                if can_use_parfor
+                    parfor idxJob = 1:numel(stage2_jobs)
+                        stage2_results(idxJob) = CMSMSLevelService.runStage2SingleJob( ...
+                            stage2_jobs(idxJob), solver_cfg, noise_model, stability_options);
+                    end
+                else
+                    for idxJob = 1:numel(stage2_jobs)
+                        stage2_results(idxJob) = CMSMSLevelService.runStage2SingleJob( ...
+                            stage2_jobs(idxJob), solver_cfg, noise_model, stability_options);
+                    end
+                end
+
+                for idxResult = 1:numel(stage2_results)
+                    result_item = stage2_results(idxResult);
+                    if result_item.ok
+                        rec = stage1_records(result_item.idxRecord);
+                        stability_diag = result_item.stability_diag;
                         rec.solver_diag.jaccard_stability = stability_diag.jaccard_stability;
                         rec.solver_diag.support_frequency = stability_diag.support_frequency;
                         rec.solver_diag.abundance_mad = stability_diag.abundance_mad;
                         rec.solver_diag.reported_imp_indices = stability_diag.reported_imp_indices;
                         rec.solver_diag.num_successful_resamples = stability_diag.num_successful_resamples;
                         rec.stability_cache.solver_diag = rec.solver_diag;
-                        
-                        stage1_records(idxRecord) = rec;
+                        stage1_records(result_item.idxRecord) = rec;
                         stage2_success_count = stage2_success_count + 1;
-                    catch ME
+                    else
                         stage2_failed_count = stage2_failed_count + 1;
                         CLogger.warn('[CMSMSLevelService:run] estimateStability failed for %s/%s: [%s] %s', ...
-                            rec.dataset_name, rec.spec_name, ME.identifier, ME.message);
+                            result_item.dataset_name, result_item.spec_name, ...
+                            result_item.error_identifier, result_item.error_message);
                     end
                 end
 
@@ -452,6 +495,21 @@ classdef CMSMSLevelService < handle
         end
 
 
+        function can_use = canUseStabilityParfor(~)
+            % Check whether parfor can be used for Stage-2 stability execution.
+            % Outputs:
+            %   can_use (1 x 1 logical)
+            %       True when parallel toolbox is available.
+
+            can_use = false;
+            if ~license('test', 'Distrib_Computing_Toolbox')
+                return;
+            end
+
+            can_use = true;
+        end
+
+
         function appendFragmentInformation(obj, ionTypePosCharge, ionIntens, frageff)
             if isempty(frageff)
                 % Skip the fragment information of this spectrum if it is empty
@@ -484,5 +542,51 @@ classdef CMSMSLevelService < handle
             end
         end
         
+    end
+
+
+    methods (Static, Access = private)
+        function result_item = runStage2SingleJob(job, solver_cfg, noise_model, stability_options)
+            % Execute one Stage-2 stability task and return merge-ready result.
+            % Inputs:
+            %   job (1 x 1 struct)
+            %       Stage-2 input package.
+            %   solver_cfg (1 x 1 struct)
+            %       Solver configuration.
+            %   noise_model (1 x 1 struct)
+            %       Dataset-level noise model.
+            %   stability_options (1 x 1 struct)
+            %       Stability execution options.
+            % Outputs:
+            %   result_item (1 x 1 struct)
+            %       Merge-ready result with ok flag and diagnostics/error.
+
+            result_item = struct( ...
+                'ok', false, ...
+                'idxRecord', job.idxRecord, ...
+                'stability_diag', struct(), ...
+                'dataset_name', job.dataset_name, ...
+                'spec_name', job.spec_name, ...
+                'error_identifier', '', ...
+                'error_message', '');
+
+            cache = job.cache;
+            try
+                stability_diag = CMS2QuantSolver.estimateStability( ...
+                    cache.vNonRedunTheoryIonMz, ...
+                    cache.matchedExpPeaks, ...
+                    cache.massArrangement, ...
+                    solver_cfg, ...
+                    cache.abundance, ...
+                    cache.fittedMatchedPeakIntensities, ...
+                    noise_model, ...
+                    stability_options);
+                result_item.ok = true;
+                result_item.stability_diag = stability_diag;
+            catch ME
+                result_item.error_identifier = ME.identifier;
+                result_item.error_message = ME.message;
+            end
+        end
     end
 end

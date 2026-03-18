@@ -199,6 +199,92 @@ delete(cleanupPath);
 end
 
 
+function testRunParallelStage2MatchesSerial(testCase)
+% Verify Stage-2 parallel path produces the same output as serial path.
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
+
+projectRoot = fileparts(fileparts(mfilename('fullpath')));
+mockRoot = fullfile(projectRoot, 'test', 'mocks', 'service_orchestration');
+cleanupPath = setupServiceOrchestrationMocks(mockRoot);
+
+workDir = tempname;
+mkdir(workDir);
+cleanupWork = onCleanup(@() rmdir(workDir, 's')); %#ok<NASGU>
+
+pepSpecPath = fullfile(workDir, 'pep_spec.txt');
+writeLines(pepSpecPath, {
+    'PEPA'
+    'rawA	spec1'
+    'rawA	spec2'
+});
+
+cfgBase = struct( ...
+    'spec_dir_path', workDir, ...
+    'fasta_file_path', fullfile(workDir, 'dummy.fasta'), ...
+    'regular_express', '.*', ...
+    'filtered_res_file_path', '', ...
+    'pep_spec_file_path', pepSpecPath, ...
+    'output_dir_path', workDir, ...
+    'model', 1, ...
+    'method', 1, ...
+    'lambda', 0, ...
+    'ms1_tolerance', struct('value', 10, 'isppm', true), ...
+    'ms2_tolerance', 0.02, ...
+    'alpha', 0.2, ...
+    'result_filter_threshold', 0.01, ...
+    'ion_types', [1, 2], ...
+    'enzyme_name', 'Trypsin', ...
+    'enzyme_limits', [1, 0], ...
+    'min_peptide_length', 1, ...
+    'max_peptide_length', 40, ...
+    'max_mod_per_peptide', 5, ...
+    'case_penalty_intens', 'intens_sum', ...
+    'grid_penalty_intens', 'intens_sum', ...
+    'case_OLS_intens_weight', 'none');
+
+cfgSerial = cfgBase;
+cfgSerial.stability_options = struct( ...
+    'n_resamples', 3, ...
+    'random_seed', 123, ...
+    'use_parallel', false, ...
+    'relative_threshold', 0.01);
+
+serialOutDir = fullfile(workDir, 'serial');
+mkdir(serialOutDir);
+cfgSerial.output_dir_path = serialOutDir;
+svcSerial = CMSMSLevelService(cfgSerial);
+svcSerial.run();
+serialRes = CMS2ResultIO.read(fullfile(serialOutDir, 'report_msms.txt'));
+
+cfgParallel = cfgBase;
+cfgParallel.stability_options = struct( ...
+    'n_resamples', 3, ...
+    'random_seed', 123, ...
+    'use_parallel', true, ...
+    'relative_threshold', 0.01);
+
+parallelOutDir = fullfile(workDir, 'parallel');
+mkdir(parallelOutDir);
+cfgParallel.output_dir_path = parallelOutDir;
+svcParallel = CMSMSLevelService(cfgParallel);
+svcParallel.run();
+parallelRes = CMS2ResultIO.read(fullfile(parallelOutDir, 'report_msms.txt'));
+
+[serialJaccard, serialSupport, serialMad] = collectStabilityColumns(serialRes);
+[parallelJaccard, parallelSupport, parallelMad] = collectStabilityColumns(parallelRes);
+
+testCase.verifyEqual(parallelJaccard, serialJaccard, 'AbsTol', 0);
+testCase.verifyEqual(parallelSupport, serialSupport, 'AbsTol', 0);
+testCase.verifyEqual(parallelMad, serialMad, 'AbsTol', 0);
+
+clear svcSerial svcParallel serialRes parallelRes;
+delete(cleanupPath);
+end
+
+
 function testRunFiltersPeptidesByLength(testCase)
 % Verify run() filters peptides outside configured length range.
 % Input:
@@ -317,7 +403,12 @@ function clearClassesAndRestoreSharedLogger()
 % Output:
 %   (none)
 
-clear classes;
+clear CMgfDatasetIO
+clear CModificationRegistry
+clear CMS2QuantSolver
+clear CMS2SpectrumPipeline
+clear CMsFileMapper
+clear CPepProtService
 configureSharedTestLogger();
 end
 
@@ -335,5 +426,36 @@ end
 logPath = fullfile(outputDir, 'ptmdecoder_test.log');
 cfg = struct();
 cfg.file_path = logPath;
+CLogger.resetForTests();
 CLogger.configure(cfg);
+end
+
+
+function [allJaccard, allSupport, allMad] = collectStabilityColumns(res)
+% Collect stability-related columns from CMS2Result into dense vectors.
+% Input:
+%   res (CMS2Result)
+%       Parsed MSMS report object.
+% Output:
+%   allJaccard (N x 1 double)
+%       Per-spectrum jaccard values.
+%   allSupport (M x 1 double)
+%       Per-peptidoform support frequency values.
+%   allMad (M x 1 double)
+%       Per-peptidoform abundance MAD values.
+
+allJaccard = [];
+allSupport = [];
+allMad = [];
+for idxPep = 1:numel(res.Peptides)
+    specs = res.Peptides(idxPep).spectrum_list;
+    for idxSpec = 1:numel(specs)
+        allJaccard(end + 1, 1) = specs(idxSpec).jaccard_stability; %#ok<AGROW>
+        nImp = specs(idxSpec).peptidoform_num;
+        if nImp > 0
+            allSupport = [allSupport; specs(idxSpec).peptidoform_list_support_freq(1:nImp)']; %#ok<AGROW>
+            allMad = [allMad; specs(idxSpec).peptidoform_list_abundance_mad(1:nImp)']; %#ok<AGROW>
+        end
+    end
+end
 end
