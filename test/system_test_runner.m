@@ -13,6 +13,7 @@ function system_test_runner()
     testDataDir = fullfile(currentDir, 'data');
     msms_pep_site_paramFile = fullfile(testDataDir, 'msms_pep_site.param');
     site_from_file_paramFile = fullfile(testDataDir, 'site_from_file.param');
+    site_dataset_from_file_paramFile = fullfile(testDataDir, 'site_dataset_from_file.param');
     pep_requant_paramFile = fullfile(testDataDir, 'requant_pep_site.param');
     align_requant_paramFile = fullfile(testDataDir, 'align_requant.param');
     align_requant_merge_on_paramFile = fullfile(testDataDir, 'align_requant_merge_on.param');
@@ -45,6 +46,9 @@ function system_test_runner()
     
     fprintf('Running site-from-file procedure...\n');
     main(site_from_file_paramFile); 
+
+    fprintf('Running site-level-dataset matrix procedure...\n');
+    main(site_dataset_from_file_paramFile);
 
     fprintf('Running pairwise merging procedure...\n');
     main(pairwise_paramFile);

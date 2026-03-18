@@ -68,6 +68,7 @@ classdef CPTMdecoderWorkflowRunner < handle
             executors(CPTMdecoderWorkflowConfig.STAGE_NORM_PEPTIDE_QUANT) = @(stage) obj.executeNormPeptideQuantStage(stage);
             executors(CPTMdecoderWorkflowConfig.STAGE_NORM_PEPTIDE_REQUANT) = @(stage) obj.executeNormPeptideRequantStage(stage);
             executors(CPTMdecoderWorkflowConfig.STAGE_SITE_LEVEL) = @(stage) obj.executeSiteLevelStage(stage);
+            executors(CPTMdecoderWorkflowConfig.STAGE_SITE_LEVEL_DATASET) = @(stage) obj.executeSiteLevelDatasetStage(stage);
             executors(CPTMdecoderWorkflowConfig.STAGE_MERGE_TO_PAIR_LEVEL) = @(stage) obj.executeMergeToPairStage(stage);
             executors(CPTMdecoderWorkflowConfig.STAGE_MERGE_PAIRS_LEVEL) = @(stage) obj.executeMergePairsStage(stage);
         end
@@ -187,6 +188,22 @@ classdef CPTMdecoderWorkflowRunner < handle
                     'Site-level stage config is required.');
             end
             process = CSiteLevelSummary(site_cfg);
+            process.run();
+        end
+
+        function executeSiteLevelDatasetStage(~, stage)
+            % Execute site-level dataset matrix summary stage.
+            % Input:
+            %   stage (struct)
+            %       stage struct
+            %       - stage.name should be STAGE_SITE_LEVEL_DATASET
+            %       - stage.config is site-level dataset summary config struct
+            site_dataset_cfg = stage.config;
+            if isempty(site_dataset_cfg)
+                error('CPTMdecoderWorkflowRunner:MissingSiteDatasetConfig', ...
+                    'Site-level dataset stage config is required.');
+            end
+            process = CSiteLevelDatasetSummary(site_dataset_cfg);
             process.run();
         end
 

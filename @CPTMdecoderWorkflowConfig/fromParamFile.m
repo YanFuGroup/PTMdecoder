@@ -58,6 +58,12 @@ if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowParamKey
         CPTMdecoderWorkflowConfig.STAGE_SITE_LEVEL, site_cfg, true);
 end
 
+if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_SITE_LEVEL_DATASET_ON)
+    site_dataset_cfg = CSiteLevelDatasetPipelineConfig.fromParamMap(task_param_map);
+    cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
+        CPTMdecoderWorkflowConfig.STAGE_SITE_LEVEL_DATASET, site_dataset_cfg, true);
+end
+
 if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MERGE_TO_PAIR_LEVEL_ON)
     merge_to_pair_cfgs = CMergeEachPairConfig.fromParamMap(task_param_map);
     cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
