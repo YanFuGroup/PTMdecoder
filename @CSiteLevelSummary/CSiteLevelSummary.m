@@ -7,10 +7,17 @@ classdef CSiteLevelSummary
         m_output_path_interested;   % Output path for interested sites
         m_output_path_uninterested; % Output path for uninterested sites
 
+        m_protein_abbr_input_mode;               % Protein abbreviation source mode: manual | file
+
         % Strings
         m_protein_name_abbr;    % Protein name and correspongding abbreviation (map)
         m_mod_name_abbr;        % Modification name and correspongding abbreviation (map)
         m_ignore_strings;       % Ignore strings, using for ignore heavy label modification strings in SILAC data
+
+        % Mapping strategy config
+        m_protein_abbr_file_path;                % Protein-abbreviation TSV file path (file mode)
+        m_protein_abbr_file_col_protein_name;    % Protein-name column in TSV header (file mode)
+        m_protein_abbr_file_col_abbr_name;       % Abbreviation column in TSV header (file mode)
 
         % Format
         m_column_idxs;          % Column indices of interested sites
@@ -34,6 +41,14 @@ classdef CSiteLevelSummary
             %           output path for interested-site summary
             %       - output_unintere_path (1 x 1 char/string)
             %           output path for uninterested peptide records
+            %       - protein_abbr_input_mode (1 x 1 char/string)
+            %           protein abbreviation source mode (manual | file)
+            %       - protein_abbr_file_path (1 x 1 char/string)
+            %           protein-abbreviation TSV path (used in file mode)
+            %       - protein_abbr_file_col_protein_name (1 x 1 char/string)
+            %           protein-name column in TSV header (used in file mode)
+            %       - protein_abbr_file_col_abbr_name (1 x 1 char/string)
+            %           abbreviation column in TSV header (used in file mode)
             %       - protein_name_abbr (containers.Map)
             %           mapping: full protein name -> abbreviation
             %       - mod_name_abbr (containers.Map)
@@ -56,6 +71,10 @@ classdef CSiteLevelSummary
             obj.m_input_path = config.input_path;
             obj.m_output_path_interested = config.output_intere_path;
             obj.m_output_path_uninterested = config.output_unintere_path;
+            obj.m_protein_abbr_input_mode = config.protein_abbr_input_mode;
+            obj.m_protein_abbr_file_path = config.protein_abbr_file_path;
+            obj.m_protein_abbr_file_col_protein_name = config.protein_abbr_file_col_protein_name;
+            obj.m_protein_abbr_file_col_abbr_name = config.protein_abbr_file_col_abbr_name;
             obj.m_protein_name_abbr = config.protein_name_abbr;
             obj.m_mod_name_abbr = config.mod_name_abbr;
             obj.m_ignore_strings = config.ignore_strings;

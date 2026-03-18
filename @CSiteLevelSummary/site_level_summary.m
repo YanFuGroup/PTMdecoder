@@ -39,15 +39,23 @@ result_output_length = 0;
 result_uninterested_string = cell(buff_length, 1);
 result_uninterested_length = 0;
 
+total_protein_lines = 0;
+matched_protein_lines = 0;
+unmatched_protein_lines = 0;
+uninterested_peptide_lines = 0;
+
 % open files and check
 fin = fopen(obj.m_input_path);
 if fin < 0
     error(['Can not open the peptide level result file: "', obj.m_input_path, '"']);
 end
 
+CLogger.info(['[CSiteLevelSummary:site_level_summary] Start summarizing. ', ...
+    'mode=%s, input=%s'], obj.m_protein_abbr_input_mode, obj.m_input_path);
+
 % read files and gather the specified sequence
 fgetl(fin);
-abbr_protein = [];
+selected_abbr_protein = [];
 fgetl(fin); % skip the first two lines, they are header lines
 while ~feof(fin)
     strline = fgetl(fin);
@@ -58,33 +66,36 @@ while ~feof(fin)
     % read one line and process
     if ~isequal(strline(1),'*') && ~isequal(strline(1),'@')
         % the protein lines
-        abbr_protein = [];
-        start_pos_protein = -1;
+        total_protein_lines = total_protein_lines + 1;
+        selected_abbr_protein = [];
+        selected_start_pos_protein = -1;
         segments = split(strline, ';');
         for i = 1:length(segments)-1
             % Split the part into key and number
             keyValue = split(segments{i}, ',');
             % Extract the key and convert it to a string
             if isKey(obj.m_protein_name_abbr, char(keyValue(1)))
-                % find the protein in map, record the abbreviation and
-                % the position on protein.
-                abbr_protein = obj.m_protein_name_abbr(char(keyValue(1)));
-                start_pos_protein = str2double(char(keyValue(2)));
+                % Keep legacy strategy: use the first resolvable hit.
+                selected_abbr_protein = obj.m_protein_name_abbr(char(keyValue(1)));
+                selected_start_pos_protein = str2double(char(keyValue(2)));
                 break;
             end
         end
         % no target protein, record as the uninterested protein
-        if isempty(abbr_protein)
+        if isempty(selected_abbr_protein)
+            unmatched_protein_lines = unmatched_protein_lines + 1;
             % record the uninterested string
             result_uninterested_length = result_uninterested_length + 1;
             if result_uninterested_length > length(result_uninterested_string)
                 result_uninterested_string{result_uninterested_length+buff_length} = [];
             end
             result_uninterested_string{result_uninterested_length} = strline;
+        else
+            matched_protein_lines = matched_protein_lines + 1;
         end
     elseif isequal(strline(1), '*')
         % check if the protein is found
-        if ~isempty(abbr_protein)
+        if ~isempty(selected_abbr_protein)
             % the IMP and quantification lines
             segments = split(strline);
             
@@ -139,17 +150,17 @@ while ~feof(fin)
                     else
                         mod_specificity{i} = 'C-term';
                     end
-                    site_name = [abbr_protein, mod_specificity{i}, '_', abbr_mod];
+                    site_name = [selected_abbr_protein, mod_specificity{i}, '_', abbr_mod];
                 else
                     % calculate the position of site on the protein
-                    if start_pos_protein < 0
+                    if selected_start_pos_protein < 0
                         error(['The start position on protein of peptide "', ...
                             modified_peptides, '" is out of range.']);
                     end
-                    mod_prot_pos(i) = start_pos_protein + positions_seq(i) - 1;
+                    mod_prot_pos(i) = selected_start_pos_protein + positions_seq(i) - 1;
                     % Minus one because of the sequence in database start
                     %   with M
-                    site_name = [abbr_protein, mod_specificity{i} , num2str(mod_prot_pos(i)-1), abbr_mod];
+                    site_name = [selected_abbr_protein, mod_specificity{i} , num2str(mod_prot_pos(i)-1), abbr_mod];
                 end
 
                 % append the line to the corresbonding result set
@@ -174,6 +185,7 @@ while ~feof(fin)
             end
         else
             % if the protein is not interested, then record it in cell
+            uninterested_peptide_lines = uninterested_peptide_lines + 1;
             result_uninterested_length = result_uninterested_length + 1;
             if result_uninterested_length > length(result_uninterested_string)
                 result_uninterested_string{result_uninterested_length+buff_length} = [];
@@ -193,5 +205,18 @@ obj.m_result_output_index = result_output_index;
 obj.m_result_output_string = result_output_string;
 obj.m_result_output_sum = result_output_sum;
 obj.m_result_uninterested_string = result_uninterested_string;
+
+if unmatched_protein_lines > 0
+    CLogger.warn(['[CSiteLevelSummary:site_level_summary] Unmatched protein lines found: %d ', ...
+        '(mapped=%d, total=%d).'], unmatched_protein_lines, matched_protein_lines, total_protein_lines);
+end
+
+if uninterested_peptide_lines > 0
+    CLogger.warn('[CSiteLevelSummary:site_level_summary] Uninterested peptide lines recorded: %d.', uninterested_peptide_lines);
+end
+
+CLogger.info(['[CSiteLevelSummary:site_level_summary] Done. total_protein_lines=%d, ', ...
+    'matched_protein_lines=%d, interested_sites=%d, uninterested_records=%d.'], ...
+    total_protein_lines, matched_protein_lines, result_output_length, result_uninterested_length);
 
 end

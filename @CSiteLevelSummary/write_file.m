@@ -5,6 +5,9 @@ function write_file(obj)
 %       site-level summarizer instance
 
 % Interested site-level
+[interested_dir, ~, ~] = fileparts(obj.m_output_path_interested);
+CPathResolver.ensureDir(interested_dir);
+
 keys_interested = keys(obj.m_result_output_index);
 fout = fopen(obj.m_output_path_interested, 'w');
 if fout < 0
@@ -18,6 +21,9 @@ end
 fclose(fout);
 
 % Uninterested site-level
+[uninterested_dir, ~, ~] = fileparts(obj.m_output_path_uninterested);
+CPathResolver.ensureDir(uninterested_dir);
+
 fout = fopen(obj.m_output_path_uninterested, 'w');
 if fout < 0
     error(['The file "', obj.m_output_path_uninterested, '" is not available.']);
