@@ -352,16 +352,44 @@ classdef CMSMSLevelService < handle
                     'error_identifier', '', ...
                     'error_message', '');
                 stage2_results = repmat(stage2_result_template, numel(stage2_jobs), 1);
+                stage2_total_jobs = numel(stage2_jobs);
+                stage2_progress_step = CMSMSLevelService.computeStage2ProgressStep(stage2_total_jobs);
+                stage2_next_log_at = stage2_progress_step;
+
+                stage2_mode = 'serial';
+                if can_use_parfor
+                    stage2_mode = 'parallel';
+                end
+                CLogger.info('[CMSMSLevelService:run] Stage-2 stability started. candidates=%d, jobs=%d, mode=%s.', ...
+                    stage2_total_candidates, stage2_total_jobs, stage2_mode);
 
                 if can_use_parfor
-                    parfor idxJob = 1:numel(stage2_jobs)
-                        stage2_results(idxJob) = CMSMSLevelService.runStage2SingleJob( ...
-                            stage2_jobs(idxJob), solver_cfg, noise_model, stability_options);
+                    stage2_batch_size = CMSMSLevelService.computeStage2ParallelBatchSize(stage2_total_jobs, stage2_progress_step);
+                    for idxBatchStart = 1:stage2_batch_size:stage2_total_jobs
+                        idxBatchEnd = min(stage2_total_jobs, idxBatchStart + stage2_batch_size - 1);
+                        parfor idxJob = idxBatchStart:idxBatchEnd
+                            stage2_results(idxJob) = CMSMSLevelService.runStage2SingleJob( ...
+                                stage2_jobs(idxJob), solver_cfg, noise_model, stability_options);
+                        end
+
+                        if idxBatchEnd >= stage2_next_log_at || idxBatchEnd == stage2_total_jobs
+                            CLogger.progress('Stage-2 stability', idxBatchEnd, stage2_total_jobs);
+                            while stage2_next_log_at <= idxBatchEnd
+                                stage2_next_log_at = stage2_next_log_at + stage2_progress_step;
+                            end
+                        end
                     end
                 else
-                    for idxJob = 1:numel(stage2_jobs)
+                    for idxJob = 1:stage2_total_jobs
                         stage2_results(idxJob) = CMSMSLevelService.runStage2SingleJob( ...
                             stage2_jobs(idxJob), solver_cfg, noise_model, stability_options);
+
+                        if idxJob >= stage2_next_log_at || idxJob == stage2_total_jobs
+                            CLogger.progress('Stage-2 stability', idxJob, stage2_total_jobs);
+                            while stage2_next_log_at <= idxJob
+                                stage2_next_log_at = stage2_next_log_at + stage2_progress_step;
+                            end
+                        end
                     end
                 end
 
@@ -546,6 +574,44 @@ classdef CMSMSLevelService < handle
 
 
     methods (Static, Access = private)
+        function progress_step = computeStage2ProgressStep(total_jobs)
+            % Compute a stable Stage-2 progress log interval.
+            % Inputs:
+            %   total_jobs (1 x 1 double)
+            %       Number of Stage-2 jobs.
+            % Outputs:
+            %   progress_step (1 x 1 double)
+            %       Progress log interval in job count.
+
+            if total_jobs <= 0
+                progress_step = 1;
+                return;
+            end
+
+            progress_step = max(20, ceil(total_jobs * 0.05));
+        end
+
+
+        function batch_size = computeStage2ParallelBatchSize(total_jobs, progress_step)
+            % Compute Stage-2 parallel batch size for progress-safe logging.
+            % Inputs:
+            %   total_jobs (1 x 1 double)
+            %       Number of Stage-2 jobs.
+            %   progress_step (1 x 1 double)
+            %       Progress log interval in job count.
+            % Outputs:
+            %   batch_size (1 x 1 double)
+            %       Number of jobs in each parfor submission batch.
+
+            if total_jobs <= 0
+                batch_size = 1;
+                return;
+            end
+
+            batch_size = min(total_jobs, max(progress_step, 32));
+        end
+
+
         function result_item = runStage2SingleJob(job, solver_cfg, noise_model, stability_options)
             % Execute one Stage-2 stability task and return merge-ready result.
             % Inputs:

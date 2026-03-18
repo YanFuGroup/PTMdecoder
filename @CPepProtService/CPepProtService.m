@@ -17,10 +17,15 @@ classdef CPepProtService
             %       Regular expression for FASTA parsing
             %   filtered_res_file_path (1 x 1 char/string)
             %       Filtered result file path (for peptide->protein mapping)
+
+            CLogger.info('Initializing CPepProtService with FASTA file: %s and filtered result file: %s', fastaFilePath, filtered_res_file_path);
+
             reader = CFastaReader(fastaFilePath, regularExp);
             obj.m_mapProt = reader.read();
             
             obj.m_pep_prot_mapper = CPeptideProteinMap(filtered_res_file_path);
+
+            CLogger.info('CPepProtService initialized successfully.');
         end
 
         % Check whether it is the N-terminus or C-terminus of the protein
