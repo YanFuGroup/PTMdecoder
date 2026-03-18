@@ -32,6 +32,17 @@ peptide_line_count = 0;
 malformed_peptide_line_count = 0;
 invalid_auc_line_count = 0;
 uninterested_peptide_lines = 0;
+protein_name_regex_miss_count = 0;
+
+if ~isempty(obj.m_protein_name_extract_regex)
+    try
+        regexp('SANITY_CHECK', obj.m_protein_name_extract_regex, 'tokens', 'once');
+    catch me
+        error('CSiteLevelDatasetSummary:InvalidProteinNameRegex', ...
+            'Invalid protein name extraction regex "%s": %s', ...
+            obj.m_protein_name_extract_regex, me.message);
+    end
+end
 
 max_column_idx = max([obj.m_column_idxs.icol_seq, obj.m_column_idxs.icol_dataset, obj.m_column_idxs.icol_auc]);
 
@@ -125,7 +136,7 @@ while ~feof(fin)
                 end
                 mod_prot_pos = selected_start_pos_protein + positions_seq(i_mod) - 1;
                 % Main site name format: [protein abbreviation] [modification specificity][modification position][modification abbreviation]
-                site_name = [selected_abbr_protein, mod_specificity, num2str(mod_prot_pos - 1), abbr_mod];
+                site_name = [selected_abbr_protein, ' ', mod_specificity, num2str(mod_prot_pos - 1), abbr_mod];
             end
 
             if isKey(site_dataset_sum, site_name)
@@ -154,6 +165,16 @@ while ~feof(fin)
                 continue;
             end
             protein_name = strtrim(key_value{1});
+
+            if ~isempty(obj.m_protein_name_extract_regex)
+                token_match = regexp(protein_name, obj.m_protein_name_extract_regex, 'tokens', 'once');
+                if ~isempty(token_match)
+                    protein_name = strtrim(token_match{1});
+                else
+                    protein_name_regex_miss_count = protein_name_regex_miss_count + 1;
+                end
+            end
+
             if isKey(obj.m_protein_name_abbr, protein_name)
                 selected_abbr_protein = obj.m_protein_name_abbr(protein_name);
                 selected_start_pos_protein = str2double(strtrim(key_value{2}));
@@ -203,6 +224,11 @@ if unmatched_protein_lines > 0
     CLogger.warn(['[CSiteLevelDatasetSummary:site_level_dataset_summary] ', ...
         'Unmatched protein lines found: %d (mapped=%d, total=%d).'], ...
         unmatched_protein_lines, matched_protein_lines, total_protein_lines);
+end
+
+if protein_name_regex_miss_count > 0
+    CLogger.warn(['[CSiteLevelDatasetSummary:site_level_dataset_summary] ', ...
+        'Protein-name regex had no match in %d protein entries.'], protein_name_regex_miss_count);
 end
 
 CLogger.info(['[CSiteLevelDatasetSummary:site_level_dataset_summary] Done. ', ...

@@ -10,6 +10,7 @@ classdef CSiteLevelDatasetSummary
         m_protein_abbr_file_path             % Protein-abbreviation TSV path
         m_protein_abbr_file_col_protein_name % Protein-name column in TSV
         m_protein_abbr_file_col_abbr_name    % Abbreviation column in TSV
+        m_protein_name_extract_regex         % Regex for extracting protein key before map lookup
         m_protein_name_abbr                  % Protein full name -> abbreviation map
         m_mod_name_abbr                      % Modification full name -> abbreviation map
         m_ignore_strings                     % Strings to remove from modified peptide sequence
@@ -41,6 +42,7 @@ classdef CSiteLevelDatasetSummary
             obj.m_protein_abbr_file_path = config.protein_abbr_file_path;
             obj.m_protein_abbr_file_col_protein_name = config.protein_abbr_file_col_protein_name;
             obj.m_protein_abbr_file_col_abbr_name = config.protein_abbr_file_col_abbr_name;
+            obj.m_protein_name_extract_regex = config.protein_name_extract_regex;
             obj.m_protein_name_abbr = config.protein_name_abbr;
             obj.m_mod_name_abbr = config.mod_name_abbr;
             obj.m_ignore_strings = config.ignore_strings;

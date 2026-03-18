@@ -7,6 +7,7 @@ classdef CSiteLevelDatasetPipelineConfig
         protein_abbr_file_path               % Path of protein-abbreviation TSV file
         protein_abbr_file_col_protein_name   % Column name for protein name in TSV header
         protein_abbr_file_col_abbr_name      % Column name for abbreviation in TSV header
+        protein_name_extract_regex           % Regex pattern for extracting protein key before map lookup
         protein_name_abbr                    % containers.Map: protein full name -> abbreviation
         mod_name_abbr                        % containers.Map: modification full name -> abbreviation
         ignore_strings                       % 1 x M cell: strings ignored in modified peptide sequence
@@ -22,6 +23,7 @@ classdef CSiteLevelDatasetPipelineConfig
             %       - input_path, output_site_dataset_matrix_path
             %       - protein_abbr_file_path, protein_abbr_file_col_protein_name
             %       - protein_abbr_file_col_abbr_name
+            %       - protein_name_extract_regex
             %       - protein_name_abbr, mod_name_abbr
             %       - ignore_strings, column_idxs
             if nargin < 1
@@ -35,6 +37,7 @@ classdef CSiteLevelDatasetPipelineConfig
             obj.protein_abbr_file_path = cfg.protein_abbr_file_path;
             obj.protein_abbr_file_col_protein_name = cfg.protein_abbr_file_col_protein_name;
             obj.protein_abbr_file_col_abbr_name = cfg.protein_abbr_file_col_abbr_name;
+            obj.protein_name_extract_regex = cfg.protein_name_extract_regex;
             obj.protein_name_abbr = cfg.protein_name_abbr;
             obj.mod_name_abbr = cfg.mod_name_abbr;
             obj.ignore_strings = cfg.ignore_strings;
@@ -53,10 +56,15 @@ classdef CSiteLevelDatasetPipelineConfig
             if ~isfield(cfg, 'protein_abbr_file_path'); cfg.protein_abbr_file_path = ''; end
             if ~isfield(cfg, 'protein_abbr_file_col_protein_name'); cfg.protein_abbr_file_col_protein_name = ''; end
             if ~isfield(cfg, 'protein_abbr_file_col_abbr_name'); cfg.protein_abbr_file_col_abbr_name = ''; end
+            if ~isfield(cfg, 'protein_name_extract_regex'); cfg.protein_name_extract_regex = ''; end
             if ~isfield(cfg, 'protein_name_abbr') || isempty(cfg.protein_name_abbr); cfg.protein_name_abbr = containers.Map; end
             if ~isfield(cfg, 'mod_name_abbr') || isempty(cfg.mod_name_abbr); cfg.mod_name_abbr = containers.Map; end
             if ~isfield(cfg, 'ignore_strings') || isempty(cfg.ignore_strings); cfg.ignore_strings = {}; end
             if ~iscell(cfg.ignore_strings); cfg.ignore_strings = {cfg.ignore_strings}; end
+            if isstring(cfg.protein_name_extract_regex)
+                cfg.protein_name_extract_regex = char(cfg.protein_name_extract_regex);
+            end
+            cfg.protein_name_extract_regex = strtrim(cfg.protein_name_extract_regex);
             if ~isfield(cfg, 'column_idxs') || isempty(cfg.column_idxs)
                 cfg.column_idxs = struct('icol_seq', 2, 'icol_dataset', 4, 'icol_auc', 8);
             end

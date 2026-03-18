@@ -64,6 +64,7 @@ classdef CPTMdecoderWorkflowParamKeys
         PARAM_OUTPUT_INTERE_PATH = 'output_intere_path'
         PARAM_OUTPUT_UNINTERE_PATH = 'output_unintere_path'
         PARAM_OUTPUT_SITE_DATASET_MATRIX_PATH = 'output_site_dataset_matrix_path'
+        PARAM_SITE_LEVEL_DATASET_PROTEIN_NAME_REGEX = 'site_level_dataset_protein_name_regex'
         PARAM_SITE_LEVEL_PROTEIN_ABBR_INPUT_MODE = 'site_level_protein_abbr_input_mode'
         PARAM_SITE_LEVEL_PROTEIN_ABBR_FILE_PATH = 'site_level_protein_abbr_file_path'
         PARAM_SITE_LEVEL_PROTEIN_ABBR_FILE_COL_PROTEIN_NAME = 'site_level_protein_abbr_file_col_protein_name'
