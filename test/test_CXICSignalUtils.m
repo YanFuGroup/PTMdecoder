@@ -126,6 +126,49 @@ classdef test_CXICSignalUtils < matlab.unittest.TestCase
              
         end
 
+        function testGetSmoothedXicNoMatchedPeaks(testCase)
+            % Test XIC extraction when no peak falls in target isotope windows
+            start_mz = 1000;
+            charge = 2;
+
+            ms1Data = containers.Map();
+            peaksData = containers.Map();
+            fileMapper = struct();
+            fileMapper.get_ms1_stem = @(x) x;
+
+            stemName = 'test_raw_nomatch';
+
+            % Cumulative peak count + 1 semantics for the 3rd column
+            ms1Index = [1, 10, 3, 0, 0; 
+                        2, 11, 5, 0, 0;
+                        3, 12, 7, 0, 0];
+
+            % All peaks are far away from the target window around start_mz
+            ms1Peaks = [900, 100; 900.5, 50;
+                        901, 200; 901.5, 80;
+                        902, 150; 902.5, 60];
+
+            ms1Data(stemName) = ms1Index;
+            peaksData(stemName) = ms1Peaks;
+
+            datasetIO = struct();
+            datasetIO.m_cMsFileMapper = fileMapper;
+            datasetIO.m_mapNameMS1Index = ms1Data;
+            datasetIO.m_mapNameMS1Peaks = peaksData;
+
+            low_mz = start_mz - 0.1;
+            high_mz = start_mz + 0.1;
+
+            [xic_rt, xic_intensity_smoothed, xic_intensity_raw] = CXICSignalUtils.get_smoothed_xic(...
+                datasetIO, 'test_raw_nomatch.mgf', low_mz, high_mz, charge);
+
+            testCase.verifyEqual(length(xic_rt), 3);
+            testCase.verifyEqual(length(xic_intensity_smoothed), 3);
+            testCase.verifyEqual(length(xic_intensity_raw), 3);
+            testCase.verifyEqual(xic_intensity_raw, zeros(3, 1));
+            testCase.verifyEqual(xic_intensity_smoothed, zeros(3, 1));
+        end
+
         function testGetFwhm(testCase)
             % Test FWHM calculation
             
