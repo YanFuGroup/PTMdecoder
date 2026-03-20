@@ -14,15 +14,7 @@ if isKey(obj.PeptideIndexMap, seq_key)
     existingIdx = double(obj.PeptideIndexMap(seq_key));
     obj.CurrentPeptideIdx = existingIdx;
     obj.CurrentSpectrumIdx = length(obj.Peptides(existingIdx).spectrum_list);
-    return;
-end
-
-existingIdx = find(strcmp({obj.Peptides.peptide_sequence}, seq_key), 1, 'first');
-if isempty(existingIdx)
-    obj.addPeptide(sequence);
 else
-    obj.PeptideIndexMap(seq_key) = int32(existingIdx);
-    obj.CurrentPeptideIdx = existingIdx;
-    obj.CurrentSpectrumIdx = length(obj.Peptides(existingIdx).spectrum_list);
+    obj.addPeptide(sequence);
 end
 end
