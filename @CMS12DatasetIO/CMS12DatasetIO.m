@@ -3,6 +3,9 @@ classdef CMS12DatasetIO<CDatasetIO
     properties(Access=public)
         m_mapNameMS1Index;  % Dictionary from file name to ms1_index
         m_mapNameMS1Peaks;  % Dictionary from file name to ms1_peaks
+        m_mapNameMS1SortedMz;    % Dictionary from file name to globally sorted MS1 m/z
+        m_mapNameMS1SortedInt;   % Dictionary from file name to intensity aligned to sorted m/z
+        m_mapNameMS1SortedScan;  % Dictionary from file name to scan row aligned to sorted m/z
         m_mapNameMS2Index;  % Dictionary from file name to ms2_index
         m_ms1_tolerance;    % the mass tolerance of MS1
         m_cMsFileMapper;    % Handle to CMsFileMapper for MGF<->MS1 mapping
@@ -18,6 +21,9 @@ classdef CMS12DatasetIO<CDatasetIO
             obj.m_strFoldname=strDatasetFoldname;
             obj.m_mapNameMS1Index = containers.Map();
             obj.m_mapNameMS1Peaks = containers.Map();
+            obj.m_mapNameMS1SortedMz = containers.Map();
+            obj.m_mapNameMS1SortedInt = containers.Map();
+            obj.m_mapNameMS1SortedScan = containers.Map();
             obj.m_mapNameMS2Index = containers.Map();
             obj.m_ms1_tolerance = ms1_tolerance;
             obj.m_cMsFileMapper = CMsFileMapper(strDatasetFoldname);

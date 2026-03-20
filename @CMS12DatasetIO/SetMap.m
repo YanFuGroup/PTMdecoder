@@ -33,6 +33,20 @@ for i_ds=1:length(ms1_dataset_files)
 
     obj.m_mapNameMS1Index(ms1_dataset_files(i_ds).name(1:end-4))=MS1_index;
     obj.m_mapNameMS1Peaks(ms1_dataset_files(i_ds).name(1:end-4))=MS1_peaks;
+
+    % Build sorted MS1 caches for fast m/z-window lookup.
+    scan_boundaries = [0; MS1_index(:, 3); inf];
+    peak_global_idx = (1:size(MS1_peaks, 1))';
+    scan_idx_all = discretize(peak_global_idx, scan_boundaries);
+
+    [sorted_mz, sort_order] = sort(MS1_peaks(:, 1), 'ascend');
+    sorted_int = MS1_peaks(sort_order, 2);
+    sorted_scan = scan_idx_all(sort_order);
+
+    obj.m_mapNameMS1SortedMz(ms1_dataset_files(i_ds).name(1:end-4)) = sorted_mz;
+    obj.m_mapNameMS1SortedInt(ms1_dataset_files(i_ds).name(1:end-4)) = sorted_int;
+    obj.m_mapNameMS1SortedScan(ms1_dataset_files(i_ds).name(1:end-4)) = sorted_scan;
+
     obj.m_mapNameMS2Index(ms2_dataset_files(i_ds).name(1:end-4))=MS2_index;
     % obj.m_mapNameMS2Peaks(ms2_dataset_files(i_ds).name(1:end-4))=MS2_peaks;
 end

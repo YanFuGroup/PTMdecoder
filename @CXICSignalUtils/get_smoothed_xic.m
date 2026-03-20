@@ -43,35 +43,61 @@ xic_intensity_raw = zeros(num_scans, num_iso);
 % -------------------------------------------------------------------------
 % 2. Pre-computation for Peak Extraction
 % -------------------------------------------------------------------------
-mz_vals = MS1_peaks(:, 1);
-intensity_vals = MS1_peaks(:, 2);
+if isstruct(ms12DatasetIO)
+    has_sorted_cache = isfield(ms12DatasetIO, 'm_mapNameMS1SortedMz') && ...
+        isfield(ms12DatasetIO, 'm_mapNameMS1SortedInt') && ...
+        isfield(ms12DatasetIO, 'm_mapNameMS1SortedScan') && ...
+        isKey(ms12DatasetIO.m_mapNameMS1SortedMz, ms1_stem) && ...
+        isKey(ms12DatasetIO.m_mapNameMS1SortedInt, ms1_stem) && ...
+        isKey(ms12DatasetIO.m_mapNameMS1SortedScan, ms1_stem);
+else
+    has_sorted_cache = isprop(ms12DatasetIO, 'm_mapNameMS1SortedMz') && ...
+        isprop(ms12DatasetIO, 'm_mapNameMS1SortedInt') && ...
+        isprop(ms12DatasetIO, 'm_mapNameMS1SortedScan') && ...
+        isKey(ms12DatasetIO.m_mapNameMS1SortedMz, ms1_stem) && ...
+        isKey(ms12DatasetIO.m_mapNameMS1SortedInt, ms1_stem) && ...
+        isKey(ms12DatasetIO.m_mapNameMS1SortedScan, ms1_stem);
+end
+
+if has_sorted_cache
+    sorted_mz = ms12DatasetIO.m_mapNameMS1SortedMz(ms1_stem);
+    sorted_intensity = ms12DatasetIO.m_mapNameMS1SortedInt(ms1_stem);
+    sorted_scan = ms12DatasetIO.m_mapNameMS1SortedScan(ms1_stem);
+else
+    mz_vals = MS1_peaks(:, 1);
+    intensity_vals = MS1_peaks(:, 2);
+    scan_boundaries = [0; MS1_index(:, 3); inf];
+    peak_global_idx = (1:size(MS1_peaks, 1))';
+    scan_idx_all = discretize(peak_global_idx, scan_boundaries);
+
+    [sorted_mz, sort_order] = sort(mz_vals, 'ascend');
+    sorted_intensity = intensity_vals(sort_order);
+    sorted_scan = scan_idx_all(sort_order);
+end
 
 % Pre-compute m/z extraction windows for all target isotopes
 mz_shift = reshape(isotope_num * (CConstant.unitdiff / selected_charge), 1, []);
 L_bounds = low_mz_bound + mz_shift;
 H_bounds = high_mz_bound + mz_shift;
 
-% Define scan boundaries based on cumulative peak numbers for fast binning
-scan_boundaries = [0; MS1_index(:, 3); inf]; 
-
 % -------------------------------------------------------------------------
 % 3. Vectorized XIC Extraction
 % -------------------------------------------------------------------------
-% Map identified m/z peaks to their respective scan numbers
+% Run one binary-search pass per isotope window on globally sorted m/z.
 for idx_iso = 1:num_iso
-    % Find global indices of peaks falling within the current isotope window
-    idxs_target_peaks = find(mz_vals > L_bounds(idx_iso) & mz_vals < H_bounds(idx_iso));
-    
-    if isempty(idxs_target_peaks)
+    idx_start = binary_search_first_gt(sorted_mz, L_bounds(idx_iso));
+    idx_end = binary_search_last_lt(sorted_mz, H_bounds(idx_iso));
+    if idx_start > idx_end
         continue;
     end
-    
-    % Vectorized binning: Map each peak index to its corresponding scan row
-    scan_idx = discretize(idxs_target_peaks, scan_boundaries);
-    
-    % Assign intensities. If multiple peaks fall in the same scan, 
-    % MATLAB implicitly retains the last evaluated intensity.
-    xic_intensity_raw(scan_idx, idx_iso) = intensity_vals(idxs_target_peaks);
+
+    target_scan = sorted_scan(idx_start:idx_end);
+    target_intensity = sorted_intensity(idx_start:idx_end);
+
+    % Keep the last hit in sorted-window order for each scan.
+    [scan_unique, idx_last] = unique(target_scan, 'last');
+    intensity_last = target_intensity(idx_last);
+    xic_intensity_raw(scan_unique, idx_iso) = intensity_last;
 end
 
 % -------------------------------------------------------------------------
@@ -122,4 +148,42 @@ xic_intensity_raw = xic_intensity_raw(:, 2);
 % Apply moving average smoothing
 xic_intensity_smoothed = smoothdata(xic_intensity_raw, 'movmean', 5);
 
+end
+
+
+function idx = binary_search_first_gt(sorted_vals, target)
+% Locate the first index with value strictly greater than target.
+
+low = 1;
+high = length(sorted_vals);
+idx = high + 1;
+
+while low <= high
+    mid = floor((low + high) / 2);
+    if sorted_vals(mid) > target
+        idx = mid;
+        high = mid - 1;
+    else
+        low = mid + 1;
+    end
+end
+end
+
+
+function idx = binary_search_last_lt(sorted_vals, target)
+% Locate the last index with value strictly smaller than target.
+
+low = 1;
+high = length(sorted_vals);
+idx = 0;
+
+while low <= high
+    mid = floor((low + high) / 2);
+    if sorted_vals(mid) < target
+        idx = mid;
+        low = mid + 1;
+    else
+        high = mid - 1;
+    end
+end
 end
