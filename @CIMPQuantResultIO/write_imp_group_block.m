@@ -1,9 +1,9 @@
-function write_imp_group_block(output_path, protein_name_pos, imp_records)
+function write_imp_group_block(fid, protein_name_pos, imp_records)
 % write_imp_group_block
 % Append IMP group block to an existing output file.
 % input:
-%   output_path (1 x 1 char/string)
-%       the path to the output file
+%   fid (1 x 1 double)
+%       file identifier for the output file
 %   protein_name_pos (N x 2 cell)
 %       cell array containing protein names and their start positions
 %   imp_records (struct array or CIMPQuantRecord array)
@@ -12,11 +12,6 @@ function write_imp_group_block(output_path, protein_name_pos, imp_records)
 if isempty(imp_records)
     return;
 end
-fid = fopen(output_path, 'a');
-if fid == -1
-    error(['Cannot open the the report file ', output_path]);
-end
 CIMPQuantResultIO.write_protein_start_position_line(fid, protein_name_pos);
 CIMPQuantResultIO.write_imp_records(fid, imp_records);
-fclose(fid);
 end

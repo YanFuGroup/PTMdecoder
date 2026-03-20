@@ -7,9 +7,18 @@ function write_protein_start_position_line(fid, prot_names_pos)
 %   prot_names_pos (N x 2 cell)
 %       cell array containing protein names and their start positions
 
-for idx_np = 1:size(prot_names_pos,1)
-    fprintf(fid, '%s,%d;', prot_names_pos{idx_np,1}, ...
-        prot_names_pos{idx_np,2});
+if isempty(prot_names_pos)
+    fprintf(fid, '\n');
+    return;
 end
-fprintf(fid,'\n');
+
+% for idx_np = 1:size(prot_names_pos,1)
+%     fprintf(fid, '%s,%d;', prot_names_pos{idx_np,1}, ...
+%         prot_names_pos{idx_np,2});
+% end
+% fprintf(fid,'\n');
+
+prot_names_pos_T = prot_names_pos';
+str = sprintf('%s,%d;', prot_names_pos_T{:});
+fprintf(fid, '%s\n', str);
 end
