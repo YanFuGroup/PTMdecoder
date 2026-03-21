@@ -34,7 +34,9 @@ classdef CPTMdecoderWorkflowRunner < handle
                     CLogger.info('Stage end: %s (failed)', stage.name);
                     CLogger.error(ME, 'Stage failed: %s (%s): %s', stage.name, ME.identifier, ME.message);
                 end
+                CLogger.flush();
             end
+            CLogger.flush();
         end
     end
 
