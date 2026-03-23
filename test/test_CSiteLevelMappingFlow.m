@@ -95,7 +95,7 @@ content_lines = {
     'peptide-header'
     'xic-header'
     'sp|P1|desc,10;'
-    ['*', char(9), 'AK{Acetyl}', char(9), 'x', char(9), 'DS1', char(9), 'x', char(9), 'x', char(9), 'x', char(9), '100']
+    ['*', char(9), '_AK{Acetyl}_', char(9), 'x', char(9), 'DS1', char(9), 'x', char(9), 'x', char(9), 'x', char(9), '100']
 };
 writeTextFile(input_path, content_lines);
 
@@ -121,9 +121,9 @@ summary_obj = CSiteLevelDatasetSummary(cfg);
 summary_obj = summary_obj.site_level_dataset_summary();
 
 site_keys = keys(summary_obj.m_site_dataset_sum);
-testCase.verifyTrue(any(strcmp(site_keys, 'H1 K9ac')));
+testCase.verifyTrue(any(strcmp(site_keys, 'H1 K11ac')));
 
-dataset_sum_map = summary_obj.m_site_dataset_sum('H1 K9ac');
+dataset_sum_map = summary_obj.m_site_dataset_sum('H1 K11ac');
 testCase.verifyTrue(isKey(dataset_sum_map, 'DS1'));
 testCase.verifyEqual(dataset_sum_map('DS1'), 100);
 end
