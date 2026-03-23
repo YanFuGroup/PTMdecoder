@@ -13,6 +13,7 @@ classdef CSiteLevelSummary
         m_protein_name_abbr;    % Protein name and correspongding abbreviation (map)
         m_mod_name_abbr;        % Modification name and correspongding abbreviation (map)
         m_ignore_strings;       % Ignore strings, using for ignore heavy label modification strings in SILAC data
+        m_site_position_count_initial_m; % logical: whether the first initial M is counted in site numbering
 
         % Mapping strategy config
         m_protein_abbr_file_path;                % Protein-abbreviation TSV file path (file mode)
@@ -78,6 +79,7 @@ classdef CSiteLevelSummary
             obj.m_protein_name_abbr = config.protein_name_abbr;
             obj.m_mod_name_abbr = config.mod_name_abbr;
             obj.m_ignore_strings = config.ignore_strings;
+            obj.m_site_position_count_initial_m = config.site_position_count_initial_m;
             obj.m_column_idxs = config.column_idxs;
         end
         

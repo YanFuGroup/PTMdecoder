@@ -135,8 +135,13 @@ while ~feof(fin)
                         modified_peptides, '" is out of range.']);
                 end
                 mod_prot_pos = selected_start_pos_protein + positions_seq(i_mod) - 1;
-                % Main site name format: [protein abbreviation] [modification specificity][1-based modification position][modification abbreviation]
-                site_name = [selected_abbr_protein, ' ', mod_specificity, num2str(mod_prot_pos), abbr_mod];
+                if obj.m_site_position_count_initial_m
+                    site_pos = mod_prot_pos;
+                else
+                    site_pos = mod_prot_pos - 1;
+                end
+                % Main site name format: [protein abbreviation] [modification specificity][modification position][modification abbreviation]
+                site_name = [selected_abbr_protein, ' ', mod_specificity, num2str(site_pos), abbr_mod];
             end
 
             if isKey(site_dataset_sum, site_name)

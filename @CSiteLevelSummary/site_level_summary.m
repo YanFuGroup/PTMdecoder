@@ -158,9 +158,12 @@ while ~feof(fin)
                             modified_peptides, '" is out of range.']);
                     end
                     mod_prot_pos(i) = selected_start_pos_protein + positions_seq(i) - 1;
-                    % Minus one because of the sequence in database start
-                    %   with M
-                    site_name = [selected_abbr_protein, mod_specificity{i} , num2str(mod_prot_pos(i)-1), abbr_mod];
+                    if obj.m_site_position_count_initial_m
+                        site_pos = mod_prot_pos(i);
+                    else
+                        site_pos = mod_prot_pos(i) - 1;
+                    end
+                    site_name = [selected_abbr_protein, mod_specificity{i} , num2str(site_pos), abbr_mod];
                 end
 
                 % append the line to the corresbonding result set

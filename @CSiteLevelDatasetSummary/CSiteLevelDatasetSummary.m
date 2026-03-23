@@ -14,6 +14,7 @@ classdef CSiteLevelDatasetSummary
         m_protein_name_abbr                  % Protein full name -> abbreviation map
         m_mod_name_abbr                      % Modification full name -> abbreviation map
         m_ignore_strings                     % Strings to remove from modified peptide sequence
+        m_site_position_count_initial_m      % logical: whether the first initial M is counted in site numbering
         m_column_idxs                        % Column index settings
 
         % Matrix result
@@ -46,6 +47,7 @@ classdef CSiteLevelDatasetSummary
             obj.m_protein_name_abbr = config.protein_name_abbr;
             obj.m_mod_name_abbr = config.mod_name_abbr;
             obj.m_ignore_strings = config.ignore_strings;
+            obj.m_site_position_count_initial_m = config.site_position_count_initial_m;
             obj.m_column_idxs = config.column_idxs;
 
             obj.m_site_names = {};

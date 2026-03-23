@@ -12,6 +12,7 @@ classdef CSiteLevelPipelineConfig
         protein_name_abbr    % containers.Map: protein full name -> abbreviation
         mod_name_abbr        % containers.Map: modification full name -> abbreviation
         ignore_strings       % 1 x M cell: strings ignored in modified peptide sequence
+        site_position_count_initial_m % logical: whether the first initial M is counted in site numbering
         column_idxs          % struct: column index settings (icol_seq, icol_auc)
     end
 
@@ -42,6 +43,7 @@ classdef CSiteLevelPipelineConfig
             obj.protein_name_abbr = cfg.protein_name_abbr;
             obj.mod_name_abbr = cfg.mod_name_abbr;
             obj.ignore_strings = cfg.ignore_strings;
+            obj.site_position_count_initial_m = cfg.site_position_count_initial_m;
             obj.column_idxs = cfg.column_idxs;
         end
     end
@@ -64,6 +66,9 @@ classdef CSiteLevelPipelineConfig
             if ~isfield(cfg, 'mod_name_abbr') || isempty(cfg.mod_name_abbr); cfg.mod_name_abbr = containers.Map; end
             if ~isfield(cfg, 'ignore_strings') || isempty(cfg.ignore_strings); cfg.ignore_strings = {}; end
             if ~iscell(cfg.ignore_strings); cfg.ignore_strings = {cfg.ignore_strings}; end
+            if ~isfield(cfg, 'site_position_count_initial_m') || isempty(cfg.site_position_count_initial_m)
+                cfg.site_position_count_initial_m = false;
+            end
             if ~isfield(cfg, 'column_idxs') || isempty(cfg.column_idxs)
                 cfg.column_idxs = struct('icol_seq', 2, 'icol_auc', 8);
             end
