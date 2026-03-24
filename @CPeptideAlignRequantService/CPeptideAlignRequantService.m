@@ -145,6 +145,10 @@ classdef CPeptideAlignRequantService < handle
                 cfg.filtered_res_file_path, rawIdentManagers, base_pep_rtrange_map, base_groups_by_peptide);
 
             align_executor.writeAlignmentReport(align_report, cfg.alignment_report_path);
+            
+            CIMPQuantStats.rt_sorted_stats('init');
+            stats_cleanup = onCleanup(@() CIMPQuantStats.rt_sorted_stats('flush', ...
+                CPathResolver.resolveFilePath(cfg.output_dir_path, 'align_requant_rt_sorted_stats.mat', '')));
 
             output_path = cfg.requant_output_path;
             report = CIMPQuantReport();
@@ -179,7 +183,8 @@ classdef CPeptideAlignRequantService < handle
             deps = struct( ...
                 'getProfilesFunc', @(dataset_name, spectrum_name) obj.getProfiles(dataset_name, spectrum_name), ...
                 'fixedModNameMass', {obj.m_fixedModNameMass}, ...
-                'variableModNameMass', {obj.m_variableModNameMass});
+                'variableModNameMass', {obj.m_variableModNameMass}, ...
+                'msmsStabilityFilter', obj.m_cfg.msms_stability_filter);
             rawIdentManager = CPeptideRawIdentAssembler.buildFromSpectrumList(spectrum_list, deps);
         end
 

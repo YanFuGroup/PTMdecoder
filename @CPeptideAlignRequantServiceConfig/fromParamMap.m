@@ -39,8 +39,10 @@ cfg.requant_output_path = CParamMapUtils.getOptional(task_param_map, ...
 
 cfg.align_strategy_obj = parseAlignStrategyFromMap(task_param_map);
 cfg.align_options = parseAlignOptionsFromMap(task_param_map);
+cfg.msms_stability_filter = CMsmsStabilityFilterConfig.fromParamMap(task_param_map, 'CPeptideAlignRequantServiceConfig');
 cfg = CPeptideAlignRequantServiceConfig.finalize(cfg);
 end
+
 
 function align_strategy_obj = parseAlignStrategyFromMap(task_param_map)
 % Build run-alignment strategy object from parameter map.
@@ -79,6 +81,7 @@ switch strategy_type
             'Unsupported align_strategy_type: %s (expected reference or pairwise).', strategy_type);
 end
 end
+
 
 function align_options = parseAlignOptionsFromMap(task_param_map)
 % Build align options struct from parameter map.

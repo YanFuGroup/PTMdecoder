@@ -31,4 +31,5 @@ cfg.output_dir_path = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWork
 cfg.checked_peptides_res_path = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_CHECKED_PEPTIDES_RES_PATH, 'checked peptides result path', 'CPeptideRequantServiceConfig');
 cfg.msms_res_path = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MSMS_RES_PATH, 'MSMS result path', 'CPeptideRequantServiceConfig');
 cfg.min_MSMS_num = CParamMapUtils.getOptionalNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MIN_MSMS_NUM, 1, 'CPeptideRequantServiceConfig');
+cfg.msms_stability_filter = CMsmsStabilityFilterConfig.fromParamMap(task_param_map, 'CPeptideRequantServiceConfig');
 end

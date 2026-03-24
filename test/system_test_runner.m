@@ -3,7 +3,7 @@ function system_test_runner()
     fclose all;clear;clc;
 
     tic
-
+ 
     % Set path
     currentDir = fileparts(mfilename('fullpath'));
     projectDir = fileparts(currentDir); % Go back one level to the code root directory
