@@ -21,6 +21,7 @@ param_map = makeBaseParamMap();
 cfg = CMSMSLevelServiceConfig.fromParamMap(param_map);
 
 testCase.verifyFalse(isfield(cfg, 'stability_options'));
+testCase.verifyFalse(isfield(cfg, 'msms_res_path'));
 testCase.verifyEqual(cfg.min_peptide_length, 7);
 testCase.verifyEqual(cfg.max_peptide_length, 40);
 testCase.verifyEqual(cfg.max_mod_per_peptide, 5);

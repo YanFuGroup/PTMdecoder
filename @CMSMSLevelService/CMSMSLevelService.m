@@ -72,11 +72,6 @@ classdef CMSMSLevelService < handle
             
             % TODO: Set the output path for MSMS level results
             each_PSM_results_path = CPathResolver.resolveFilePath(cfg.output_dir_path, 'report_msms.txt', '');
-            may_fp_report_path = CPathResolver.resolveFilePath(cfg.output_dir_path, 'report_spectra_may_FP.txt', '');
-            fo_may_FP = fopen(may_fp_report_path,'w');
-            if fo_may_FP <= 0
-                error(['Cannot open the the report file ', may_fp_report_path]);
-            end
             strLine = fgetl(fin);
             str = regexp(strLine,'\t','split');
             pepSeq = str{1};
@@ -218,10 +213,6 @@ classdef CMSMSLevelService < handle
                         stage1_success_count = stage1_success_count + 1;
                         if stage1_is_shortcut
                             stage1_shortcut_count = stage1_shortcut_count + 1;
-                        end
-                        
-                        if is_X_not_full_column_rank
-                            fprintf(fo_may_FP,'%s\t%s\n',dataset_name,spec_name);
                         end
                         
                         if obj.m_is_record_fragment_information
@@ -475,7 +466,6 @@ classdef CMSMSLevelService < handle
             end
             
             CMS2ResultIO.write(msms_result, each_PSM_results_path);
-            fclose(fo_may_FP);
             fclose(fin);
             print_progress.last_update();
             CLogger.info('MSMS-level quantification done.');

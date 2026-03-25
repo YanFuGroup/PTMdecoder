@@ -93,5 +93,4 @@ cfg.grid_penalty_intens = 'intens_sum';
 cfg.case_OLS_intens_weight = 'none';
 cfg.pep_spec_file_path = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_PEP_SPEC_FILE_PATH, 'peptide-spectrum file path', 'CMSMSLevelServiceConfig');
 cfg.checked_peptides_res_path = [];
-cfg.msms_res_path = [];
 end
