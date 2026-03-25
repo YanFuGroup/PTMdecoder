@@ -148,6 +148,10 @@ def load_and_validate_data(input_file: str) -> pd.DataFrame:
     df['Mass error [Da]'] = df['Mass error [Da]'].fillna('0')
     df['Number of matches'] = df['Number of matches'].fillna('0')
     
+    # 4. Format Proteins column for downstream compatibility
+    # Replace semicolons with commas for multiple protein assignments
+    df['Proteins'] = df['Proteins'].str.replace(';', ',')
+    
     return df
 
 # ------------------------------------------------------------------------
@@ -157,8 +161,16 @@ def load_and_validate_data(input_file: str) -> pd.DataFrame:
 def generate_pep_spec_list(df: pd.DataFrame, output_path: str):
     """Generates the grouped peptide-spectrum list file (Task 1)."""
     print("Generating grouped peptide-spectrum list...")
+    
+    # 1. Filter out rows where modification is '-'
+    # Call the existing parse_modified_sequence function to parse 'Modified sequence'.
+    # Keep the row if the parsed modification part is not '-'.
+    is_modified = df['Modified sequence'].apply(lambda x: parse_modified_sequence(x)[0] != '-')
+    filtered_df = df[is_modified]
+
+    # 2. Group the filtered DataFrame by Sequence and write to file
     with open(output_path, 'w', encoding='utf-8') as f:
-        grouped = df.groupby('Sequence', sort=False)
+        grouped = filtered_df.groupby('Sequence', sort=False)
         for sequence, group in grouped:
             f.write(f"{sequence}\n")
             for _, row in group.iterrows():
