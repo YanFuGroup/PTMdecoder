@@ -7,3 +7,6 @@ temp_*
 *.mat
 .github/
 *.log
+.vscode/
+__pycache__
+.pytest_cache
