@@ -61,8 +61,14 @@ testCase.verifyEqual(p1.spectrum_list(1).peptidoform_num, 2, 'SpecA1 count misma
 testCase.verifyEqual(p1.spectrum_list(1).peptidoform_list_abun(2), 200, 'Abundance value mismatch');
 testCase.verifyTrue(isnan(p1.spectrum_list(1).jaccard_stability), ...
     'Legacy S line should default jaccard_stability to NaN');
+testCase.verifyTrue(isnan(p1.spectrum_list(1).vif_all_imp_max), ...
+    'Legacy S line should default vif_all_imp_max to NaN');
+testCase.verifyTrue(isnan(p1.spectrum_list(1).vif_reported_imp_max), ...
+    'Legacy S line should default vif_reported_imp_max to NaN');
 testCase.verifyTrue(all(isnan(p1.spectrum_list(1).peptidoform_list_support_freq)), ...
     'Legacy peptidoform lines should default support_frequency to NaN');
+testCase.verifyTrue(all(isnan(p1.spectrum_list(1).peptidoform_list_vif)), ...
+    'Legacy peptidoform lines should default vif to NaN');
 testCase.verifyTrue(all(isnan(p1.spectrum_list(1).peptidoform_list_abundance_mad)), ...
     'Legacy peptidoform lines should default abundance_mad to NaN');
 
@@ -87,13 +93,19 @@ testCase.addTeardown(@() deleteTestFile(testFile));
 % Build source result object
 src = CMS2Result();
 src.addOrSelectPeptide('PEPTIDE_A');
-src.addSpectrum('Dataset1', 'SpecA1', struct('jaccard_stability', 0.85));
-src.addPeptidoform('FormA1', 100, struct('support_frequency', 0.90, 'abundance_mad', 0.01));
-src.addPeptidoform('FormA2', 200, struct('support_frequency', 0.60, 'abundance_mad', 0.08));
+src.addSpectrum('Dataset1', 'SpecA1', struct( ...
+    'jaccard_stability', 0.85, ...
+    'vif_all_imp_max', 4.2, ...
+    'vif_reported_imp_max', 1.8));
+src.addPeptidoform('FormA1', 100, struct('support_frequency', 0.90, 'vif', 10.5, 'abundance_mad', 0.01));
+src.addPeptidoform('FormA2', 200, struct('support_frequency', 0.60, 'vif', 2.4, 'abundance_mad', 0.08));
 
 src.addOrSelectPeptide('PEPTIDE_B');
-src.addSpectrum('Dataset2', 'SpecB1', struct('jaccard_stability', NaN));
-src.addPeptidoform('FormB1', 300.5, struct('support_frequency', 0.75, 'abundance_mad', 0.12));
+src.addSpectrum('Dataset2', 'SpecB1', struct( ...
+    'jaccard_stability', NaN, ...
+    'vif_all_imp_max', NaN, ...
+    'vif_reported_imp_max', NaN));
+src.addPeptidoform('FormB1', 300.5, struct('support_frequency', 0.75, 'vif', 3.3, 'abundance_mad', 0.12));
 
 src.compress();
 
@@ -119,7 +131,10 @@ for i = 1:length(src.Peptides)
         testCase.verifyEqual(dstSpec.peptidoform_list_str, srcSpec.peptidoform_list_str);
         testCase.verifyEqual(dstSpec.peptidoform_list_abun, srcSpec.peptidoform_list_abun, 'AbsTol', 1e-12);
         testCase.verifyEqual(dstSpec.jaccard_stability, srcSpec.jaccard_stability, 'AbsTol', 1e-12);
+        testCase.verifyEqual(dstSpec.vif_all_imp_max, srcSpec.vif_all_imp_max, 'AbsTol', 1e-12);
+        testCase.verifyEqual(dstSpec.vif_reported_imp_max, srcSpec.vif_reported_imp_max, 'AbsTol', 1e-12);
         testCase.verifyEqual(dstSpec.peptidoform_list_support_freq, srcSpec.peptidoform_list_support_freq, 'AbsTol', 1e-12);
+        testCase.verifyEqual(dstSpec.peptidoform_list_vif, srcSpec.peptidoform_list_vif, 'AbsTol', 1e-12);
         testCase.verifyEqual(dstSpec.peptidoform_list_abundance_mad, srcSpec.peptidoform_list_abundance_mad, 'AbsTol', 1e-12);
     end
 end
@@ -137,8 +152,8 @@ if fid < 0
 end
 
 fprintf(fid, 'P\tPEPTIDE_A\n');
-fprintf(fid, 'S\tDataset1\tSpecA1\tjaccard=0.125000\tunknown_key=abc\n');
-fprintf(fid, 'FormA1\t100\tsupport=0.333333\tmad=0.050000\textra=ignored\n');
+fprintf(fid, 'S\tDataset1\tSpecA1\tjaccard=0.125000\tvif_all=6.500000\tvif_reported=2.250000\tunknown_key=abc\n');
+fprintf(fid, 'FormA1\t100\tsupport=0.333333\tvif=11.200000\tmad=0.050000\textra=ignored\n');
 fprintf(fid, 'FormA2\t200\n');
 fclose(fid);
 
@@ -146,10 +161,15 @@ resultObj = CMS2ResultIO.read(testFile);
 spec = resultObj.Peptides(1).spectrum_list(1);
 
 testCase.verifyEqual(spec.jaccard_stability, 0.125, 'AbsTol', 1e-12);
+testCase.verifyEqual(spec.vif_all_imp_max, 6.5, 'AbsTol', 1e-12);
+testCase.verifyEqual(spec.vif_reported_imp_max, 2.25, 'AbsTol', 1e-12);
 testCase.verifyEqual(spec.peptidoform_list_support_freq(1), 0.333333, 'AbsTol', 1e-12);
+testCase.verifyEqual(spec.peptidoform_list_vif(1), 11.2, 'AbsTol', 1e-12);
 testCase.verifyEqual(spec.peptidoform_list_abundance_mad(1), 0.05, 'AbsTol', 1e-12);
 testCase.verifyTrue(isnan(spec.peptidoform_list_support_freq(2)), ...
     'Missing support field should default to NaN');
+testCase.verifyTrue(isnan(spec.peptidoform_list_vif(2)), ...
+    'Missing vif field should default to NaN');
 testCase.verifyTrue(isnan(spec.peptidoform_list_abundance_mad(2)), ...
     'Missing mad field should default to NaN');
 end

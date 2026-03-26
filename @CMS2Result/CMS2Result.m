@@ -10,9 +10,12 @@ classdef CMS2Result < handle
         %       - dataset_name: char/string
         %       - spectrum_name: char/string
         %       - jaccard_stability: 1 x 1 double
+        %       - vif_all_imp_max: 1 x 1 double
+        %       - vif_reported_imp_max: 1 x 1 double
         %       - peptidoform_list_str: cell array of strings (N x 1)
         %       - peptidoform_list_abun: double array (N x 1)
         %       - peptidoform_list_support_freq: double array (N x 1)
+        %       - peptidoform_list_vif: double array (N x 1)
         %       - peptidoform_list_abundance_mad: double array (N x 1)
         %       - peptidoform_num: int
         Peptides

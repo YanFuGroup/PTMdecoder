@@ -72,6 +72,10 @@ testCase.verifyEqual(length(keptSpec.peptidoform_list_support_freq), 60, ...
     'Support-frequency buffer should be trimmed to exact size');
 testCase.verifyTrue(all(isnan(keptSpec.peptidoform_list_support_freq)), ...
     'Support-frequency values should default to NaN when not provided');
+testCase.verifyEqual(length(keptSpec.peptidoform_list_vif), 60, ...
+    'Per-peptidoform VIF buffer should be trimmed to exact size');
+testCase.verifyTrue(all(isnan(keptSpec.peptidoform_list_vif)), ...
+    'Per-peptidoform VIF values should default to NaN when not provided');
 testCase.verifyEqual(length(keptSpec.peptidoform_list_abundance_mad), 60, ...
     'Abundance-MAD buffer should be trimmed to exact size');
 testCase.verifyTrue(all(isnan(keptSpec.peptidoform_list_abundance_mad)), ...
@@ -83,18 +87,26 @@ function testMetadataStorage(testCase)
 
 res = CMS2Result();
 res.addPeptide('PEPTIDE_META');
-res.addSpectrum('DatasetM', 'SpecM1', struct('jaccard_stability', 0.42));
-res.addPeptidoform('FormM1', 123.4, struct('support_frequency', 0.7, 'abundance_mad', 0.05));
+res.addSpectrum('DatasetM', 'SpecM1', struct( ...
+    'jaccard_stability', 0.42, ...
+    'vif_all_imp_max', 5.1, ...
+    'vif_reported_imp_max', 2.3));
+res.addPeptidoform('FormM1', 123.4, struct('support_frequency', 0.7, 'vif', 9.4, 'abundance_mad', 0.05));
 res.addPeptidoform('FormM2', 10.0, struct('abundance_mad', 0.2));
 
 res.compress();
 
 spec = res.Peptides(1).spectrum_list(1);
 testCase.verifyEqual(spec.jaccard_stability, 0.42, 'AbsTol', 1e-12);
+testCase.verifyEqual(spec.vif_all_imp_max, 5.1, 'AbsTol', 1e-12);
+testCase.verifyEqual(spec.vif_reported_imp_max, 2.3, 'AbsTol', 1e-12);
 testCase.verifyEqual(spec.peptidoform_list_support_freq(1), 0.7, 'AbsTol', 1e-12);
+testCase.verifyEqual(spec.peptidoform_list_vif(1), 9.4, 'AbsTol', 1e-12);
 testCase.verifyEqual(spec.peptidoform_list_abundance_mad(1), 0.05, 'AbsTol', 1e-12);
 testCase.verifyTrue(isnan(spec.peptidoform_list_support_freq(2)), ...
     'Support-frequency should default to NaN when support_frequency field is not provided');
+testCase.verifyTrue(isnan(spec.peptidoform_list_vif(2)), ...
+    'Per-peptidoform VIF should default to NaN when vif field is not provided');
 testCase.verifyEqual(spec.peptidoform_list_abundance_mad(2), 0.2, 'AbsTol', 1e-12);
 end
 

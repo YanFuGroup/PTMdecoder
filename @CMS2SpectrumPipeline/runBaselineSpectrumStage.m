@@ -48,6 +48,12 @@ function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff, ...
 %               Whether matrix X is rank-deficient during abundance solve.
 %           jaccard_stability (double)
 %               Jaccard stability of the solution (NaN if not computed).
+%           vif_all_imp_max (double)
+%               Max VIF over all IMP columns in the solve design matrix.
+%           vif_reported_imp_max (double)
+%               Max VIF over filter-reported IMP columns.
+%           vif_reported_each (double array)
+%               Per-IMP VIF on filter-reported IMP columns.
 %           support_frequency (double array)
 %               Support frequency of each peptidoform (empty if not computed).
 %           abundance_mad (double array)
@@ -68,6 +74,9 @@ is_X_not_full_column_rank = false;
 solver_diag = struct( ...
     'is_X_not_full_column_rank', false, ...
     'jaccard_stability', NaN, ...
+    'vif_all_imp_max', NaN, ...
+    'vif_reported_imp_max', NaN, ...
+    'vif_reported_each', [], ...
     'support_frequency', [], ...
     'abundance_mad', [], ...
     'reported_imp_indices', [], ...
@@ -150,6 +159,9 @@ if isempty(matchedExpPeaks)
         abundance = 1;
         cstrIMP = CMS2ResultIO.formatImpStrings(massArrangement,fixedPosMod,obj.m_variableModNameMass,inxSites,pepSeq);
         solver_diag.jaccard_stability = 1;
+        solver_diag.vif_all_imp_max = 1;
+        solver_diag.vif_reported_imp_max = 1;
+        solver_diag.vif_reported_each = 1;
         solver_diag.reported_imp_indices = 1;
         solver_diag.support_frequency = 1;
         solver_diag.abundance_mad = 0;
@@ -173,6 +185,9 @@ if size(massArrangement,1) == 1
     cstrIMP = CMS2ResultIO.formatImpStrings(massArrangement,fixedPosMod,obj.m_variableModNameMass,inxSites,pepSeq);
     bSuccess = true;
     solver_diag.jaccard_stability = 1;
+    solver_diag.vif_all_imp_max = 1;
+    solver_diag.vif_reported_imp_max = 1;
+    solver_diag.vif_reported_each = 1;
     solver_diag.reported_imp_indices = 1;
     solver_diag.support_frequency = 1;
     solver_diag.abundance_mad = 0;
@@ -198,7 +213,7 @@ solver_cfg = struct( ...
     'grid_penalty_intens', obj.m_grid_penalty_intens, ...
     'case_OLS_intens_weight', obj.m_case_OLS_intens_weight);
 
-[abundance, frageff, ionTypePosCharge, ionIntens, is_X_not_full_column_rank] = ...
+[abundance, frageff, ionTypePosCharge, ionIntens, is_X_not_full_column_rank, X] = ...
     CMS2QuantSolver.solve(vNonRedunTheoryIonMz, matchedExpPeaks, massArrangement, solver_cfg);
 
 fittedMatchedPeakIntensities = CMS2QuantSolver.computeFittedMatchedPeakIntensities( ...
@@ -212,6 +227,8 @@ abundance = abundance / (sum(abundance) + eps);
 cstrIMP = CMS2ResultIO.formatImpStrings(massArrangement,fixedPosMod,obj.m_variableModNameMass,inxSites,pepSeq);
 
 solver_diag.is_X_not_full_column_rank = is_X_not_full_column_rank;
+[solver_diag.vif_all_imp_max, solver_diag.vif_reported_imp_max, solver_diag.vif_reported_each] = CMS2QuantSolver.computeImpVifMetrics( ...
+    X, size(massArrangement, 1), reported_imp_mask);
 solver_diag.reported_imp_indices = find(reported_imp_mask);
 
 noise_model_fit_inputs.matchedExpPeaks = matchedExpPeaks;

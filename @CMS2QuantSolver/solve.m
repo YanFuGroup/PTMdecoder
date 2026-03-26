@@ -1,4 +1,4 @@
-function [abundance, frageff, ionTypePosCharge, ionIntens, is_X_not_full_column_rank] = solve(vNonRedunTheoryIonMz, matchedExpPeaks, massArrangement, solver_cfg)
+function [abundance, frageff, ionTypePosCharge, ionIntens, is_X_not_full_column_rank, X] = solve(vNonRedunTheoryIonMz, matchedExpPeaks, massArrangement, solver_cfg)
 % solve - Model/method dispatch for MS2 quantification
 % Inputs:
 %   vNonRedunTheoryIonMz (L x T double)
@@ -21,11 +21,14 @@ function [abundance, frageff, ionTypePosCharge, ionIntens, is_X_not_full_column_
 %       Aggregated ion intensities corresponding to ionTypePosCharge.
 %   is_X_not_full_column_rank (1 x 1 logical)
 %       True if X is rank-deficient.
+%   X (N x P double)
+%       Design matrix used by the abundance solver.
 
 ionTypePosCharge = [];
 ionIntens = [];
 frageff = [];
 is_X_not_full_column_rank = false;
+X = [];
 
 if solver_cfg.method == 3
     % Penalty: compute peptidoform-dependent penalty factors.
