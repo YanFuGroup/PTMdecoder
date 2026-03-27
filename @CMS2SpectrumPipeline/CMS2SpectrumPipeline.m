@@ -48,6 +48,6 @@ classdef CMS2SpectrumPipeline
             obj.m_case_OLS_intens_weight = cfg.case_OLS_intens_weight;
         end
 
-        [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,is_X_not_full_column_rank,solver_diag,noise_model_fit_inputs,stability_cache] = runBaselineSpectrumStage(obj, peptideCtx, spectrumCtx);
+        [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,solver_diag,noise_model_fit_inputs,stability_cache] = runBaselineSpectrumStage(obj, peptideCtx, spectrumCtx);
     end
 end

@@ -4,7 +4,7 @@ classdef CMS2SpectrumPipeline
         end
 
 
-        function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,is_X_not_full_column_rank,solver_diag,noise_model_fit_inputs,stability_cache] = runBaselineSpectrumStage(~, ~, spectrumCtx)
+        function [bSuccess,cstrIMP,abundance,ionTypePosCharge,ionIntens,frageff,solver_diag,noise_model_fit_inputs,stability_cache] = runBaselineSpectrumStage(~, ~, spectrumCtx)
             specName = spectrumCtx.specName;
             bSuccess = true;
             cstrIMP = {['IMP_', specName, '_1']; ['IMP_', specName, '_2']};
@@ -12,10 +12,7 @@ classdef CMS2SpectrumPipeline
             ionTypePosCharge = [1, 1, 1; 2, 2, 1];
             ionIntens = [1.0; 0.8];
             frageff = [0.6; 0.4];
-            is_X_not_full_column_rank = false;
-
             solver_diag = struct( ...
-                'is_X_not_full_column_rank', false, ...
                 'jaccard_stability', NaN, ...
                 'vif_all_imp_max', 3.5, ...
                 'vif_reported_imp_max', 2.0, ...

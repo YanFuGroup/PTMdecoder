@@ -6,7 +6,7 @@ classdef CMS2QuantSolver
 
         stability_diag = estimateStability(vNonRedunTheoryIonMz, matchedExpPeaks, massArrangement, solver_cfg, base_abundance, fittedMatchedPeakIntensities, noise_model, stability_options)
 
-        [abundance, frageff, ionTypePosCharge, ionIntens, is_X_not_full_column_rank, X] = solve(vNonRedunTheoryIonMz, matchedExpPeaks, massArrangement, solver_cfg)
+        [abundance, frageff, ionTypePosCharge, ionIntens, X] = solve(vNonRedunTheoryIonMz, matchedExpPeaks, massArrangement, solver_cfg)
 
         [vif_all_imp_max, vif_reported_imp_max, vif_reported_imp_each] = computeImpVifMetrics(X, num_imp, reported_imp_mask)
 

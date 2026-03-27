@@ -10,7 +10,7 @@ end
 
 
 function testSolveModel2Method1Basic(testCase)
-% TESTSOLVEMODEL2METHOD1BASIC Validate model=2, method=1 returns normalized abundance and rank flag false
+% TESTSOLVEMODEL2METHOD1BASIC Validate model=2, method=1 returns normalized abundance
 % Input:
 %   testCase (matlab.unittest.TestCase)
 % Output:
@@ -30,19 +30,19 @@ massArrangement = [0; 1];
 solver_cfg = struct('model',2,'method',1,'lambda',0.1, ...
     'case_penalty_intens','intens_sum','grid_penalty_intens','intens_sum','case_OLS_intens_weight','none');
 
-[abundance, frageff, ionTypePosCharge, ionIntens, isRankDef] = CMS2QuantSolver.solve(v, matched, massArrangement, solver_cfg);
+[abundance, frageff, ionTypePosCharge, ionIntens, X] = CMS2QuantSolver.solve(v, matched, massArrangement, solver_cfg);
 
 testCase.verifySize(abundance, [2,1]);
 testCase.verifyEqual(sum(abundance), 1, 'AbsTol', 1e-6);
 testCase.verifyEmpty(frageff);
 testCase.verifyEmpty(ionTypePosCharge);
 testCase.verifyEmpty(ionIntens);
-testCase.verifyFalse(isRankDef);
+testCase.verifySize(X, [2, 2]);
 end
 
 
 function testSolveRankDeficientX(testCase)
-% TESTSOLVERANKDEFICIENTX Validate rank-deficient X is reported
+% TESTSOLVERANKDEFICIENTX Validate rank-deficient X can be inferred from returned design matrix
 % Input:
 %   testCase (matlab.unittest.TestCase)
 % Output:
@@ -62,10 +62,10 @@ massArrangement = [0; 1];
 solver_cfg = struct('model',2,'method',1,'lambda',0.1, ...
     'case_penalty_intens','intens_sum','grid_penalty_intens','intens_sum','case_OLS_intens_weight','none');
 
-[abundance, ~, ~, ~, isRankDef] = CMS2QuantSolver.solve(v, matched, massArrangement, solver_cfg);
+[abundance, ~, ~, ~, X] = CMS2QuantSolver.solve(v, matched, massArrangement, solver_cfg);
 
 testCase.verifySize(abundance, [2,1]);
-testCase.verifyTrue(isRankDef);
+testCase.verifyLessThan(rank(X), size(X,2));
 end
 
 
