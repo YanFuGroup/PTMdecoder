@@ -150,7 +150,25 @@ def load_and_validate_data(input_file: str) -> pd.DataFrame:
     
     # 4. Format Proteins column for downstream compatibility
     # Replace semicolons with commas for multiple protein assignments
-    df['Proteins'] = df['Proteins'].str.replace(';', ',')
+    # Then remove any protein names that start with 'CON__'.
+    # If removing these leaves an empty assignment, drop the row.
+    df['Proteins'] = df['Proteins'].astype(str).str.replace(';', ',', regex=False)
+
+    def _filter_con_proteins(protein_str: str) -> str:
+        if protein_str is None:
+            return ''
+        parts = [p.strip() for p in protein_str.split(',') if p.strip() != '']
+        filtered = [p for p in parts if not p.startswith('CON__')]
+        return ','.join(filtered)
+
+    df['Proteins'] = df['Proteins'].apply(_filter_con_proteins)
+
+    # Drop rows where Proteins is empty after filtering out CON__ entries
+    empty_mask = df['Proteins'].astype(str).str.strip() == ''
+    if empty_mask.any():
+        num_removed = empty_mask.sum()
+        print(f"[Info] Removing {num_removed} rows where only 'CON__' proteins were assigned (now empty after filtering).")
+        df = df[~empty_mask]
     
     return df
 
