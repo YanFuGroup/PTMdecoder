@@ -176,7 +176,7 @@ def load_and_validate_data(input_file: str) -> pd.DataFrame:
 # Module 3: Output Generators
 # ------------------------------------------------------------------------
 
-def generate_pep_spec_list(df: pd.DataFrame, output_path: str):
+def generate_pep_spec_list(df: pd.DataFrame, output_path: str, dataset_suffix: str = ''):
     """Generates the grouped peptide-spectrum list file (Task 1)."""
     print("Generating grouped peptide-spectrum list...")
     
@@ -195,13 +195,13 @@ def generate_pep_spec_list(df: pd.DataFrame, output_path: str):
                 raw = row['Raw file']
                 scan = row['Scan number']
                 charge = row['Charge']
-                col1 = f"{raw}.mgf"
+                col1 = f"{raw}{dataset_suffix}.mgf"
                 col2 = f"{raw}.{scan}.{scan}.{charge}.0.dta"
                 f.write(f"{col1}\t{col2}\n")
     print(f"[Success] Peptide-spectrum list saved to: {output_path}")
 
 
-def generate_ident_result_table(df: pd.DataFrame, output_path: str):
+def generate_ident_result_table(df: pd.DataFrame, output_path: str, dataset_suffix: str = ''):
     """Parses modifications and generates the detailed identification result table (Task 2)."""
     print("Parsing modifications and computing masses for identification result table...")
     
@@ -212,7 +212,7 @@ def generate_ident_result_table(df: pd.DataFrame, output_path: str):
 
     df_result = pd.DataFrame({
         'Site': '-', 
-        'DatasetName': df['Raw file'] + '.mgf',
+        'DatasetName': df['Raw file'].astype(str) + dataset_suffix + '.mgf',
         'Scan': df['Scan number'],
         'Spectrum': df['Raw file'] + '.' + df['Scan number'] + '.' + df['Scan number'] + '.' + df['Charge'] + '.0.dta',
         'Charge': df['Charge'],
@@ -241,6 +241,7 @@ def main():
     parser.add_argument('-i', '--input', required=True, help="Path to input MaxQuant msms.txt")
     parser.add_argument('-o', '--output', required=True, help="Path to output pep_spec_list.txt")
     parser.add_argument('-r', '--result', required=True, help="Path to output filtered_res_file.txt")
+    parser.add_argument('-s', '--suffix', default='', help="Optional dataset suffix to insert between Raw file and '.mgf' (supports empty string)")
     
     args = parser.parse_args()
     
@@ -248,10 +249,10 @@ def main():
     df = load_and_validate_data(args.input)
     
     # 2. Generate Task 1 File
-    generate_pep_spec_list(df, args.output)
+    generate_pep_spec_list(df, args.output, args.suffix)
     
     # 3. Generate Task 2 File
-    generate_ident_result_table(df, args.result)
+    generate_ident_result_table(df, args.result, args.suffix)
     
     print("All tasks completed! You are ready to run PTMdecoder.")
 
