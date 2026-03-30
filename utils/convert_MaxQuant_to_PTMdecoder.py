@@ -196,7 +196,7 @@ def generate_pep_spec_list(df: pd.DataFrame, output_path: str, dataset_suffix: s
                 scan = row['Scan number']
                 charge = row['Charge']
                 col1 = f"{raw}{dataset_suffix}.mgf"
-                col2 = f"{raw}.{scan}.{scan}.{charge}.0.dta"
+                col2 = scan
                 f.write(f"{col1}\t{col2}\n")
     print(f"[Success] Peptide-spectrum list saved to: {output_path}")
 
@@ -214,7 +214,7 @@ def generate_ident_result_table(df: pd.DataFrame, output_path: str, dataset_suff
         'Site': '-', 
         'DatasetName': df['Raw file'].astype(str) + dataset_suffix + '.mgf',
         'Scan': df['Scan number'],
-        'Spectrum': df['Raw file'] + '.' + df['Scan number'] + '.' + df['Scan number'] + '.' + df['Charge'] + '.0.dta',
+        'Spectrum': df['Scan number'],
         'Charge': df['Charge'],
         'Calc_neutral_pepmass': df['Mass'],
         'precursor_neutral_mass': precursor_mass_str,

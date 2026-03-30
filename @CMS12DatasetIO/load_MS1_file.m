@@ -31,6 +31,9 @@ if -1==fid
     return;
 end
 
+file_info = dir(ms1_fullfile);
+ms1_file_size = max(file_info.bytes, 1);
+
 %% init
 % initialize the MS1 info
 maxpeaknum = 1e4;% the max peak number on a MS1 scan
@@ -75,7 +78,9 @@ while 0==feof(fid)
     if 1==strcmp( str(1:len1),keyword1 )
         % progress
         fno = fno + 1;
-        CLogger.progress('MS1 scans', fno, maxMS1num);
+        if mod(fno, 2000) == 0
+            CLogger.progress('MS1 file read', ftell(fid), ms1_file_size);
+        end
 
         % 1.get the MS1 info
         % MS1 scan
@@ -150,6 +155,7 @@ while 0==feof(fid)
     end
 end
 fclose(fid);% close the TXT file
+CLogger.progress('MS1 file read', ms1_file_size, ms1_file_size);
 CLogger.info('MS1 scans loaded: %d', fno);
 
 %% save the MS1 info

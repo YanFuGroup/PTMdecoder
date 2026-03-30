@@ -12,6 +12,8 @@ CLogger.info('Total number of datasets: %d', length(dataset_files));
 % begin building up
 for i = 1:length(dataset_names) % Iterate over each spectral dataset
     filename = fullfile(obj.m_strFoldname,dataset_names{i,1});
+    dataset_size = dataset_files(i).bytes;
+    progress_label = sprintf('MGF map %s', dataset_names{i,1});
     nSpec = 0;
     
     % load mgf map when existing a intermediate map file
@@ -38,7 +40,7 @@ for i = 1:length(dataset_names) % Iterate over each spectral dataset
                 nSpec = nSpec+1;
 
                 if mod(nSpec,2000) == 0
-                    CLogger.progress(sprintf('MGF map %s', dataset_names{i,1}), nSpec, max(nSpec, 1));
+                    CLogger.progress(progress_label, ftell(fid), max(dataset_size, 1));
                 end
 
                 % The starting position of the file corresponding to each spectrum is BEGIN IONS
@@ -60,6 +62,7 @@ for i = 1:length(dataset_names) % Iterate over each spectral dataset
                 end
             end
         end
+        CLogger.progress(progress_label, max(dataset_size, 1), max(dataset_size, 1));
         save(mgf_mapfile,'mgf_map');
         fclose(fid);
     end
