@@ -53,12 +53,14 @@ for i = 1:length(dataset_names) % Iterate over each spectral dataset
                 strSpecName = strLine(7:end);
                 mgf_map(strSpecName) = iPosition;
 
-                if contains(strSpecName,'.')
-                    strScanNum = regexp(strSpecName,'\.','split');
-                    MS2ScanI = str2double(strScanNum{2});
-                    if ~isnan(MS2ScanI)
-                        mgf_map(strScanNum{2}) = iPosition;
+                try
+                    MS2ScanI = CMS2SpecNameUtils.parseMS2ScanNumber(strSpecName);
+                    scan_key = num2str(MS2ScanI);
+                    if ~isequal(scan_key, strSpecName)
+                        mgf_map(scan_key) = iPosition;
                     end
+                catch
+                    % Keep raw TITLE mapping only when scan number is not parseable.
                 end
             end
         end

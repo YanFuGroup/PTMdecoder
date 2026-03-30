@@ -88,58 +88,10 @@ classdef CXICDrawService < handle
             % Output:
             %   rawIdentManager (CIMPRawIdentManager)
             %       assembled raw identification manager
-            deps = struct( ...
-                'getProfilesFunc', @(dataset_name, spectrum_name) obj.getProfiles(dataset_name, spectrum_name), ...
-                'fixedModNameMass', {obj.m_fixedModNameMass}, ...
-                'variableModNameMass', {obj.m_variableModNameMass}, ...
-                'msmsStabilityFilter', obj.m_cfg.msms_stability_filter);
+            deps = CPeptideRawIdentAssembler.createSpectrumListDeps( ...
+                obj.m_cMgfDatasetIO, obj.m_cMs12DatasetIO, obj.m_cMsFileMapper, obj.m_cfg.ms1_tolerance, ...
+                obj.m_fixedModNameMass, obj.m_variableModNameMass, obj.m_cfg.msms_stability_filter);
             rawIdentManager = CPeptideRawIdentAssembler.buildFromSpectrumList(spectrum_list, deps);
-        end
-
-        function [isorts,c_ref_isointens,cur_mz,cur_ch] = getProfiles(obj, mgf_name, spectrum_name)
-            % Read MS1 profile around one MS2 spectrum precursor.
-            % Input:
-            %   mgf_name (1 x 1 char/string)
-            %       dataset file name in MGF
-            %   spectrum_name (1 x 1 char/string)
-            %       spectrum name in MGF
-            % Output:
-            %   isorts (1 x 1 double)
-            %       MS1 retention time of matched precursor scan
-            %   c_ref_isointens (1 x 1 double)
-            %       reference isotope intensity near precursor m/z
-            %   cur_mz (1 x 1 double)
-            %       precursor m/z from MGF
-            %   cur_ch (1 x 1 double/int)
-            %       precursor charge from MGF
-            spec_name = regexp(spectrum_name,'\.','split');
-            MS2ScanI = str2double(spec_name{2});
-            [~, cur_ch, cur_mz] = obj.m_cMgfDatasetIO.read_oneSpec(mgf_name,spectrum_name);
-
-            mgf_stem = erase(mgf_name,'.mgf');
-            ms12_stem = obj.m_cMsFileMapper.get_ms1_stem(mgf_stem);
-
-            MS2_index = obj.m_cMs12DatasetIO.m_mapNameMS2Index(ms12_stem);
-            idx_cur_scan = MS2_index(:,2)==MS2ScanI;
-            MS1Scan = MS2_index(idx_cur_scan,1);
-            MS1_index = obj.m_cMs12DatasetIO.m_mapNameMS1Index(ms12_stem);
-            MS1_peaks = obj.m_cMs12DatasetIO.m_mapNameMS1Peaks(ms12_stem);
-            index_starts_MS1 = [1;MS1_index(1:size(MS1_index,1),3)];
-            ino = find(MS1_index(:,1)==MS1Scan);
-            isorts = MS1_index(ino,2);
-            IX = index_starts_MS1(ino):index_starts_MS1(ino+1)-1;
-            mz = MS1_peaks(IX,1);
-            inten = MS1_peaks(IX,2);
-            if obj.m_cfg.ms1_tolerance.isppm
-                ptol = obj.m_cfg.ms1_tolerance.value*cur_mz*1e-6;
-            else
-                ptol = obj.m_cfg.ms1_tolerance.value;
-            end
-            c_ptol = min([ptol,0.3]);
-            c_ref_isointens = max(inten(abs(mz-cur_mz)<c_ptol));
-            if isempty(c_ref_isointens)
-                c_ref_isointens = 0;
-            end
         end
 
     end

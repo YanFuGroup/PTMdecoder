@@ -3,6 +3,8 @@ classdef CXICPeakUtils
     % Peak detection/selection utilities for IMP quant workflows.
     methods (Static)
         is_reserved = hasMinRows(ratio_matrix, min_rows)
+
+        [isorts, c_ref_isointens, cur_mz, cur_ch] = getProfiles(cMgfDatasetIO, cMs12DatasetIO, cMsFileMapper, ms1_tolerance, mgf_name, spectrum_name)
         
         xic_ratio_estimated = filter_and_normalize_peak_ratios(xic_rt, xic_intensity_smoothed, xic_ratio_estimated, xic_peak_idx_bounds, resFilterThres)
 

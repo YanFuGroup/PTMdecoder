@@ -3,6 +3,38 @@ classdef CPeptideRawIdentAssembler
     % This class only assembles data and does not execute business workflows.
 
     methods (Static)
+        function deps = createSpectrumListDeps(cMgfDatasetIO, cMs12DatasetIO, cMsFileMapper, ms1_tolerance, fixedModNameMass, variableModNameMass, msmsStabilityFilter)
+            % Build dependency struct for buildFromSpectrumList.
+            % Inputs:
+            %    cMgfDatasetIO (CMgfDatasetIO)
+            %        MGF dataset reader.
+            %    cMs12DatasetIO (CMS12DatasetIO)
+            %        MS1/MS2 dataset reader.
+            %    cMsFileMapper (CMsFileMapper)
+            %        MGF-to-MS1 mapping helper.
+            %    ms1_tolerance (struct)
+            %        MS1 tolerance struct with fields value and isppm.
+            %    fixedModNameMass (Nf x 3 cell)
+            %        Fixed modification list.
+            %    variableModNameMass (Nv x 3 cell)
+            %        Variable modification list.
+            %    msmsStabilityFilter (struct)
+            %        Optional stability filter config.
+            % Outputs:
+            %    deps (struct)
+            %        Dependency container for spectrum-list assembly.
+
+            deps = struct( ...
+                'cMgfDatasetIO', cMgfDatasetIO, ...
+                'cMs12DatasetIO', cMs12DatasetIO, ...
+                'cMsFileMapper', cMsFileMapper, ...
+                'ms1_tolerance', ms1_tolerance, ...
+                'fixedModNameMass', {fixedModNameMass}, ...
+                'variableModNameMass', {variableModNameMass}, ...
+                'msmsStabilityFilter', msmsStabilityFilter);
+        end
+
+
         function [rawIdentManager, filterStats] = buildFromSpectrumList(spectrum_list, deps)
             % Build a raw identification manager from a spectrum list.
             % Input:
@@ -14,12 +46,14 @@ classdef CPeptideRawIdentAssembler
             %       - peptidoform_list_abun
             %   deps (struct)
             %       dependencies:
-            %       - getProfilesFunc (function_handle)
-            %           function handle: [rt,iso,mz,ch] = f(dataset_name, spectrum_name)
-            %           rt: MS1 RT of precursor scan
-            %           iso: reference isotope intensity near precursor
-            %           mz: precursor m/z
-            %           ch: precursor charge
+            %       - cMgfDatasetIO (CMgfDatasetIO)
+            %           MGF dataset reader
+            %       - cMs12DatasetIO (CMS12DatasetIO)
+            %           MS1/MS2 dataset reader
+            %       - cMsFileMapper (CMsFileMapper)
+            %           MGF-to-MS1 mapping helper
+            %       - ms1_tolerance (struct)
+            %           MS1 tolerance with fields value and isppm
             %       - fixedModNameMass (Nf x 3 cell)
             %           fixed modification list {mod_name, specificity, mass}
             %       - variableModNameMass (Nv x 3 cell)
@@ -76,7 +110,8 @@ classdef CPeptideRawIdentAssembler
                 peptidoform_strs = spectrum_entry.peptidoform_list_str;
                 peptidoform_abuns = spectrum_entry.peptidoform_list_abun;
 
-                [isorts, c_ref_isointens, c_mz, cur_ch] = deps.getProfilesFunc(dataset_name, spectrum_name);
+                [isorts, c_ref_isointens, c_mz, cur_ch] = CXICPeakUtils.getProfiles( ...
+                    deps.cMgfDatasetIO, deps.cMs12DatasetIO, deps.cMsFileMapper, deps.ms1_tolerance, dataset_name, spectrum_name);
                 lfMasses = CPeptideRawIdentAssembler.getMassesIMPs(peptidoform_strs, modNameMass);
 
                 rawStore = rawIdentManager.getOrCreate(dataset_name);
@@ -180,12 +215,9 @@ classdef CPeptideRawIdentAssembler
             % Input:
             %   deps (struct)
             %       dependency struct containing required fields
-            required_fields = {'getProfilesFunc', 'fixedModNameMass', 'variableModNameMass'};
+            required_fields = {'cMgfDatasetIO', 'cMs12DatasetIO', 'cMsFileMapper', 'ms1_tolerance', ...
+                'fixedModNameMass', 'variableModNameMass'};
             CPeptideRawIdentAssembler.assertRequiredFields(deps, required_fields, 'buildFromSpectrumList');
-            if ~isa(deps.getProfilesFunc, 'function_handle')
-                error('CPeptideRawIdentAssembler:InvalidDependency', ...
-                    'deps.getProfilesFunc must be a function handle.');
-            end
         end
 
         function assertDepsForFdrEntries(deps)

@@ -156,6 +156,27 @@ testCase.verifyEqual(store.impNames{1}, 'APEPTIDEA');
 end
 
 
+function testCreateSpectrumListDepsBuildsExpectedFields(testCase)
+% Build deps via factory and verify required fields exist.
+% Inputs:
+%    testCase (matlab.unittest.TestCase)
+%        Test case context.
+% Outputs:
+%    (none)
+
+deps = CPeptideRawIdentAssembler.createSpectrumListDeps( ...
+    [], [], [], struct('value', 20, 'isppm', true), cell(0, 3), cell(0, 3), struct('enabled', false));
+
+testCase.verifyTrue(isfield(deps, 'cMgfDatasetIO'));
+testCase.verifyTrue(isfield(deps, 'cMs12DatasetIO'));
+testCase.verifyTrue(isfield(deps, 'cMsFileMapper'));
+testCase.verifyTrue(isfield(deps, 'ms1_tolerance'));
+testCase.verifyTrue(isfield(deps, 'fixedModNameMass'));
+testCase.verifyTrue(isfield(deps, 'variableModNameMass'));
+testCase.verifyTrue(isfield(deps, 'msmsStabilityFilter'));
+end
+
+
 function spectrum = buildSpectrum(dataset_name, spectrum_name, jaccard, imp_strs, imp_abuns, support, mad)
 % Build one spectrum entry used by assembler tests.
 % Inputs:
@@ -198,29 +219,11 @@ function deps = makeDeps(filter_cfg)
 %        Dependency struct for buildFromSpectrumList.
 
 deps = struct( ...
-    'getProfilesFunc', @mockGetProfiles, ...
+    'cMgfDatasetIO', MockAssemblerMgfDatasetIO(), ...
+    'cMs12DatasetIO', MockAssemblerMs12DatasetIO(), ...
+    'cMsFileMapper', MockAssemblerMsFileMapper(), ...
+    'ms1_tolerance', struct('value', 20, 'isppm', true), ...
     'fixedModNameMass', {cell(0, 3)}, ...
     'variableModNameMass', {cell(0, 3)}, ...
     'msmsStabilityFilter', filter_cfg);
-end
-
-
-function [isorts, c_ref_isointens, c_mz, cur_ch] = mockGetProfiles(~, ~)
-% Return deterministic precursor profile for tests.
-% Inputs:
-%    (ignored)
-% Outputs:
-%    isorts (1 x 1 double)
-%        Retention time.
-%    c_ref_isointens (1 x 1 double)
-%        Reference isotope intensity.
-%    c_mz (1 x 1 double)
-%        Precursor m/z.
-%    cur_ch (1 x 1 double)
-%        Precursor charge.
-
-isorts = 10.0;
-c_ref_isointens = 1000.0;
-c_mz = 500.0;
-cur_ch = 2.0;
 end
