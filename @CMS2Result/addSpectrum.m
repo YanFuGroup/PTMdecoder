@@ -34,20 +34,20 @@ if nargin >= 4 && ~isempty(varargin{1})
     end
 end
 
-obj.CurrentSpectrumIdx = obj.CurrentSpectrumIdx + 1;
+currentSpectrumIdx = length(obj.Peptides(obj.CurrentPeptideIdx).spectrum_list) + 1;
 
 % Expand spectrum list for current peptide
-obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).dataset_name = datasetName;
-obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).spectrum_name = spectrumName;
-obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).jaccard_stability = jaccard_stability;
-obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).vif_all_imp_max = vif_all_imp_max;
-obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).vif_reported_imp_max = vif_reported_imp_max;
-obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_num = 0;
+obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).dataset_name = datasetName;
+obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).spectrum_name = spectrumName;
+obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).jaccard_stability = jaccard_stability;
+obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).vif_all_imp_max = vif_all_imp_max;
+obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).vif_reported_imp_max = vif_reported_imp_max;
+obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).peptidoform_num = 0;
 
 % Initialize buffers (empty)
-obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_str = {};
-obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_abun = [];
-obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_support_freq = [];
-obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_vif = [];
-obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_abundance_mad = [];
+obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).peptidoform_list_str = {};
+obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).peptidoform_list_abun = [];
+obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).peptidoform_list_support_freq = [];
+obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).peptidoform_list_vif = [];
+obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).peptidoform_list_abundance_mad = [];
 end

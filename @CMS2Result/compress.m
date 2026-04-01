@@ -36,11 +36,6 @@ end
 
 % Reset indices just in case
 obj.CurrentPeptideIdx = length(obj.Peptides);
-if obj.CurrentPeptideIdx > 0
-    obj.CurrentSpectrumIdx = length(obj.Peptides(end).spectrum_list);
-else
-    obj.CurrentSpectrumIdx = 0;
-end
 
 obj.rebuildPeptideIndexMap();
 end

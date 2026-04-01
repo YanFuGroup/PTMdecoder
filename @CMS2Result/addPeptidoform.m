@@ -10,7 +10,12 @@ function addPeptidoform(obj, peptidoform_str, relative_abundance, varargin)
 %       - vif (1 x 1 double)
 %       - abundance_mad (1 x 1 double)
 
-if obj.CurrentPeptideIdx == 0 || obj.CurrentSpectrumIdx == 0
+if obj.CurrentPeptideIdx == 0
+    error('CMS2Result:NoSpectrum', 'Cannot add peptidoform without peptide and spectrum context.');
+end
+
+currentSpectrumIdx = length(obj.Peptides(obj.CurrentPeptideIdx).spectrum_list);
+if currentSpectrumIdx == 0
     error('CMS2Result:NoSpectrum', 'Cannot add peptidoform without peptide and spectrum context.');
 end
 
@@ -35,27 +40,27 @@ if nargin >= 4 && ~isempty(varargin{1})
 end
 
 % Quick access references
-currentNum = obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_num;
+currentNum = obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).peptidoform_num;
 newNum = currentNum + 1;
 
 % Update count
-obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_num = newNum;
+obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).peptidoform_num = newNum;
 
 % Buffer check logic from original code
-currentLen = length(obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_abun);
+currentLen = length(obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).peptidoform_list_abun);
 if newNum > currentLen
     % Extend by 50
     % TODO: make the buffer size a parameter?
-    obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_str{newNum + 50} = '';
-    obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_abun(newNum + 50) = 0;
-    obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_support_freq(newNum + 50) = NaN;
-    obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_vif(newNum + 50) = NaN;
-    obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_abundance_mad(newNum + 50) = NaN;
+    obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).peptidoform_list_str{newNum + 50} = '';
+    obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).peptidoform_list_abun(newNum + 50) = 0;
+    obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).peptidoform_list_support_freq(newNum + 50) = NaN;
+    obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).peptidoform_list_vif(newNum + 50) = NaN;
+    obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).peptidoform_list_abundance_mad(newNum + 50) = NaN;
 end
 
-obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_str{newNum} = peptidoform_str;
-obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_abun(newNum) = relative_abundance;
-obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_support_freq(newNum) = support_frequency;
-obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_vif(newNum) = vif;
-obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(obj.CurrentSpectrumIdx).peptidoform_list_abundance_mad(newNum) = abundance_mad;
+obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).peptidoform_list_str{newNum} = peptidoform_str;
+obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).peptidoform_list_abun(newNum) = relative_abundance;
+obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).peptidoform_list_support_freq(newNum) = support_frequency;
+obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).peptidoform_list_vif(newNum) = vif;
+obj.Peptides(obj.CurrentPeptideIdx).spectrum_list(currentSpectrumIdx).peptidoform_list_abundance_mad(newNum) = abundance_mad;
 end

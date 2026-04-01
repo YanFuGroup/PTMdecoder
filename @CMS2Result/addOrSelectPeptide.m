@@ -13,7 +13,6 @@ seq_key = char(sequence);
 if isKey(obj.PeptideIndexMap, seq_key)
     existingIdx = double(obj.PeptideIndexMap(seq_key));
     obj.CurrentPeptideIdx = existingIdx;
-    obj.CurrentSpectrumIdx = length(obj.Peptides(existingIdx).spectrum_list);
 else
     obj.addPeptide(sequence);
 end

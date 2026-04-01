@@ -4,7 +4,6 @@ function addPeptide(obj, sequence)
 %       peptide sequence
 
 obj.CurrentPeptideIdx = length(obj.Peptides) + 1;
-obj.CurrentSpectrumIdx = 0;
 
 % Expand structure
 obj.Peptides(obj.CurrentPeptideIdx).peptide_sequence = sequence;

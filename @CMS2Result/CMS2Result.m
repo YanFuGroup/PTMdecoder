@@ -23,8 +23,6 @@ classdef CMS2Result < handle
 
     properties(Access = private)
         CurrentPeptideIdx = 0;
-        % TODO: Current spectrum index within the current peptide, not global
-        CurrentSpectrumIdx = 0;
         PeptideIndexMap
     end
 
