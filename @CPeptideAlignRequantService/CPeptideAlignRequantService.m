@@ -36,10 +36,8 @@ classdef CPeptideAlignRequantService < handle
             %   - cfg.align_strategy_obj
             %   - cfg.align_options
             % Recognized align_options keys:
-            %       - msms_res_path (1 x 1 char/string)
-            %           input MSMS result path (default: cfg.msms_res_path or report_msms.txt)
             %       - peptide_quant_res_path (1 x 1 char/string)
-            %           initial peptide quant result path (default: report_peptide_all.txt)
+            %           initial peptide quant result path (deprecated; use cfg.peptide_quant_res_path)
             %       - min_psm (1 x 1 double)
             %           minimum anchors/PSMs for alignment (passed to aligner)
             %       - num_bins (1 x 1 double)
@@ -79,14 +77,11 @@ classdef CPeptideAlignRequantService < handle
                     'FDR filtered result path is required for alignment.');
             end
 
-            CPathResolver.ensureDir(cfg.output_dir_path);
-
-            msms_res_path = CPathResolver.resolveFilePath(cfg.output_dir_path, 'report_msms.txt', ...
-                CStructOptionUtils.get(align_options, 'msms_res_path', cfg.msms_res_path));
+            msms_res_path = cfg.msms_res_path;
             msms_result = CMS2ResultIO.read(msms_res_path);
 
-            quant_output_path = CPathResolver.resolveFilePath(cfg.output_dir_path, 'report_peptide_all_primary.txt', ...
-                CStructOptionUtils.get(align_options, 'peptide_quant_res_path', ''));
+            quant_output_path = cfg.peptide_quant_res_path;
+            obj.ensureParentDirForFile(quant_output_path);
 
             proc_cfg = CIMPProcessingExecutorConfig(struct( ...
                 'ms12DatasetIO', obj.m_cMs12DatasetIO, ...
@@ -144,13 +139,17 @@ classdef CPeptideAlignRequantService < handle
             [pep_rtrange_map, align_report] = align_executor.buildAlignedRtRangeMap( ...
                 cfg.filtered_res_file_path, rawIdentManagers, base_pep_rtrange_map, base_groups_by_peptide);
 
+            obj.ensureParentDirForFile(cfg.alignment_report_path);
             align_executor.writeAlignmentReport(align_report, cfg.alignment_report_path);
             
-            CIMPQuantStats.rt_sorted_stats('init');
-            stats_cleanup = onCleanup(@() CIMPQuantStats.rt_sorted_stats('flush', ...
-                CPathResolver.resolveFilePath(cfg.output_dir_path, 'align_requant_rt_sorted_stats.mat', '')));
+            if ~isempty(cfg.align_requant_rt_stats_path)
+                obj.ensureParentDirForFile(cfg.align_requant_rt_stats_path);
+                CIMPQuantStats.rt_sorted_stats('init');
+                stats_cleanup = onCleanup(@() CIMPQuantStats.rt_sorted_stats('flush', cfg.align_requant_rt_stats_path)); 
+            end
 
             output_path = cfg.requant_output_path;
+            obj.ensureParentDirForFile(output_path);
             report = CIMPQuantReport();
             print_progress = CPrintProgress(length(msms_result.Peptides), 'peptide_requant_aligned');
 
@@ -184,6 +183,25 @@ classdef CPeptideAlignRequantService < handle
                 obj.m_cMgfDatasetIO, obj.m_cMs12DatasetIO, obj.m_cMsFileMapper, obj.m_cfg.ms1_tolerance, ...
                 obj.m_fixedModNameMass, obj.m_variableModNameMass, obj.m_cfg.msms_stability_filter);
             rawIdentManager = CPeptideRawIdentAssembler.buildFromSpectrumList(spectrum_list, deps);
+        end
+
+
+        function ensureParentDirForFile(~, file_path)
+            % Ensure parent directory exists for a target file path.
+            % Input:
+            %   file_path (1 x 1 char/string)
+            %       target file path
+            % Output:
+            %   (none)
+            if isempty(file_path)
+                return;
+            end
+
+            parent_dir = fileparts(char(string(file_path)));
+            if isempty(parent_dir)
+                return;
+            end
+            CPathResolver.ensureDir(parent_dir);
         end
 
     end

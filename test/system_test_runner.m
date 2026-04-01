@@ -193,6 +193,37 @@ function isMatch = compare_text_files(file1, file2, tol)
     isMatch = true;
 end
 
+
+function isMatch = compare_mat_files(file1, file2)
+    % COMPARE_MAT_FILES Compare MAT files by variable names and values
+    % Input:
+    %   file1 (1 x N char/string)
+    %   file2 (1 x N char/string)
+    % Output:
+    %   isMatch (1 x 1 logical)
+    vars1 = whos('-file', file1);
+    vars2 = whos('-file', file2);
+
+    names1 = sort({vars1.name});
+    names2 = sort({vars2.name});
+    if ~isequal(names1, names2)
+        isMatch = false;
+        return;
+    end
+
+    data1 = load(file1);
+    data2 = load(file2);
+    for i_var = 1:numel(names1)
+        var_name = names1{i_var};
+        if ~isequaln(data1.(var_name), data2.(var_name))
+            isMatch = false;
+            return;
+        end
+    end
+
+    isMatch = true;
+end
+
 function allMatch = compare_dir_recursive(currentDir, rootGoldenDir, rootOutputDir)
     % COMPARE_DIR_RECURSIVE Recursively compare output directory to golden
     % Input:
@@ -229,9 +260,12 @@ function allMatch = compare_dir_recursive(currentDir, rootGoldenDir, rootOutputD
             
             [~, ~, ext] = fileparts(files(i).name);
             isTextFile = any(strcmpi(ext, {'.txt'}));
+            isMatFile = strcmpi(ext, '.mat');
             
             if isTextFile
                 passed = compare_text_files(fullGoldenPath, outputPath, 1e-5);
+            elseif isMatFile
+                passed = compare_mat_files(fullGoldenPath, outputPath);
             else
                 passed = compare_binary_files(fullGoldenPath, outputPath);
             end

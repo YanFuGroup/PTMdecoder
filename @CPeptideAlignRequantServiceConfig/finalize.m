@@ -19,6 +19,15 @@ end
 if ~isfield(cfg, 'requant_output_path')
     cfg.requant_output_path = '';
 end
+if ~isfield(cfg, 'msms_res_path')
+    cfg.msms_res_path = '';
+end
+if ~isfield(cfg, 'peptide_quant_res_path')
+    cfg.peptide_quant_res_path = '';
+end
+if ~isfield(cfg, 'align_requant_rt_stats_path')
+    cfg.align_requant_rt_stats_path = '';
+end
 if ~isfield(cfg.align_options, 'min_psm') || isempty(cfg.align_options.min_psm)
     cfg.align_options.min_psm = 1;
 end
@@ -48,8 +57,20 @@ if cfg.align_options.max_rt_residual < 0
     cfg.align_options.max_rt_residual = [];
 end
 
-cfg.alignment_report_path = CPathResolver.resolveFilePath( ...
-    cfg.output_dir_path, 'report_alignment.txt', cfg.alignment_report_path);
-cfg.requant_output_path = CPathResolver.resolveFilePath( ...
-    cfg.output_dir_path, 'report_peptide_all_requant_aligned.txt', cfg.requant_output_path);
+if isempty(cfg.msms_res_path)
+    error('CPeptideAlignRequantServiceConfig:MissingMsmsResPath', ...
+        'msms_res_path must be provided for peptide align-requant stage.');
+end
+if isempty(cfg.peptide_quant_res_path)
+    error('CPeptideAlignRequantServiceConfig:MissingPeptideQuantResPath', ...
+        'peptide_quant_res_path must be provided for peptide align-requant stage.');
+end
+if isempty(cfg.alignment_report_path)
+    error('CPeptideAlignRequantServiceConfig:MissingAlignReportPath', ...
+        'align_report_path must be provided for peptide align-requant stage.');
+end
+if isempty(cfg.requant_output_path)
+    error('CPeptideAlignRequantServiceConfig:MissingAlignRequantOutputPath', ...
+        'align_requant_output_path must be provided for peptide align-requant stage.');
+end
 end

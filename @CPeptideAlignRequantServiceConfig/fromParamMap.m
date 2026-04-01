@@ -27,15 +27,18 @@ cfg.alpha = CParamMapUtils.getRequiredNumber(task_param_map, CPTMdecoderWorkflow
 cfg.result_filter_threshold = CParamMapUtils.getRequiredNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_RESULT_FILTER_THRESHOLD, 'result filter threshold', 'CPeptideAlignRequantServiceConfig');
 cfg.fasta_file_path = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_FASTA_FILE_PATH, 'FASTA file path', 'CPeptideAlignRequantServiceConfig');
 cfg.regular_express = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_REGULAR_EXPRESS, 'regular expression', 'CPeptideAlignRequantServiceConfig');
-cfg.output_dir_path = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_OUTPUT_DIR_PATH, 'output directory path', 'CPeptideAlignRequantServiceConfig');
+cfg.output_dir_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_OUTPUT_DIR_PATH, '', 'CPeptideAlignRequantServiceConfig');
 
 cfg.filtered_res_file_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_FILTERED_RES_FILE_PATH, '', 'CPeptideAlignRequantServiceConfig');
-cfg.msms_res_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MSMS_RES_PATH, [], 'CPeptideAlignRequantServiceConfig');
+cfg.msms_res_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MSMS_RES_PATH, '', 'CPeptideAlignRequantServiceConfig');
+cfg.peptide_quant_res_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_PEPTIDE_QUANT_RES_PATH, '', 'CPeptideAlignRequantServiceConfig');
 cfg.min_MSMS_num = CParamMapUtils.getOptionalNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MIN_MSMS_NUM, 1, 'CPeptideAlignRequantServiceConfig');
 cfg.alignment_report_path = CParamMapUtils.getOptional(task_param_map, ...
     CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_REPORT_PATH, '', 'CPeptideAlignRequantServiceConfig');
 cfg.requant_output_path = CParamMapUtils.getOptional(task_param_map, ...
     CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_REQUANT_OUTPUT_PATH, '', 'CPeptideAlignRequantServiceConfig');
+cfg.align_requant_rt_stats_path = CParamMapUtils.getOptional(task_param_map, ...
+    CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_REQUANT_RT_STATS_PATH, '', 'CPeptideAlignRequantServiceConfig');
 
 cfg.align_strategy_obj = parseAlignStrategyFromMap(task_param_map);
 cfg.align_options = parseAlignOptionsFromMap(task_param_map);

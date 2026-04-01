@@ -32,12 +32,6 @@ switch lower(action)
             return;
         end
         stats_path = value;
-        if exist(stats_path, 'file')
-            stats_data = load(stats_path, 'rt_sorted_counts');
-            if isfield(stats_data, 'rt_sorted_counts')
-                rt_sorted_counts = [stats_data.rt_sorted_counts; rt_sorted_counts];
-            end
-        end
         save(stats_path, 'rt_sorted_counts', '-v7');
         rt_sorted_counts = zeros(0, 1);
 

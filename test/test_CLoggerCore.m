@@ -12,7 +12,7 @@ function testConfigureAcceptsLogicalFlags(testCase)
 % TESTCONFIGUREACCEPTSLOGICALFLAGS Verify logical config values are accepted.
 
 log_file = fullfile(tempdir, ['ptmdecoder_core_test_', char(java.util.UUID.randomUUID()), '.log']);
-cleanup_log = onCleanup(@() deleteIfExists(log_file)); %#ok<NASGU>
+cleanup_log = onCleanup(@() deleteIfExists(log_file));
 
 core = CLoggerCore();
 core.configure(struct( ...
@@ -71,7 +71,7 @@ function testErrorForcesImmediateFlush(testCase)
 % TESTERRORFORCESIMMEDIATEFLUSH Verify ERROR entries are flushed immediately.
 
 log_file = fullfile(tempdir, ['ptmdecoder_core_test_', char(java.util.UUID.randomUUID()), '.log']);
-cleanup_log = onCleanup(@() deleteIfExists(log_file)); %#ok<NASGU>
+cleanup_log = onCleanup(@() deleteIfExists(log_file));
 
 core = CLoggerCore();
 core.configure(struct( ...
