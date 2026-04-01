@@ -7,8 +7,8 @@ This directory contains utility scripts to support data preparation, format conv
 ### 1. MaxQuant Format Converter
 * **Script:** `convert_mq_to_ptmdecoder.py`
 * **Description:** Converts MaxQuant's standard `msms.txt` output into the specific formats required by PTMdecoder. It generates two essential files:
-  1. **Grouped peptide-spectrum list** (`pep_spec_file`): Formatted for RT alignment and core quantification.
-  2. **Identification result table** (`filtered_res_file`): A detailed TSV file with calculated precursor masses, dynamic modification parsing, and proper PTM positioning mappings.
+  1. **Grouped peptide-spectrum list** (`pepSpecFile.txt`): Formatted for RT alignment and core quantification.
+  2. **Identification result table** (`filtered_result_mascot.txt`): A detailed TSV file with calculated precursor masses, dynamic modification parsing, and proper PTM positioning mappings.
 
 * **Usage:**
   Run the script from the command line, providing the input `msms.txt` and the desired output paths for the two generated files:
@@ -16,8 +16,8 @@ This directory contains utility scripts to support data preparation, format conv
   ```bash
   python convert_mq_to_ptmdecoder.py \
       -i /path/to/MaxQuant/txt/msms.txt \
-      -o /path/to/output/pep_spec_file.txt \
-      -r /path/to/output/filtered_res_file.txt
+      -o /path/to/output/pepSpecFile.txt \
+      -r /path/to/output/filtered_result_mascot.txt
   ```
 
 * **Advanced PTM Parsing Note:**

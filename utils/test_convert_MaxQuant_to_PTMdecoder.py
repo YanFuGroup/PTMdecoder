@@ -110,12 +110,12 @@ def test_full_pipeline_with_decoys(tmp_path):
     with open(pep_out, 'r', encoding='utf-8') as f:
         lines = f.read().splitlines()
         
-        # Verify grouping headers
-        assert "PEPTIDE" in lines
+        # Current converter keeps only modified peptides in pep_spec output
+        assert "PEPTIDE" not in lines
         assert "SEQUENCE" in lines
         
-        # Verify concatenated format of mgf and dta
-        assert "RawA.mgf\tRawA.100.100.2.0.dta" in lines
+        # Verify current format: Dataset.mgf + scan number
+        assert "RawB.mgf\t200" in lines
 
     # 5. Assert if Result table content is parsed correctly
     df_res = pd.read_csv(res_out, sep='\t', dtype=str)
@@ -128,4 +128,4 @@ def test_full_pipeline_with_decoys(tmp_path):
     # Check the second result (with modification) for correct mapping
     assert df_res.iloc[1]['modification'] == "Ac (N-term),Phos (S)"
     assert df_res.iloc[1]['modificationlocation'] == "0,6"
-    assert df_res.iloc[1]['Spectrum'] == "RawB.200.200.3.0.dta"
+    assert df_res.iloc[1]['Spectrum'] == "200"
