@@ -5,9 +5,14 @@ function main_processes(~, varargin)
 %       list of task parameter file paths
 
 for i = 1:length(varargin)
-    workflow_config = CPTMdecoderWorkflowConfig.fromParamFile(varargin{i});
-    CLogger.info('Processing parameter file: %s', varargin{i});
-    workflow_runner = CPTMdecoderWorkflowRunner(workflow_config);
-    workflow_runner.run();
+    try
+        workflow_config = CPTMdecoderWorkflowConfig.fromParamFile(varargin{i});
+        CLogger.info('Processing parameter file: %s', varargin{i});
+        workflow_runner = CPTMdecoderWorkflowRunner(workflow_config);
+        workflow_runner.run();
+        CLogger.flush();
+    catch ME
+        CLogger.error(ME, 'Failed processing parameter file: %s', varargin{i});
+    end
 end
 end

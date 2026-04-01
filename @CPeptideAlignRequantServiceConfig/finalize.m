@@ -10,8 +10,8 @@ if ~isfield(cfg, 'align_options') || isempty(cfg.align_options)
     cfg.align_options = struct();
 end
 if ~isfield(cfg, 'align_strategy_obj') || isempty(cfg.align_strategy_obj)
-    error('CPeptideAlignRequantServiceConfig:InvalidAlignStrategy', ...
-        'align_strategy_obj must be provided.');
+    CLogger.error(['[CPeptideAlignRequantServiceConfig:InvalidAlignStrategy] ', ...
+        'align_strategy_obj must be provided.']);
 end
 if ~isfield(cfg, 'alignment_report_path')
     cfg.alignment_report_path = '';
@@ -58,19 +58,19 @@ if cfg.align_options.max_rt_residual < 0
 end
 
 if isempty(cfg.msms_res_path)
-    error('CPeptideAlignRequantServiceConfig:MissingMsmsResPath', ...
-        'msms_res_path must be provided for peptide align-requant stage.');
+    CLogger.error(['[CPeptideAlignRequantServiceConfig:MissingMsmsResPath] ', ...
+        'msms_res_path must be provided for peptide align-requant stage.']);
 end
 if isempty(cfg.peptide_quant_res_path)
-    error('CPeptideAlignRequantServiceConfig:MissingPeptideQuantResPath', ...
-        'peptide_quant_res_path must be provided for peptide align-requant stage.');
+    CLogger.error(['[CPeptideAlignRequantServiceConfig:MissingPeptideQuantResPath] ', ...
+        'peptide_quant_res_path must be provided for peptide align-requant stage.']);
 end
 if isempty(cfg.alignment_report_path)
-    error('CPeptideAlignRequantServiceConfig:MissingAlignReportPath', ...
-        'align_report_path must be provided for peptide align-requant stage.');
+    CLogger.error(['[CPeptideAlignRequantServiceConfig:MissingAlignReportPath] ', ...
+        'align_report_path must be provided for peptide align-requant stage.']);
 end
 if isempty(cfg.requant_output_path)
-    error('CPeptideAlignRequantServiceConfig:MissingAlignRequantOutputPath', ...
-        'align_requant_output_path must be provided for peptide align-requant stage.');
+    CLogger.error(['[CPeptideAlignRequantServiceConfig:MissingAlignRequantOutputPath] ', ...
+        'align_requant_output_path must be provided for peptide align-requant stage.']);
 end
 end

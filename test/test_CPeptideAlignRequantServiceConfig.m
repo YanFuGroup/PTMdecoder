@@ -103,7 +103,7 @@ param_map = makeBaseParamMap();
 remove(param_map, CPTMdecoderWorkflowParamKeys.PARAM_PEPTIDE_QUANT_RES_PATH);
 
 f = @() CPeptideAlignRequantServiceConfig.fromParamMap(param_map);
-testCase.verifyError(f, 'CPeptideAlignRequantServiceConfig:MissingPeptideQuantResPath');
+verifyLoggedErrorContains(testCase, f, 'CPeptideAlignRequantServiceConfig:MissingPeptideQuantResPath');
 end
 
 

@@ -12,6 +12,7 @@ cfg.param_file_path = param_file_path;
 
 logger_cfg = buildLoggerConfigFromParamMap(task_param_map);
 CLogger.configure(logger_cfg);
+CLogger.flush();
 
 cfg.stages = {};
 
