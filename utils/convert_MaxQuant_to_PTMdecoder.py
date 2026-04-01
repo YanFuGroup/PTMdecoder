@@ -239,8 +239,8 @@ def main():
         description="Convert MaxQuant msms.txt to PTMdecoder input formats."
     )
     parser.add_argument('-i', '--input', required=True, help="Path to input MaxQuant msms.txt")
-    parser.add_argument('-o', '--output', required=True, help="Path to output pep_spec_list.txt")
-    parser.add_argument('-r', '--result', required=True, help="Path to output filtered_res_file.txt")
+    parser.add_argument('-o', '--output', required=True, help="Path to output pepSpecFile.txt")
+    parser.add_argument('-r', '--result', required=True, help="Path to output filtered_result_mascot.txt")
     parser.add_argument('-s', '--suffix', default='', help="Optional dataset suffix to insert between Raw file and '.mgf' (supports empty string)")
     
     args = parser.parse_args()

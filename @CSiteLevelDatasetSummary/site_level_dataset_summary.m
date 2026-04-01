@@ -15,6 +15,14 @@ end
 CLogger.info(['[CSiteLevelDatasetSummary:site_level_dataset_summary] Start summarizing. ', ...
     'input=%s'], obj.m_input_path);
 
+% -------------------------------------------------------------------------
+% The peptide-level result file contains three fixed-format header lines,
+% then a mixed stream of protein-context lines and peptide-detail lines.
+% We build a two-level map:
+%   site_dataset_sum(site_name) -> dataset_sum_map(dataset_name) = AUC sum
+% and track all observed datasets for final matrix column ordering.
+% -------------------------------------------------------------------------
+
 % Keep compatibility with peptide-level file format:
 % line 1: protein header, line 2: peptide header, line 3: xic peak header
 fgetl(fin);
@@ -49,6 +57,13 @@ max_column_idx = max([obj.m_column_idxs.icol_seq, obj.m_column_idxs.icol_dataset
 selected_abbr_protein = [];
 selected_start_pos_protein = -1;
 
+% -------------------------------------------------------------------------
+% Streaming parser over the whole file.
+% - Peptide line: starts with '*', carries sequence / dataset / AUC.
+% - Protein line: non-'*' and non-'@', refreshes current protein context.
+% The current protein context is then used by following peptide lines until
+% the next protein line appears.
+% -------------------------------------------------------------------------
 while ~feof(fin)
     strline = fgetl(fin);
     if ~ischar(strline) || isempty(strline)
@@ -59,6 +74,7 @@ while ~feof(fin)
     if strline(1) == '*'
         peptide_line_count = peptide_line_count + 1;
 
+        % Parse and validate peptide-level columns first.
         segments = strsplit(strline, sprintf('\t'));
         if numel(segments) < max_column_idx
             malformed_peptide_line_count = malformed_peptide_line_count + 1;
@@ -86,10 +102,12 @@ while ~feof(fin)
 
         modified_peptides = segments{obj.m_column_idxs.icol_seq};
 
+        % Remove configured tokens that should not affect mod parsing.
         for idx_ig = 1:length(obj.m_ignore_strings)
             modified_peptides = strrep(modified_peptides, obj.m_ignore_strings{idx_ig}, '');
         end
 
+        % Extract all modification blocks in the form {mod_name}.
         mod_str_matches = regexp(modified_peptides, '{(.*?)}', 'tokens');
         if isempty(mod_str_matches)
             continue;
@@ -99,6 +117,7 @@ while ~feof(fin)
         positions_str = zeros(1, numel(mod_str_matches));
         start_pos = 0;
 
+        % Iterate each modification occurrence and map it to a site key.
         for i_mod = 1:numel(mod_str_matches)
             mod_name = mod_str_matches{i_mod}{1};
             found_index = strfind(modified_peptides(start_pos + 1:end), ['{' mod_name '}']);
@@ -122,6 +141,7 @@ while ~feof(fin)
             abbr_mod = obj.m_mod_name_abbr(mod_name);
             mod_specificity = modified_peptides(positions_str(i_mod) - 1);
 
+            % Build site key for terminal and residue-specific modifications.
             if mod_specificity == '_'
                 if positions_seq(i_mod) == 0
                     mod_specificity = 'N-term';
@@ -144,6 +164,7 @@ while ~feof(fin)
                 site_name = [selected_abbr_protein, ' ', mod_specificity, num2str(site_pos), abbr_mod];
             end
 
+            % Aggregate AUC by (site, dataset).
             if isKey(site_dataset_sum, site_name)
                 dataset_sum_map = site_dataset_sum(site_name);
             else
@@ -159,6 +180,8 @@ while ~feof(fin)
             site_dataset_sum(site_name) = dataset_sum_map;
         end
     elseif strline(1) ~= '@'
+        % Protein-context line: pick first protein name that maps to an
+        % abbreviation and cache its peptide start position on protein.
         total_protein_lines = total_protein_lines + 1;
         selected_abbr_protein = [];
         selected_start_pos_protein = -1;
@@ -197,6 +220,10 @@ end
 
 fclose(fin);
 
+% -------------------------------------------------------------------------
+% Finalize outputs: sort dataset/site axes for deterministic downstream use,
+% then emit quality diagnostics for skipped or unmatched records.
+% -------------------------------------------------------------------------
 dataset_names = keys(dataset_seen);
 if isempty(dataset_names)
     dataset_names = {};
