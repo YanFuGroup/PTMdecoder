@@ -10,6 +10,10 @@ function protein_name_abbr_map = loadProteinAbbrMapFromTsv(file_path, col_protei
 % Outputs:
 %    protein_name_abbr_map (containers.Map)
 %        Mapping from normalized protein name to abbreviation.
+
+% =========================================================================
+% 1. Input Parameter Normalization and Validation
+% =========================================================================
 file_path = normalizeTextInput(file_path, 'file_path');
 col_protein_name = strtrim(normalizeTextInput(col_protein_name, 'col_protein_name'));
 col_abbr_name = strtrim(normalizeTextInput(col_abbr_name, 'col_abbr_name'));
@@ -31,6 +35,9 @@ if ~exist(file_path, 'file')
         'Protein abbreviation map file does not exist: %s', file_path);
 end
 
+% =========================================================================
+% 2. Core Data Structure and File Handle Initialization
+% =========================================================================
 protein_name_abbr_map = containers.Map('KeyType', 'char', 'ValueType', 'char');
 
 fid = fopen(file_path, 'r');
@@ -40,6 +47,9 @@ if fid < 0
 end
 cleanup_obj = onCleanup(@() fclose(fid));
 
+% =========================================================================
+% 3. Read Header and Locate Target Columns
+% =========================================================================
 header_line = fgetl(fid);
 if ~ischar(header_line)
     error('CSiteLevelPipelineConfig:ProteinAbbrMapEmptyFile', ...
@@ -66,6 +76,9 @@ if isempty(idx_abbr)
         'Column "%s" is not found in header of file: %s', col_abbr_name, file_path);
 end
 
+% =========================================================================
+% 4. Extract Full Data using textscan
+% =========================================================================
 num_columns = numel(header_tokens);
 format_spec = repmat('%s', 1, num_columns);
 column_cells = textscan(fid, format_spec, ...
@@ -81,6 +94,9 @@ else
     data_row_count = numel(column_cells{1});
 end
 
+% =========================================================================
+% 5. Extract Target Columns and Perform String Cleaning
+% =========================================================================
 protein_col = column_cells{idx_protein};
 abbr_col = column_cells{idx_abbr};
 
@@ -92,6 +108,9 @@ abbr_token_by_row = cellfun(@extractFirstNonEmptyAbbrToken, abbr_col, 'UniformOu
 is_valid_row = ~cellfun(@isempty, protein_tokens_by_row) & ~cellfun(@isempty, abbr_token_by_row);
 invalid_row_count = 0;
 
+% =========================================================================
+% 6. Build Dictionary Mapping and Handle Duplicates/Conflicts
+% =========================================================================
 for idx_row = 1:data_row_count
     line_no = idx_row + 1;
     if ~is_valid_row(idx_row)
@@ -112,7 +131,7 @@ for idx_row = 1:data_row_count
                     'Conflict at line %d for protein "%s": old="%s", new="%s".'], ...
                     line_no, protein_key, existing_abbr, abbr_token);
             end
-            continue;
+            continue;   % Will not overwrite existing mapping, even if not exit by error
         end
 
         protein_name_abbr_map(protein_key) = abbr_token;
