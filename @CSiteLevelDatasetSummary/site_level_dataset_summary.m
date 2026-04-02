@@ -40,22 +40,11 @@ peptide_line_count = 0;
 malformed_peptide_line_count = 0;
 invalid_auc_line_count = 0;
 uninterested_peptide_lines = 0;
-protein_name_regex_miss_count = 0;
-
-if ~isempty(obj.m_protein_name_extract_regex)
-    try
-        regexp('SANITY_CHECK', obj.m_protein_name_extract_regex, 'tokens', 'once');
-    catch me
-        error('CSiteLevelDatasetSummary:InvalidProteinNameRegex', ...
-            'Invalid protein name extraction regex "%s": %s', ...
-            obj.m_protein_name_extract_regex, me.message);
-    end
-end
+invalid_protein_context_segment_count = 0;
 
 max_column_idx = max([obj.m_column_idxs.icol_seq, obj.m_column_idxs.icol_dataset, obj.m_column_idxs.icol_auc]);
 
-selected_abbr_protein = [];
-selected_start_pos_protein = -1;
+selected_protein_contexts = struct('protein_name', {}, 'start_pos', {});
 
 % -------------------------------------------------------------------------
 % Streaming parser over the whole file.
@@ -87,7 +76,7 @@ while ~feof(fin)
             continue;
         end
 
-        if isempty(selected_abbr_protein)
+        if isempty(selected_protein_contexts)
             uninterested_peptide_lines = uninterested_peptide_lines + 1;
             continue;
         end
@@ -141,28 +130,33 @@ while ~feof(fin)
             abbr_mod = obj.m_mod_name_abbr(mod_name);
             mod_specificity = modified_peptides(positions_str(i_mod) - 1);
 
-            % Build site key for terminal and residue-specific modifications.
+            % Build one protein-prefix string that preserves all proteins from
+            % the current protein line, each with its computed site position.
+            protein_site_tokens = cell(1, numel(selected_protein_contexts));
+            for idx_ctx = 1:numel(selected_protein_contexts)
+                mod_prot_pos = selected_protein_contexts(idx_ctx).start_pos + positions_seq(i_mod) - 1;
+                if obj.m_site_position_count_initial_m
+                    site_pos_curr = mod_prot_pos;
+                else
+                    site_pos_curr = mod_prot_pos - 1;
+                end
+
+                protein_site_tokens{idx_ctx} = [selected_protein_contexts(idx_ctx).protein_name, ...
+                    ',', num2str(site_pos_curr), ';'];
+            end
+            protein_site_prefix = strjoin(protein_site_tokens, '');
+
+            % Keep terminal/residue semantics from the legacy output format.
             if mod_specificity == '_'
                 if positions_seq(i_mod) == 0
                     mod_specificity = 'N-term';
                 else
                     mod_specificity = 'C-term';
                 end
-                site_name = [selected_abbr_protein, mod_specificity, '_', abbr_mod];
-            else
-                if selected_start_pos_protein < 0
-                    error(['The start position on protein of peptide "', ...
-                        modified_peptides, '" is out of range.']);
-                end
-                mod_prot_pos = selected_start_pos_protein + positions_seq(i_mod) - 1;
-                if obj.m_site_position_count_initial_m
-                    site_pos = mod_prot_pos;
-                else
-                    site_pos = mod_prot_pos - 1;
-                end
-                % Main site name format: [protein abbreviation] [modification specificity][modification position][modification abbreviation]
-                site_name = [selected_abbr_protein, ' ', mod_specificity, num2str(site_pos), abbr_mod];
             end
+            % Main site name format:
+            % [protein_name,pos;protein_name,pos;] [specificity]_[abbr]
+            site_name = [protein_site_prefix, ' ', mod_specificity, '_', abbr_mod];
 
             % Aggregate AUC by (site, dataset).
             if isKey(site_dataset_sum, site_name)
@@ -180,37 +174,31 @@ while ~feof(fin)
             site_dataset_sum(site_name) = dataset_sum_map;
         end
     elseif strline(1) ~= '@'
-        % Protein-context line: pick first protein name that maps to an
-        % abbreviation and cache its peptide start position on protein.
+        % Protein-context line: cache all protein/start-position pairs from
+        % this line and reuse them for following peptide-detail lines.
         total_protein_lines = total_protein_lines + 1;
-        selected_abbr_protein = [];
-        selected_start_pos_protein = -1;
+        selected_protein_contexts = struct('protein_name', {}, 'start_pos', {});
 
         segments = strsplit(strline, ';');
         for i_seg = 1:(length(segments) - 1)
             key_value = strsplit(segments{i_seg}, ',');
             if numel(key_value) < 2
+                invalid_protein_context_segment_count = invalid_protein_context_segment_count + 1;
                 continue;
             end
             protein_name = strtrim(key_value{1});
-
-            if ~isempty(obj.m_protein_name_extract_regex)
-                token_match = regexp(protein_name, obj.m_protein_name_extract_regex, 'tokens', 'once');
-                if ~isempty(token_match)
-                    protein_name = strtrim(token_match{1});
-                else
-                    protein_name_regex_miss_count = protein_name_regex_miss_count + 1;
-                end
+            start_pos = str2double(strtrim(key_value{2}));
+            if isempty(protein_name) || isnan(start_pos) || ~isfinite(start_pos)
+                invalid_protein_context_segment_count = invalid_protein_context_segment_count + 1;
+                continue;
             end
 
-            if isKey(obj.m_protein_name_abbr, protein_name)
-                selected_abbr_protein = obj.m_protein_name_abbr(protein_name);
-                selected_start_pos_protein = str2double(strtrim(key_value{2}));
-                break;
-            end
+            new_idx = numel(selected_protein_contexts) + 1;
+            selected_protein_contexts(new_idx).protein_name = protein_name;
+            selected_protein_contexts(new_idx).start_pos = start_pos;
         end
 
-        if isempty(selected_abbr_protein)
+        if isempty(selected_protein_contexts)
             unmatched_protein_lines = unmatched_protein_lines + 1;
         else
             matched_protein_lines = matched_protein_lines + 1;
@@ -258,9 +246,9 @@ if unmatched_protein_lines > 0
         unmatched_protein_lines, matched_protein_lines, total_protein_lines);
 end
 
-if protein_name_regex_miss_count > 0
+if invalid_protein_context_segment_count > 0
     CLogger.warn(['[CSiteLevelDatasetSummary:site_level_dataset_summary] ', ...
-        'Protein-name regex had no match in %d protein entries.'], protein_name_regex_miss_count);
+        'Invalid protein-context entries skipped: %d.'], invalid_protein_context_segment_count);
 end
 
 CLogger.info(['[CSiteLevelDatasetSummary:site_level_dataset_summary] Done. ', ...
