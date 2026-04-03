@@ -50,8 +50,7 @@ if fin < 0
     error(['Can not open the peptide level result file: "', obj.m_input_path, '"']);
 end
 
-CLogger.info(['[CSiteLevelSummary:site_level_summary] Start summarizing. ', ...
-    'mode=%s, input=%s'], obj.m_protein_abbr_input_mode, obj.m_input_path);
+CLogger.info('[CSiteLevelSummary:site_level_summary] Start summarizing. input=%s', obj.m_input_path);
 
 % read files and gather the specified sequence
 fgetl(fin);
