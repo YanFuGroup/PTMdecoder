@@ -93,7 +93,7 @@ def calculate_precursor_mass(df: pd.DataFrame) -> pd.Series:
 # Module 2: Data I/O and Validation
 # ------------------------------------------------------------------------
 
-def load_and_validate_data(input_file: str) -> pd.DataFrame:
+def load_and_validate_data(input_file: str, strict_con_filter: bool = False) -> pd.DataFrame:
     """Loads MaxQuant msms.txt, validates required columns, and cleans data."""
     print(f"Reading MaxQuant results from: {input_file} ...")
     try:
@@ -149,10 +149,17 @@ def load_and_validate_data(input_file: str) -> pd.DataFrame:
     df['Number of matches'] = df['Number of matches'].fillna('0')
     
     # 4. Format Proteins column for downstream compatibility
-    # Replace semicolons with commas for multiple protein assignments
-    # Then remove any protein names that start with 'CON__'.
-    # If removing these leaves an empty assignment, drop the row.
+    # Replace semicolons with commas for multiple protein assignments.
+    # Filtering strategy for proteins starting with 'CON__':
+    # - lenient mode (default): remove only CON__ entries in-place; drop rows only if nothing remains.
+    # - strict mode: drop the entire row if any CON__ entry is present.
     df['Proteins'] = df['Proteins'].astype(str).str.replace(';', ',', regex=False)
+
+    def _contains_con_protein(protein_str: str) -> bool:
+        if protein_str is None:
+            return False
+        parts = [p.strip() for p in protein_str.split(',') if p.strip() != '']
+        return any(p.startswith('CON__') for p in parts)
 
     def _filter_con_proteins(protein_str: str) -> str:
         if protein_str is None:
@@ -161,14 +168,21 @@ def load_and_validate_data(input_file: str) -> pd.DataFrame:
         filtered = [p for p in parts if not p.startswith('CON__')]
         return ','.join(filtered)
 
-    df['Proteins'] = df['Proteins'].apply(_filter_con_proteins)
+    if strict_con_filter:
+        strict_drop_mask = df['Proteins'].apply(_contains_con_protein)
+        if strict_drop_mask.any():
+            num_removed = strict_drop_mask.sum()
+            print(f"[Info] Strict mode enabled: removing {num_removed} rows containing at least one 'CON__' protein assignment.")
+            df = df[~strict_drop_mask]
+    else:
+        df['Proteins'] = df['Proteins'].apply(_filter_con_proteins)
 
-    # Drop rows where Proteins is empty after filtering out CON__ entries
-    empty_mask = df['Proteins'].astype(str).str.strip() == ''
-    if empty_mask.any():
-        num_removed = empty_mask.sum()
-        print(f"[Info] Removing {num_removed} rows where only 'CON__' proteins were assigned (now empty after filtering).")
-        df = df[~empty_mask]
+        # Drop rows where Proteins is empty after filtering out CON__ entries
+        empty_mask = df['Proteins'].astype(str).str.strip() == ''
+        if empty_mask.any():
+            num_removed = empty_mask.sum()
+            print(f"[Info] Removing {num_removed} rows where only 'CON__' proteins were assigned (now empty after filtering).")
+            df = df[~empty_mask]
     
     return df
 
@@ -240,13 +254,18 @@ def main():
     )
     parser.add_argument('-i', '--input', required=True, help="Path to input MaxQuant msms.txt")
     parser.add_argument('-o', '--output', required=True, help="Path to output pepSpecFile.txt")
-    parser.add_argument('-r', '--result', required=True, help="Path to output filtered_result_mascot.txt")
+    parser.add_argument('-r', '--result', required=True, help="Path to output filtered_result.txt")
     parser.add_argument('-s', '--suffix', default='', help="Optional dataset suffix to insert between Raw file and '.mgf' (supports empty string)")
+    parser.add_argument(
+        '-c', '--strict-con-filter',
+        action='store_true',
+        help="Enable strict contaminant filtering: drop any row containing a protein that starts with 'CON__'. Default is lenient mode.",
+    )
     
     args = parser.parse_args()
     
     # 1. Load and Validate
-    df = load_and_validate_data(args.input)
+    df = load_and_validate_data(args.input, strict_con_filter=args.strict_con_filter)
     
     # 2. Generate Task 1 File
     generate_pep_spec_list(df, args.output, args.suffix)
