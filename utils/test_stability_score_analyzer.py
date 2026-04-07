@@ -1,10 +1,9 @@
 import pytest
 import pandas as pd
 import numpy as np
-from pathlib import Path
 
 # Import functions from the new modularized analyzer script
-from stability_score_analyzer import parse_metrics_from_file, calculate_quantiles
+from stability_score_analyzer import parse_metrics_from_file, calculate_directional_thresholds
 
 @pytest.fixture
 def mock_txt_file(tmp_path):
@@ -46,7 +45,7 @@ def test_parse_metrics_from_file(mock_txt_file):
     assert list(metrics["support"]) == [100.0, 10.0, 50.0]
     assert list(metrics["mad"]) == [0.05, 0.95, 0.50]
 
-def test_calculate_quantiles():
+def test_calculate_directional_thresholds():
     """
     Tests if the quantile calculation logic works correctly on known data.
     """
@@ -57,20 +56,29 @@ def test_calculate_quantiles():
         'mad': pd.Series(np.arange(1, 101, dtype=float))
     }
     
-    quantiles = [0.01, 0.05]
-    result_df = calculate_quantiles(mock_data, quantiles)
-    
-    assert 0.01 in result_df.index
-    assert 0.05 in result_df.index
-    
-    # Check columns
-    assert "jaccard" in result_df.columns
-    assert "support" in result_df.columns
-    assert "mad" in result_df.columns
-    
-    # In an array of 1 to 100, the 0.01 quantile is approximately 1.99 
-    assert np.isclose(result_df.loc[0.01, 'jaccard'], 1.99)
-    assert np.isclose(result_df.loc[0.05, 'jaccard'], 5.95)
+    metric_quantile_map = {
+        'jaccard': [0.01, 0.05],
+        'support': [0.01, 0.05],
+        'mad': [0.99, 0.95]
+    }
+    result_df = calculate_directional_thresholds(mock_data, metric_quantile_map)
+
+    # Check index (metrics)
+    assert "jaccard" in result_df.index
+    assert "support" in result_df.index
+    assert "mad" in result_df.index
+
+    # Check directional label columns
+    assert "bottom_1%" in result_df.columns
+    assert "bottom_5%" in result_df.columns
+    assert "top_1%" in result_df.columns
+    assert "top_5%" in result_df.columns
+
+    # In an array of 1 to 100, the 0.01 quantile is approximately 1.99
+    assert np.isclose(result_df.loc['jaccard', 'bottom_1%'], 1.99)
+    assert np.isclose(result_df.loc['jaccard', 'bottom_5%'], 5.95)
+    assert np.isclose(result_df.loc['mad', 'top_1%'], 99.01)
+    assert np.isclose(result_df.loc['mad', 'top_5%'], 95.05)
 
 def test_empty_file_handling(tmp_path):
     """
@@ -80,8 +88,13 @@ def test_empty_file_handling(tmp_path):
     empty_file.write_text("")
     
     metrics = parse_metrics_from_file(empty_file)
-    result_df = calculate_quantiles(metrics, [0.01, 0.05])
+    metric_quantile_map = {
+        'jaccard': [0.01, 0.05],
+        'support': [0.01, 0.05],
+        'mad': [0.99, 0.95]
+    }
+    result_df = calculate_directional_thresholds(metrics, metric_quantile_map)
     
-    # Should result in NaNs, but not crash
+    # Empty input should not crash and should produce an empty result table.
     assert len(metrics["jaccard"]) == 0
-    assert pd.isna(result_df.loc[0.01, 'jaccard'])
+    assert result_df.empty

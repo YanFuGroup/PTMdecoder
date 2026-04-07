@@ -67,6 +67,62 @@ def test_missing_protein_raises_exit(tmp_path):
     # Verify if exit code is 1 (indicates error exit)
     assert excinfo.value.code == 1
 
+
+def test_lenient_con_filter_removes_only_con_entries(tmp_path):
+    """Default lenient mode should keep rows and strip only CON__ proteins."""
+    input_file = tmp_path / "lenient_msms.txt"
+
+    data = {
+        'Raw file': ['RawA', 'RawB', 'RawC'],
+        'Scan number': ['100', '200', '300'],
+        'Charge': ['2', '2', '2'],
+        'Sequence': ['PEPA', 'PEPB', 'PEPC'],
+        'Mass': ['800', '810', '820'],
+        'Mass error [Da]': ['0', '0', '0'],
+        'm/z': ['400', '405', '410'],
+        'Number of matches': ['10', '11', '12'],
+        'Proteins': ['CON__A;ProtA', 'ProtB;CON__B', 'CON__Only'],
+        'Modified sequence': ['_PEPA_', '_PEPB_', '_PEPC_'],
+        'Score': ['100', '101', '102'],
+        'Reverse': ['', '', '']
+    }
+    pd.DataFrame(data).to_csv(input_file, sep='\t', index=False)
+
+    df_valid = load_and_validate_data(str(input_file))
+
+    # Row with only CON__ should be dropped; mixed rows should be kept and cleaned.
+    assert len(df_valid) == 2
+    assert df_valid['Proteins'].tolist() == ['ProtA', 'ProtB']
+    assert not df_valid['Proteins'].str.contains('CON__').any()
+
+
+def test_strict_con_filter_drops_any_con_row(tmp_path):
+    """Strict mode should drop any row that contains at least one CON__ protein."""
+    input_file = tmp_path / "strict_msms.txt"
+
+    data = {
+        'Raw file': ['RawA', 'RawB', 'RawC'],
+        'Scan number': ['100', '200', '300'],
+        'Charge': ['2', '2', '2'],
+        'Sequence': ['PEPA', 'PEPB', 'PEPC'],
+        'Mass': ['800', '810', '820'],
+        'Mass error [Da]': ['0', '0', '0'],
+        'm/z': ['400', '405', '410'],
+        'Number of matches': ['10', '11', '12'],
+        'Proteins': ['CON__A;ProtA', 'ProtB', 'ProtC,CON__C'],
+        'Modified sequence': ['_PEPA_', '_PEPB_', '_PEPC_'],
+        'Score': ['100', '101', '102'],
+        'Reverse': ['', '', '']
+    }
+    pd.DataFrame(data).to_csv(input_file, sep='\t', index=False)
+
+    df_valid = load_and_validate_data(str(input_file), strict_con_filter=True)
+
+    # Only the row without any CON__ protein should remain.
+    assert len(df_valid) == 1
+    assert df_valid.iloc[0]['Sequence'] == 'PEPB'
+    assert df_valid.iloc[0]['Proteins'] == 'ProtB'
+
 # ==========================================
 # Module 3: End-to-End Integration Tests 
 # ==========================================
