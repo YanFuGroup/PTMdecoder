@@ -12,6 +12,7 @@ Free for academic uses. Licensed under BSD-3-Clause-Clear license.
 - [Features](#features)
 - [Installation](#installation)
 - [Getting Started](#getting-started)
+- [Developer Notes](#developer-notes)
 
 # Features
 
@@ -85,3 +86,14 @@ Click the ​**Save Parameter & Run**​ button to generate a reusable `.param` 
 ---
 
 For more information about PTMdecoder and more test data, please see [PTMdecoder website](http://fugroup.amss.ac.cn/software/PTMdecoder/PTMdecoder.html).
+
+# Developer Notes
+
+Developer-facing architecture notes are kept under [docs](docs/README.md):
+
+- [Architecture Overview](docs/ARCHITECTURE.md) explains the current workflow
+  stages and class layers.
+- [Class Guide](docs/CLASS_GUIDE.md) maps common maintenance tasks to the
+  classes that own them.
+- [Maintainer Guide](docs/MAINTAINER_GUIDE.md) records conventions for adding
+  classes and keeping the documentation current.
