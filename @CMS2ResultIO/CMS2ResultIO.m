@@ -4,7 +4,7 @@ classdef CMS2ResultIO
     methods (Static)
         keys = CMS2ResultFieldKeys()
         resultObj = read(msms_res_path)
-        write(result, path)
+        write(result, path, include_vif)
         cStr = formatImpStrings(massArrangement, fixedPosMod, dictVariMod, inxSites, pepSeq)
     end
 end

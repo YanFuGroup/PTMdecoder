@@ -484,7 +484,8 @@ classdef CMSMSLevelService < handle
                 end
             end
             
-            CMS2ResultIO.write(msms_result, each_PSM_results_path);
+            include_vif = isfield(cfg, 'msms_report_vif_on') && cfg.msms_report_vif_on == 1;
+            CMS2ResultIO.write(msms_result, each_PSM_results_path, include_vif);
             fclose(fin);
             print_progress.last_update();
             CLogger.info('MSMS-level quantification done.');

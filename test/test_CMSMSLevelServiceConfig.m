@@ -25,6 +25,7 @@ testCase.verifyFalse(isfield(cfg, 'msms_res_path'));
 testCase.verifyEqual(cfg.min_peptide_length, 7);
 testCase.verifyEqual(cfg.max_peptide_length, 40);
 testCase.verifyEqual(cfg.max_mod_per_peptide, 5);
+testCase.verifyEqual(cfg.msms_report_vif_on, 0);
 end
 
 
@@ -136,6 +137,39 @@ cfg = CMSMSLevelServiceConfig.fromParamMap(param_map);
 
 testCase.verifyTrue(isfield(cfg, 'stability_options'));
 testCase.verifyTrue(cfg.stability_options.use_parallel);
+end
+
+
+function testMsmsReportVifOnCanBeEnabled(testCase)
+% Verify MSMS report VIF output switch accepts 1.
+% Inputs:
+%    testCase (matlab.unittest.TestCase)
+%        Test case context.
+% Outputs:
+%    (none)
+
+param_map = makeBaseParamMap();
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_MSMS_REPORT_VIF_ON) = '1';
+
+cfg = CMSMSLevelServiceConfig.fromParamMap(param_map);
+
+testCase.verifyEqual(cfg.msms_report_vif_on, 1);
+end
+
+
+function testInvalidMsmsReportVifOnThrowsError(testCase)
+% Verify MSMS report VIF output switch only accepts 0 or 1.
+% Inputs:
+%    testCase (matlab.unittest.TestCase)
+%        Test case context.
+% Outputs:
+%    (none)
+
+param_map = makeBaseParamMap();
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_MSMS_REPORT_VIF_ON) = '2';
+
+f = @() CMSMSLevelServiceConfig.fromParamMap(param_map);
+testCase.verifyError(f, 'CMSMSLevelServiceConfig:InvalidMsmsReportVifOn');
 end
 
 

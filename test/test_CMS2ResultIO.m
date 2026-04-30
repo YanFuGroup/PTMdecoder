@@ -109,8 +109,8 @@ src.addPeptidoform('FormB1', 300.5, struct('support_frequency', 0.75, 'vif', 3.3
 
 src.compress();
 
-% Round-trip: write then read
-CMS2ResultIO.write(src, testFile);
+% Round-trip: write then read with VIF fields enabled
+CMS2ResultIO.write(src, testFile, true);
 dst = CMS2ResultIO.read(testFile);
 
 % Verify hierarchical structure is consistent
@@ -138,6 +138,32 @@ for i = 1:length(src.Peptides)
         testCase.verifyEqual(dstSpec.peptidoform_list_abundance_mad, srcSpec.peptidoform_list_abundance_mad, 'AbsTol', 1e-12);
     end
 end
+end
+
+function testWriteDefaultsToNoVifFields(testCase)
+% TESTWRITEDEFAULTSTONOVIFFIELDS Validate default MSMS output omits VIF fields.
+
+testFile = fullfile(pwd, 'test_msms_res_no_vif_temp.txt');
+testCase.addTeardown(@() deleteTestFile(testFile));
+
+src = CMS2Result();
+src.addOrSelectPeptide('PEPTIDE_A');
+src.addSpectrum('Dataset1', 'SpecA1', struct( ...
+    'jaccard_stability', 0.85, ...
+    'vif_all_imp_max', 4.2, ...
+    'vif_reported_imp_max', 1.8));
+src.addPeptidoform('FormA1', 100, struct('support_frequency', 0.90, 'vif', 10.5, 'abundance_mad', 0.01));
+src.compress();
+
+CMS2ResultIO.write(src, testFile);
+
+content = fileread(testFile);
+lines = strsplit(strtrim(content), newline);
+testCase.verifyTrue(any(strcmp(lines, sprintf('S\tDataset1\tSpecA1\tjaccard=0.850000'))));
+testCase.verifyTrue(any(strcmp(lines, sprintf('FormA1\t100.000000\tsupport=0.900000\tmad=0.010000'))));
+testCase.verifyFalse(contains(content, 'vif_all='));
+testCase.verifyFalse(contains(content, 'vif_reported='));
+testCase.verifyFalse(contains(content, sprintf('\tvif=')));
 end
 
 function testReadNamedFields(testCase)

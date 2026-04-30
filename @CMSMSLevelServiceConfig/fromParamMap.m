@@ -43,6 +43,11 @@ cfg.result_filter_threshold = CParamMapUtils.getRequiredNumber(task_param_map, C
 cfg.enzyme_name = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_ENZYME_NAME, 'enzyme name', 'CMSMSLevelServiceConfig');
 cfg.enzyme_limits = str2num(CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_ENZYME_LIMIT_C_TERM_POSSIBLE_MOD, 'enzyme limit C-term possible modifications', 'CMSMSLevelServiceConfig')); %#ok<ST2NM>
 cfg.output_dir_path = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_OUTPUT_DIR_PATH, 'output directory path', 'CMSMSLevelServiceConfig');
+cfg.msms_report_vif_on = CParamMapUtils.getOptionalNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MSMS_REPORT_VIF_ON, 0, 'CMSMSLevelServiceConfig');
+if ~(cfg.msms_report_vif_on == 0 || cfg.msms_report_vif_on == 1)
+    error('CMSMSLevelServiceConfig:InvalidMsmsReportVifOn', ...
+        'Param ''msms_report_vif_on'' must be 0 or 1.');
+end
 
 if task_param_map.isKey(CPTMdecoderWorkflowParamKeys.PARAM_N_RESAMPLES)
     num_resamples = CParamMapUtils.getRequiredNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_N_RESAMPLES, 'number of stability resamples', 'CMSMSLevelServiceConfig');

@@ -1,0 +1,5 @@
+* text=auto
+
+*.m text eol=lf
+*.param text eol=lf
+*.txt text eol=lf
