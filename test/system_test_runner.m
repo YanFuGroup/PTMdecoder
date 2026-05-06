@@ -7,6 +7,9 @@ function system_test_runner()
     % Set path
     currentDir = fileparts(mfilename('fullpath'));
     projectDir = fileparts(currentDir); % Go back one level to the code root directory
+    originalDir = pwd;
+    cleanupWorkingDir = onCleanup(@() cd(originalDir));
+    cd(currentDir);
     addpath(projectDir);
     
     % Configure test data

@@ -41,8 +41,23 @@ classdef CTraceabilityReportService < handle
             %   (none)
             %       Writes the configured peptide-MS/MS and site-peptide trace
             %       files to disk.
+            CLogger.info('[CTraceabilityReportService:run] Traceability report generation started.');
+            total_timer = tic;
+
+            CLogger.info('[CTraceabilityReportService:run] Stage start: peptide-msms trace.');
+            stage_timer = tic;
             obj.writePeptideMsmsTrace();
+            CLogger.info('[CTraceabilityReportService:run] Stage end: peptide-msms trace. elapsed=%.1fs', ...
+                toc(stage_timer));
+
+            CLogger.info('[CTraceabilityReportService:run] Stage start: site-peptide trace.');
+            stage_timer = tic;
             obj.writeSitePeptideTrace();
+            CLogger.info('[CTraceabilityReportService:run] Stage end: site-peptide trace. elapsed=%.1fs', ...
+                toc(stage_timer));
+
+            CLogger.info('[CTraceabilityReportService:run] Traceability report generation done. elapsed=%.1fs', ...
+                toc(total_timer));
         end
 
         function delete(obj)
@@ -63,7 +78,11 @@ classdef CTraceabilityReportService < handle
             % Output:
             %   (none)
             %       Writes one row per peptide/spectrum/IMP evidence relation.
+            CLogger.info('[CTraceabilityReportService:writePeptideMsmsTrace] Reading MS/MS result: %s', ...
+                obj.m_cfg.msms_res_path);
             result = CMS2ResultIO.read(obj.m_cfg.msms_res_path);
+            CLogger.info('[CTraceabilityReportService:writePeptideMsmsTrace] MS/MS result loaded. peptides=%d', ...
+                numel(result.Peptides));
             obj.ensureParentDirForFile(obj.m_cfg.output_trace_peptide_msms_path);
 
             fid = fopen(obj.m_cfg.output_trace_peptide_msms_path, 'w');
@@ -80,7 +99,10 @@ classdef CTraceabilityReportService < handle
             % therefore resolved from the corresponding MGF dataset by exact
             % spectrum name. A missing charge is treated as an input mismatch
             % rather than silently falling back to a scan-number lookup.
+            print_progress = CPrintProgress(max(numel(result.Peptides), 1), 'trace_peptide_msms');
+            row_count = 0;
             for idx_pep = 1:numel(result.Peptides)
+                print_progress = print_progress.update_show(idx_pep);
                 peptide = result.Peptides(idx_pep);
                 for idx_spec = 1:numel(peptide.spectrum_list)
                     spectrum = peptide.spectrum_list(idx_spec);
@@ -110,12 +132,14 @@ classdef CTraceabilityReportService < handle
                             abundance, ...
                             support_frequency, ...
                             abundance_mad);
+                        row_count = row_count + 1;
                     end
                 end
             end
+            print_progress.last_update();
 
             CLogger.info(['[CTraceabilityReportService:writePeptideMsmsTrace] ', ...
-                'Trace written: %s'], obj.m_cfg.output_trace_peptide_msms_path);
+                'Trace written: %s, rows=%d'], obj.m_cfg.output_trace_peptide_msms_path, row_count);
         end
 
         function writeSitePeptideTrace(obj)
@@ -135,6 +159,11 @@ classdef CTraceabilityReportService < handle
                     'Cannot open peptide-level result file: %s', obj.m_cfg.pep_level_file_path);
             end
             cleanup_in = onCleanup(@() fclose(fin));
+            pep_file_info = dir(obj.m_cfg.pep_level_file_path);
+            pep_file_size = 1;
+            if ~isempty(pep_file_info)
+                pep_file_size = max(pep_file_info.bytes, 1);
+            end
 
             fout = fopen(obj.m_cfg.output_trace_site_peptide_path, 'w');
             if fout < 0
@@ -157,6 +186,7 @@ classdef CTraceabilityReportService < handle
 
             line_no = 3;
             current_protein_line = '';
+            row_count = 0;
 
             % The peptide-level report is block-oriented: a protein context
             % line applies to the following IMP records until the next protein
@@ -165,6 +195,9 @@ classdef CTraceabilityReportService < handle
             while ~feof(fin)
                 strline = fgetl(fin);
                 line_no = line_no + 1;
+                if mod(line_no, 2000) == 0
+                    CLogger.progress('trace_site_peptide', ftell(fin), pep_file_size);
+                end
                 if ~ischar(strline) || isempty(strline)
                     continue;
                 end
@@ -196,14 +229,16 @@ classdef CTraceabilityReportService < handle
                             rec.high_mz_bound, ...
                             rec.peak_area, ...
                             line_no);
+                        row_count = row_count + 1;
                     end
                 elseif strline(1) ~= '@'
                     current_protein_line = strline;
                 end
             end
+            CLogger.progress('trace_site_peptide', pep_file_size, pep_file_size);
 
             CLogger.info(['[CTraceabilityReportService:writeSitePeptideTrace] ', ...
-                'Trace written: %s'], obj.m_cfg.output_trace_site_peptide_path);
+                'Trace written: %s, rows=%d'], obj.m_cfg.output_trace_site_peptide_path, row_count);
         end
 
         function charge = lookupSpectrumCharge(obj, dataset_name, spectrum_name)
@@ -221,8 +256,12 @@ classdef CTraceabilityReportService < handle
             if isKey(obj.m_dataset_charge_maps, dataset_name)
                 charge_map = obj.m_dataset_charge_maps(dataset_name);
             else
+                CLogger.info('[CTraceabilityReportService:lookupSpectrumCharge] Loading charge map: %s', ...
+                    dataset_name);
                 charge_map = obj.m_mgf_dataset_io.get_dataset_charge_map(dataset_name);
                 obj.m_dataset_charge_maps(dataset_name) = charge_map;
+                CLogger.info('[CTraceabilityReportService:lookupSpectrumCharge] Charge map ready: %s, entries=%d', ...
+                    dataset_name, charge_map.Count);
             end
 
             if ~isKey(charge_map, spectrum_name)
