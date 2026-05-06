@@ -11,6 +11,7 @@ classdef CPTMdecoderWorkflowParamKeys
         PARAM_NORM_PEPTIDE_REQUANT_ON = 'norm_peptide_requant_on'
         PARAM_SITE_LEVEL_ON = 'site_level_on'
         PARAM_SITE_LEVEL_DATASET_ON = 'site_level_dataset_on'
+        PARAM_TRACEABILITY_REPORT_ON = 'traceability_report_on'
         PARAM_MERGE_TO_PAIR_LEVEL_ON = 'merge_to_pair_level_on'
         PARAM_MERGE_PAIRS_LEVEL_ON = 'merge_pairs_level_on'
 
@@ -72,6 +73,8 @@ classdef CPTMdecoderWorkflowParamKeys
         PARAM_OUTPUT_INTERE_PATH = 'output_intere_path'
         PARAM_OUTPUT_UNINTERE_PATH = 'output_unintere_path'
         PARAM_OUTPUT_SITE_DATASET_MATRIX_PATH = 'output_site_dataset_matrix_path'
+        PARAM_OUTPUT_TRACE_PEPTIDE_MSMS_PATH = 'output_trace_peptide_msms_path'
+        PARAM_OUTPUT_TRACE_SITE_PEPTIDE_PATH = 'output_trace_site_peptide_path'
         PARAM_SITE_POSITION_COUNT_INITIAL_M = 'site_position_count_initial_m'
         PARAM_SITE_LEVEL_DATASET_PROTEIN_NAME_REGEX = 'site_level_dataset_protein_name_regex'
         PARAM_SITE_LEVEL_PROTEIN_ABBR_INPUT_MODE = 'site_level_protein_abbr_input_mode'

@@ -65,6 +65,12 @@ if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowParamKey
         CPTMdecoderWorkflowConfig.STAGE_SITE_LEVEL_DATASET, site_dataset_cfg, true);
 end
 
+if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_TRACEABILITY_REPORT_ON)
+    traceability_cfg = CTraceabilityReportServiceConfig.fromParamMap(task_param_map);
+    cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...
+        CPTMdecoderWorkflowConfig.STAGE_TRACEABILITY_REPORT, traceability_cfg, true);
+end
+
 if CPTMdecoderWorkflowConfig.getFlag(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MERGE_TO_PAIR_LEVEL_ON)
     merge_to_pair_cfgs = CMergeEachPairConfig.fromParamMap(task_param_map);
     cfg.stages{end + 1} = CPTMdecoderWorkflowConfig.makeStage( ...

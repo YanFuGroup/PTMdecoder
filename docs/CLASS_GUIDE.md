@@ -41,7 +41,8 @@ utilities.
 
 ### Data Access
 
-- `CMgfDatasetIO` reads MGF spectra by dataset and spectrum name.
+- `CMgfDatasetIO` reads MGF spectra by dataset and spectrum name, and builds
+  cached TITLE/scan-number to precursor-charge maps.
 - `CMS12DatasetIO` reads MS1/MS2 files and supports XIC-related access.
 - `CMsFileMapper` maps MGF names to MS1/MS2 stems.
 - `CFastaReader` reads FASTA sequences.
