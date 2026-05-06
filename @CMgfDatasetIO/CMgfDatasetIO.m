@@ -41,6 +41,9 @@ classdef CMgfDatasetIO<CDatasetIO
 
         % read the specified spectrum in the mgf file
         [Peaks,Charge,PrecursorMZ]=read_oneSpec(obj,filename,specname);
+
+        % read all spectrum TITLE/CHARGE pairs in one MGF dataset
+        dataset_charge_map=get_dataset_charge_map(obj,dataset_name);
     end
 
     methods (Access=protected)
