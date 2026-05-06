@@ -160,8 +160,8 @@ classdef CTraceabilityReportService < handle
 
             % The peptide-level report is block-oriented: a protein context
             % line applies to the following IMP records until the next protein
-            % context line appears. For traceability, the context is preserved
-            % verbatim instead of recalculating protein positions here.
+            % context line appears. The original context is preserved verbatim,
+            % while protein_site_positions stores computed modification sites.
             while ~feof(fin)
                 strline = fgetl(fin);
                 line_no = line_no + 1;
@@ -234,15 +234,15 @@ classdef CTraceabilityReportService < handle
             charge = charge_map(spectrum_name);
         end
 
-        function site_records = buildSiteRecords(obj, imp_name, protein_site_positions)
+        function site_records = buildSiteRecords(obj, imp_name, protein_context)
             % Build site contribution records for one IMP sequence.
             % Input:
             %   obj (CTraceabilityReportService)
             %       Service instance with modification abbreviation settings.
             %   imp_name (char/string)
             %       Modified peptide/IMP string from the peptide-level report.
-            %   protein_site_positions (char/string)
-            %       Protein-site context copied from the peptide-level report.
+            %   protein_context (char/string)
+            %       Protein/start-position context copied from the peptide-level report.
             % Output:
             %   site_records (struct array)
             %       One record per target modification occurrence in imp_name.
@@ -258,14 +258,18 @@ classdef CTraceabilityReportService < handle
                 return;
             end
 
+            protein_contexts = obj.parseProteinContexts(protein_context);
+            if isempty(protein_contexts)
+                return;
+            end
+            peptide_length = numel(obj.buildPlainPeptideSequence(modified_peptide));
+
             positions_seq = zeros(1, numel(mod_matches));
             positions_str = zeros(1, numel(mod_matches));
             start_pos = 0;
 
-            % Identify target modification occurrences in the IMP string. The
-            % parsed sequence/string positions are used only to recover the
-            % modified residue or terminal label; protein positions are not
-            % recomputed in this traceability stage.
+            % Identify target modification occurrences in the IMP string and
+            % map each occurrence back to every protein context for tracing.
             for idx_mod = 1:numel(mod_matches)
                 mod_name = mod_matches{idx_mod}{1};
                 found_index = strfind(modified_peptide(start_pos + 1:end), ['{' mod_name '}']);
@@ -292,10 +296,15 @@ classdef CTraceabilityReportService < handle
                 if residue_or_term == '_'
                     if positions_seq(idx_mod) == 0
                         residue_or_term = 'N-term';
+                        local_pos = 0;
                     else
                         residue_or_term = 'C-term';
+                        local_pos = peptide_length + 1;
                     end
+                else
+                    local_pos = positions_seq(idx_mod);
                 end
+                protein_site_positions = obj.buildProteinSitePositions(protein_contexts, local_pos);
                 site_name = [protein_site_positions, ' ', residue_or_term, '_', mod_abbr];
 
                 new_idx = numel(site_records) + 1;
@@ -305,6 +314,58 @@ classdef CTraceabilityReportService < handle
                 site_records(new_idx).mod_name = mod_name;
                 site_records(new_idx).mod_abbr = mod_abbr;
             end
+        end
+
+        function protein_contexts = parseProteinContexts(~, protein_context)
+            % Parse protein/start-position pairs from a peptide-level context line.
+            % Input:
+            %   protein_context (char/string)
+            %       Context in the form protein,start;protein,start;.
+            % Output:
+            %   protein_contexts (struct array)
+            %       Valid protein/start-position entries from the context.
+            protein_contexts = struct('protein_name', {}, 'start_pos', {});
+            segments = strsplit(char(string(protein_context)), ';');
+            for idx_seg = 1:(numel(segments) - 1)
+                key_value = strsplit(segments{idx_seg}, ',');
+                if numel(key_value) < 2
+                    continue;
+                end
+                protein_name = strtrim(key_value{1});
+                start_pos = str2double(strtrim(key_value{2}));
+                if isempty(protein_name) || isnan(start_pos) || ~isfinite(start_pos)
+                    continue;
+                end
+
+                new_idx = numel(protein_contexts) + 1;
+                protein_contexts(new_idx).protein_name = protein_name;
+                protein_contexts(new_idx).start_pos = start_pos;
+            end
+        end
+
+        function protein_site_positions = buildProteinSitePositions(obj, protein_contexts, local_pos)
+            % Build protein-position prefix for one peptide-local site position.
+            % Input:
+            %   obj (CTraceabilityReportService)
+            %       Service instance with site-position numbering config.
+            %   protein_contexts (struct array)
+            %       Parsed protein/start-position entries.
+            %   local_pos (double)
+            %       Peptide-local modification position. N-term is 0 and C-term
+            %       is peptide length plus one.
+            % Output:
+            %   protein_site_positions (char)
+            %       Protein-site prefix in the form protein,pos;protein,pos;.
+            protein_site_tokens = cell(1, numel(protein_contexts));
+            for idx_ctx = 1:numel(protein_contexts)
+                site_pos = protein_contexts(idx_ctx).start_pos + local_pos - 1;
+                if ~obj.m_cfg.site_position_count_initial_m
+                    site_pos = site_pos - 1;
+                end
+                protein_site_tokens{idx_ctx} = [protein_contexts(idx_ctx).protein_name, ...
+                    ',', num2str(site_pos), ';'];
+            end
+            protein_site_positions = strjoin(protein_site_tokens, '');
         end
 
         function peptide_sequence = buildPlainPeptideSequence(obj, imp_name)
@@ -349,7 +410,7 @@ classdef CTraceabilityReportService < handle
             %       Validated configuration with normalized ignore_strings.
             required_fields = {'spec_dir_path', 'msms_res_path', 'pep_level_file_path', ...
                 'output_trace_peptide_msms_path', 'output_trace_site_peptide_path', ...
-                'mod_name_abbr', 'ignore_strings', 'column_idxs'};
+                'mod_name_abbr', 'ignore_strings', 'site_position_count_initial_m', 'column_idxs'};
             for idx_field = 1:numel(required_fields)
                 if ~isfield(cfg, required_fields{idx_field})
                     error('CTraceabilityReportService:MissingConfigField', ...
@@ -363,6 +424,12 @@ classdef CTraceabilityReportService < handle
             if ~iscell(cfg.ignore_strings)
                 cfg.ignore_strings = {cfg.ignore_strings};
             end
+            if ~islogical(cfg.site_position_count_initial_m) && ...
+                    ~(isnumeric(cfg.site_position_count_initial_m) && isscalar(cfg.site_position_count_initial_m))
+                error('CTraceabilityReportService:InvalidSitePositionCountInitialM', ...
+                    'site_position_count_initial_m must be logical or numeric scalar.');
+            end
+            cfg.site_position_count_initial_m = logical(cfg.site_position_count_initial_m);
             required_column_fields = {'icol_seq', 'icol_charge', 'icol_dataset', ...
                 'icol_mass_center', 'icol_low_mz_bound', 'icol_high_mz_bound', 'icol_auc'};
             for idx_field = 1:numel(required_column_fields)

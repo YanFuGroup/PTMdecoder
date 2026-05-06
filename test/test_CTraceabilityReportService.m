@@ -59,10 +59,12 @@ sitePeptideValues = strsplit(sitePeptideLines{2}, sprintf('\t'));
 testCase.verifyEqual(sitePeptideHeader{1}, 'site_peptide_key');
 testCase.verifyEqual(sitePeptideHeader{2}, 'site_name');
 testCase.verifyEqual(sitePeptideHeader{8}, 'protein_site_positions');
-testCase.verifyEqual(sitePeptideValues{1}, 'P1,10;P2,30; K_ac|sample.mgf|_AK{Acetyl}_|+2');
-testCase.verifyEqual(sitePeptideValues{2}, 'P1,10;P2,30; K_ac');
+testCase.verifyEqual(sitePeptideValues{1}, 'P1,11;P2,31; K_ac|sample.mgf|_AK{Acetyl}_|+2');
+testCase.verifyEqual(sitePeptideValues{2}, 'P1,11;P2,31; K_ac');
 testCase.verifyEqual(sitePeptideValues{5}, '2');
 testCase.verifyEqual(sitePeptideValues{6}, 'AK');
+testCase.verifyEqual(sitePeptideValues{7}, 'P1,10;P2,30;');
+testCase.verifyEqual(sitePeptideValues{8}, 'P1,11;P2,31;');
 testCase.verifyEqual(sitePeptideValues{15}, '100');
 end
 
@@ -147,8 +149,8 @@ testCase.verifyEqual(numel(sitePeptideLines), 3);
 
 firstValues = strsplit(sitePeptideLines{2}, sprintf('\t'));
 secondValues = strsplit(sitePeptideLines{3}, sprintf('\t'));
-testCase.verifyEqual(firstValues{1}, 'P1,10; K_ac|sample.mgf|_AK{Acetyl}_|+2');
-testCase.verifyEqual(secondValues{1}, 'P1,10; K_ac|sample.mgf|_AK{Acetyl}_|+3');
+testCase.verifyEqual(firstValues{1}, 'P1,11; K_ac|sample.mgf|_AK{Acetyl}_|+2');
+testCase.verifyEqual(secondValues{1}, 'P1,11; K_ac|sample.mgf|_AK{Acetyl}_|+3');
 
 areaSum = str2double(firstValues{15}) + str2double(secondValues{15});
 testCase.verifyEqual(areaSum, 150);
@@ -196,9 +198,104 @@ service.run();
 
 sitePeptideLines = readLines(cfg.output_trace_site_peptide_path);
 sitePeptideValues = strsplit(sitePeptideLines{2}, sprintf('\t'));
-testCase.verifyEqual(sitePeptideValues{1}, 'P1,10; K_ac|sample.mgf|_AK{Acetyl}_|+2');
+testCase.verifyEqual(sitePeptideValues{1}, 'P1,11; K_ac|sample.mgf|_AK{Acetyl}_|+2');
 testCase.verifyEqual(sitePeptideValues{12}, '500.25');
 testCase.verifyEqual(sitePeptideValues{15}, '100');
+end
+
+
+function testSitePeptideTraceCanExcludeInitialM(testCase)
+% Verify trace site positions honor site_position_count_initial_m=false.
+workDir = tempname;
+mkdir(workDir);
+
+specDir = fullfile(workDir, 'spectra');
+mkdir(specDir);
+writeLines(fullfile(specDir, 'sample.mgf'), {
+    'BEGIN IONS'
+    'TITLE=SpecA'
+    'PEPMASS=500.25'
+    'CHARGE=2+'
+    'END IONS'
+});
+
+msmsPath = fullfile(workDir, 'report_msms.txt');
+writeLines(msmsPath, {
+    'P	AK'
+    'S	sample.mgf	SpecA'
+    'AK{Acetyl}	1'
+});
+
+peptidePath = fullfile(workDir, 'report_peptide_all_requant_aligned.txt');
+writeLines(peptidePath, {
+    'Protein_name,Peptide_start_position_on_protein;'
+    '*	IMP	Charge	Dataset	Mass_center	Low_mass_bound	High_mass_bound	Peak_area'
+    '@	RT_start	RT_end	Proportion	Check_label'
+    'P1,10;P2,30;'
+    '*	_AK{Acetyl}_	+2	sample.mgf	500.25	499.95	500.55	100'
+});
+
+cfg = makeTraceConfig(specDir, msmsPath, peptidePath, workDir);
+cfg.site_position_count_initial_m = false;
+service = CTraceabilityReportService(cfg);
+cleanupAll = onCleanup(@() cleanupServiceAndDir(service, workDir));
+service.run();
+
+sitePeptideLines = readLines(cfg.output_trace_site_peptide_path);
+sitePeptideValues = strsplit(sitePeptideLines{2}, sprintf('\t'));
+testCase.verifyEqual(sitePeptideValues{1}, 'P1,10;P2,30; K_ac|sample.mgf|_AK{Acetyl}_|+2');
+testCase.verifyEqual(sitePeptideValues{2}, 'P1,10;P2,30; K_ac');
+testCase.verifyEqual(sitePeptideValues{7}, 'P1,10;P2,30;');
+testCase.verifyEqual(sitePeptideValues{8}, 'P1,10;P2,30;');
+end
+
+
+function testSitePeptideTraceComputesTerminalPositions(testCase)
+% Verify N-term and C-term site coordinates are traced on all proteins.
+workDir = tempname;
+mkdir(workDir);
+
+specDir = fullfile(workDir, 'spectra');
+mkdir(specDir);
+writeLines(fullfile(specDir, 'sample.mgf'), {
+    'BEGIN IONS'
+    'TITLE=SpecA'
+    'PEPMASS=500.25'
+    'CHARGE=2+'
+    'END IONS'
+});
+
+msmsPath = fullfile(workDir, 'report_msms.txt');
+writeLines(msmsPath, {
+    'P	AK'
+    'S	sample.mgf	SpecA'
+    'AK{Acetyl}	1'
+});
+
+peptidePath = fullfile(workDir, 'report_peptide_all_requant_aligned.txt');
+writeLines(peptidePath, {
+    'Protein_name,Peptide_start_position_on_protein;'
+    '*	IMP	Charge	Dataset	Mass_center	Low_mass_bound	High_mass_bound	Peak_area'
+    '@	RT_start	RT_end	Proportion	Check_label'
+    'P1,10;P2,30;'
+    '*	_{Acetyl}AK_	+2	sample.mgf	500.25	499.95	500.55	100'
+    '*	_AK_{Acetyl}	+2	sample.mgf	500.25	499.95	500.55	50'
+});
+
+cfg = makeTraceConfig(specDir, msmsPath, peptidePath, workDir);
+service = CTraceabilityReportService(cfg);
+cleanupAll = onCleanup(@() cleanupServiceAndDir(service, workDir));
+service.run();
+
+sitePeptideLines = readLines(cfg.output_trace_site_peptide_path);
+nTermValues = strsplit(sitePeptideLines{2}, sprintf('\t'));
+cTermValues = strsplit(sitePeptideLines{3}, sprintf('\t'));
+testCase.verifyEqual(nTermValues{2}, 'P1,9;P2,29; N-term_ac');
+testCase.verifyEqual(nTermValues{8}, 'P1,9;P2,29;');
+testCase.verifyEqual(nTermValues{9}, 'N-term');
+testCase.verifyEqual(cTermValues{2}, 'P1,12;P2,32; C-term_ac');
+testCase.verifyEqual(cTermValues{8}, 'P1,12;P2,32;');
+testCase.verifyEqual(cTermValues{9}, 'C-term');
 end
 
 
@@ -230,6 +327,33 @@ testCase.verifyEqual(traceCfg.output_trace_peptide_msms_path, ...
     fullfile(workDir, 'report_trace_peptide_msms.txt'));
 testCase.verifyEqual(traceCfg.output_trace_site_peptide_path, ...
     fullfile(workDir, 'report_trace_site_peptide.txt'));
+testCase.verifyTrue(traceCfg.site_position_count_initial_m);
+end
+
+
+function testConfigCanDisableInitialMCounting(testCase)
+% Verify traceability config can disable initial-M site numbering.
+workDir = tempname;
+mkdir(workDir);
+cleanupWork = onCleanup(@() cleanupTempDir(workDir));
+
+paramPath = fullfile(workDir, 'params.txt');
+writeLines(paramPath, {
+    'traceability_report_on=1'
+    ['spec_dir_path=', fullfile(workDir, 'spectra')]
+    ['msms_res_path=', fullfile(workDir, 'report_msms.txt')]
+    ['pep_level_file_path=', fullfile(workDir, 'report_peptide_all_requant_aligned.txt')]
+    ['output_dir_path=', workDir]
+    'mod_name_abbr_num=1'
+    'mod_name_abbr_1=Acetyl>ac'
+    'ignore_strings_site_level=""'
+    'site_position_count_initial_m=0'
+    'log_enabled=0'
+});
+
+workflowCfg = CPTMdecoderWorkflowConfig.fromParamFile(paramPath);
+traceCfg = workflowCfg.stages{1}.config;
+testCase.verifyFalse(traceCfg.site_position_count_initial_m);
 end
 
 
@@ -246,6 +370,7 @@ cfg.output_trace_peptide_msms_path = fullfile(outputDir, 'report_trace_peptide_m
 cfg.output_trace_site_peptide_path = fullfile(outputDir, 'report_trace_site_peptide.txt');
 cfg.mod_name_abbr = modMap;
 cfg.ignore_strings = {};
+cfg.site_position_count_initial_m = true;
 cfg.column_idxs = struct('icol_seq', 2, 'icol_charge', 3, 'icol_dataset', 4, ...
     'icol_mass_center', 5, 'icol_low_mz_bound', 6, 'icol_high_mz_bound', 7, 'icol_auc', 8);
 end
