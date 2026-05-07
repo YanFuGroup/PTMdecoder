@@ -21,37 +21,23 @@ for idx=1:size(ctx.m_fixedModNameMass,1)
 		if isequal(cellTemp{1},'Protein') && ~ctx.m_isProtN
 			continue;
 		end
-		if ~isempty(cellTemp{2})
-			if ~startsWith(ctx.m_pepSeq,cellTemp{2})
-				continue;
-			else
-				fixedPosMod{1,1} = 1;
-				fixedPosMod{1,2} = ctx.m_fixedModNameMass{idx,1};
-				fixedPosMod{1,3} = ctx.m_fixedModNameMass{idx,3};
-			end
-		else
-			fixedPosMod{1,1} = 0;
-			fixedPosMod{1,2} = ctx.m_fixedModNameMass{idx,1};
-			fixedPosMod{1,3} = ctx.m_fixedModNameMass{idx,3};
+		if ~isempty(cellTemp{2}) && ~startsWith(ctx.m_pepSeq,cellTemp{2})
+			continue;
 		end
+		fixedPosMod{1,1} = 0;
+		fixedPosMod{1,2} = ctx.m_fixedModNameMass{idx,1};
+		fixedPosMod{1,3} = ctx.m_fixedModNameMass{idx,3};
 	elseif contains(strSpecfct,'C-term')
 		cellTemp=split(strSpecfct,'C-term');
 		if isequal(cellTemp{1},'Protein') && ~ctx.m_isProtC
 			continue;
 		end
-		if ~isempty(cellTemp{2})
-			if ~endsWith(ctx.m_pepSeq,cellTemp{2})
-				continue;   % C-terminal specificity, with amino acid restriction
-			else
-				fixedPosMod{length(ctx.m_pepSeq)+2,1} = length(ctx.m_pepSeq);
-				fixedPosMod{length(ctx.m_pepSeq)+2,2} = ctx.m_fixedModNameMass{idx,1};
-				fixedPosMod{length(ctx.m_pepSeq)+2,3} = ctx.m_fixedModNameMass{idx,3};
-			end
-		else
-			fixedPosMod{length(ctx.m_pepSeq)+2,1} = length(ctx.m_pepSeq)+1;
-			fixedPosMod{length(ctx.m_pepSeq)+2,2} = ctx.m_fixedModNameMass{idx,1};
-			fixedPosMod{length(ctx.m_pepSeq)+2,3} = ctx.m_fixedModNameMass{idx,3};
+		if ~isempty(cellTemp{2}) && ~endsWith(ctx.m_pepSeq,cellTemp{2})
+			continue;   % C-terminal specificity, with amino acid restriction
 		end
+		fixedPosMod{length(ctx.m_pepSeq)+2,1} = length(ctx.m_pepSeq)+1;
+		fixedPosMod{length(ctx.m_pepSeq)+2,2} = ctx.m_fixedModNameMass{idx,1};
+		fixedPosMod{length(ctx.m_pepSeq)+2,3} = ctx.m_fixedModNameMass{idx,3};
 	else
 		% Only one amino acid
 		vecPos=strfind(ctx.m_pepSeq,strSpecfct);

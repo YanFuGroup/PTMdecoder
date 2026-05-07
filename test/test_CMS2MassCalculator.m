@@ -103,6 +103,46 @@ testCase.verifyTrue(any(abs(massArrangement(:) - 1.0) < 1e-10), ...
     'Expected variable modification mass 1.0 to appear in arrangement.');
 end
 
+function testFixedTerminalModsWithResidueSpecificityUseTerminalPositions(testCase)
+% TESTFIXEDTERMINALMODSWITHRESIDUESPECIFICITYUSETERMINALPOSITIONS Validate terminal residue restrictions keep terminal positions
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
+
+ctx = baseCtx('QAK');
+ctx.m_fixedModNameMass = {
+    'NtermQMod', 'AnyN-termQ', 10.0; ...
+    'CtermKMod', 'AnyC-termK', 20.0
+};
+
+fixedPosMod = CMS2MassCalculator.getFixedPosMod(ctx);
+
+testCase.verifyEqual(size(fixedPosMod, 1), 2);
+testCase.verifyTrue(any(strcmp(fixedPosMod(:,2), 'NtermQMod') & cell2mat(fixedPosMod(:,1)) == 0), ...
+    'N-terminal residue-specific fixed modification should stay at position 0.');
+testCase.verifyTrue(any(strcmp(fixedPosMod(:,2), 'CtermKMod') & cell2mat(fixedPosMod(:,1)) == length(ctx.m_pepSeq) + 1), ...
+    'C-terminal residue-specific fixed modification should stay at position length(peptide)+1.');
+end
+
+function testFixedTerminalModsWithResidueSpecificitySkipMismatches(testCase)
+% TESTFIXEDTERMINALMODSWITHRESIDUESPECIFICITYSKIPMISMATCHES Validate terminal residue restrictions reject mismatched peptides
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
+
+ctx = baseCtx('AAK');
+ctx.m_fixedModNameMass = {
+    'NtermQMod', 'AnyN-termQ', 10.0; ...
+    'CtermRMod', 'AnyC-termR', 20.0
+};
+
+fixedPosMod = CMS2MassCalculator.getFixedPosMod(ctx);
+
+testCase.verifyEmpty(fixedPosMod);
+end
+
 
 function testMaxModPerPeptideFiltersCandidates(testCase)
 % TESTMAXMODPERPEPTIDEFILTERSCANDIDATES Validate over-limit candidates are removed while feasible ones remain
