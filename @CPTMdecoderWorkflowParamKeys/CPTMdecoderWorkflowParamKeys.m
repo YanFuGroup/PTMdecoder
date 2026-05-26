@@ -76,7 +76,6 @@ classdef CPTMdecoderWorkflowParamKeys
         PARAM_OUTPUT_TRACE_PEPTIDE_MSMS_PATH = 'output_trace_peptide_msms_path'
         PARAM_OUTPUT_TRACE_SITE_PEPTIDE_PATH = 'output_trace_site_peptide_path'
         PARAM_SITE_POSITION_COUNT_INITIAL_M = 'site_position_count_initial_m'
-        PARAM_SITE_LEVEL_DATASET_PROTEIN_NAME_REGEX = 'site_level_dataset_protein_name_regex'
         PARAM_SITE_LEVEL_PROTEIN_ABBR_INPUT_MODE = 'site_level_protein_abbr_input_mode'
         PARAM_SITE_LEVEL_PROTEIN_ABBR_FILE_PATH = 'site_level_protein_abbr_file_path'
         PARAM_SITE_LEVEL_PROTEIN_ABBR_FILE_COL_PROTEIN_NAME = 'site_level_protein_abbr_file_col_protein_name'
