@@ -166,6 +166,10 @@ classdef CPeptideAlignRequantService < handle
             CLogger.info('Aligned peptide-level re-quantification done.');
 
             CIMPQuantResultIO.write(report, output_path);
+            if isfield(cfg, 'split_by_dataset_on') && cfg.split_by_dataset_on
+                [~, output_prefix, ~] = fileparts(char(string(output_path)));
+                CIMPQuantResultIO.splitByDataset(output_path, cfg.split_output_dir, output_prefix);
+            end
         end
     end
 

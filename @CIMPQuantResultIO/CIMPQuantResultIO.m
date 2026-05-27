@@ -6,6 +6,8 @@ classdef CIMPQuantResultIO
 
         write(report, path)
 
+        output_paths = splitByDataset(input_path, output_dir, output_prefix)
+
         % Legacy writer helpers (shared by CIMPGatherWriter)
         write_header(fid)
 

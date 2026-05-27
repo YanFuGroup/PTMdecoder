@@ -47,6 +47,61 @@ testCase.verifyEqual(cfg.peptide_quant_res_path, 'output/demo/report_peptide_all
 testCase.verifyEqual(cfg.alignment_report_path, 'output/demo/report_alignment.txt');
 testCase.verifyEqual(cfg.requant_output_path, 'output/demo/report_peptide_all_requant_aligned.txt');
 testCase.verifyEmpty(cfg.align_requant_rt_stats_path);
+testCase.verifyFalse(cfg.split_by_dataset_on);
+testCase.verifyEmpty(cfg.split_output_dir);
+end
+
+
+function testDefaultSplitByDatasetDisabled(testCase)
+% Verify split-by-dataset output is disabled by default.
+% Inputs:
+%    testCase (matlab.unittest.TestCase)
+%        Test case context.
+% Outputs:
+%    (none)
+
+param_map = makeBaseParamMap();
+cfg = CPeptideAlignRequantServiceConfig.fromParamMap(param_map);
+
+testCase.verifyFalse(cfg.split_by_dataset_on);
+testCase.verifyEmpty(cfg.split_output_dir);
+end
+
+
+function testSplitByDatasetDefaultOutputDir(testCase)
+% Verify split output dir defaults next to the combined aligned output.
+% Inputs:
+%    testCase (matlab.unittest.TestCase)
+%        Test case context.
+% Outputs:
+%    (none)
+
+param_map = makeBaseParamMap();
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_REQUANT_SPLIT_BY_DATASET_ON) = '1';
+
+cfg = CPeptideAlignRequantServiceConfig.fromParamMap(param_map);
+
+testCase.verifyTrue(cfg.split_by_dataset_on);
+testCase.verifyEqual(cfg.split_output_dir, fullfile('output/demo', 'split_by_dataset'));
+end
+
+
+function testSplitByDatasetExplicitOutputDir(testCase)
+% Verify explicit split output dir is preserved.
+% Inputs:
+%    testCase (matlab.unittest.TestCase)
+%        Test case context.
+% Outputs:
+%    (none)
+
+param_map = makeBaseParamMap();
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_REQUANT_SPLIT_BY_DATASET_ON) = true;
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_REQUANT_SPLIT_OUTPUT_DIR) = 'output/demo/left_right_peptides';
+
+cfg = CPeptideAlignRequantServiceConfig.fromParamMap(param_map);
+
+testCase.verifyTrue(cfg.split_by_dataset_on);
+testCase.verifyEqual(cfg.split_output_dir, 'output/demo/left_right_peptides');
 end
 
 

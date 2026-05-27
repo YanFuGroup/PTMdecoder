@@ -28,6 +28,12 @@ end
 if ~isfield(cfg, 'align_requant_rt_stats_path')
     cfg.align_requant_rt_stats_path = '';
 end
+if ~isfield(cfg, 'split_by_dataset_on') || isempty(cfg.split_by_dataset_on)
+    cfg.split_by_dataset_on = false;
+end
+if ~isfield(cfg, 'split_output_dir')
+    cfg.split_output_dir = '';
+end
 if ~isfield(cfg.align_options, 'min_psm') || isempty(cfg.align_options.min_psm)
     cfg.align_options.min_psm = 1;
 end
@@ -72,5 +78,9 @@ end
 if isempty(cfg.requant_output_path)
     CLogger.error(['[CPeptideAlignRequantServiceConfig:MissingAlignRequantOutputPath] ', ...
         'align_requant_output_path must be provided for peptide align-requant stage.']);
+end
+if cfg.split_by_dataset_on && isempty(cfg.split_output_dir)
+    combined_output_dir = fileparts(char(string(cfg.requant_output_path)));
+    cfg.split_output_dir = fullfile(combined_output_dir, 'split_by_dataset');
 end
 end
