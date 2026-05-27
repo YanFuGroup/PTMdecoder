@@ -65,6 +65,8 @@ classdef CPTMdecoderWorkflowParamKeys
         PARAM_ALIGN_REPORT_PATH = 'align_report_path'
         PARAM_ALIGN_REQUANT_OUTPUT_PATH = 'align_requant_output_path'
         PARAM_ALIGN_REQUANT_RT_STATS_PATH = 'align_requant_rt_stats_path'
+        PARAM_ALIGN_REQUANT_SPLIT_BY_DATASET_ON = 'align_requant_split_by_dataset_on'
+        PARAM_ALIGN_REQUANT_SPLIT_OUTPUT_DIR = 'align_requant_split_output_dir'
         PARAM_NORM_PROTEIN_PEPTIDE_PAIR_PATH = 'norm_protein_peptide_pair_path'
         PARAM_NORM_OUTPUT_FILE_NAME = 'norm_output_file_name'
         PARAM_NORM_REQUANT_OUTPUT_FILE_NAME = 'norm_requant_output_file_name'
