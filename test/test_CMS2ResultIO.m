@@ -140,6 +140,59 @@ for i = 1:length(src.Peptides)
 end
 end
 
+function testReadMultipleFilesAndMerge(testCase)
+% TESTREADMULTIPLEFILESANDMERGE Validate object-level merge of multiple MS/MS files.
+% Input:
+%   testCase (matlab.unittest.TestCase)
+% Output:
+%   (none)
+
+testFile1 = fullfile(pwd, 'test_msms_res_merge_1_temp.txt');
+testFile2 = fullfile(pwd, 'test_msms_res_merge_2_temp.txt');
+testCase.addTeardown(@() deleteTestFile(testFile1));
+testCase.addTeardown(@() deleteTestFile(testFile2));
+
+src1 = CMS2Result();
+src1.addOrSelectPeptide('PEPTIDE_SHARED');
+src1.addSpectrum('Dataset1', 'SpecA1', struct( ...
+    'jaccard_stability', 0.81, ...
+    'vif_all_imp_max', 4.1, ...
+    'vif_reported_imp_max', 1.7));
+src1.addPeptidoform('FormA1', 100, struct('support_frequency', 0.90, 'vif', 7.5, 'abundance_mad', 0.02));
+src1.compress();
+
+src2 = CMS2Result();
+src2.addOrSelectPeptide('PEPTIDE_SHARED');
+src2.addSpectrum('Dataset2', 'SpecA2', struct( ...
+    'jaccard_stability', 0.72, ...
+    'vif_all_imp_max', 3.2, ...
+    'vif_reported_imp_max', 1.2));
+src2.addPeptidoform('FormA2', 200, struct('support_frequency', 0.80, 'vif', 6.5, 'abundance_mad', 0.03));
+src2.addOrSelectPeptide('PEPTIDE_UNIQUE');
+src2.addSpectrum('Dataset2', 'SpecB1');
+src2.addPeptidoform('FormB1', 300);
+src2.compress();
+
+CMS2ResultIO.write(src1, testFile1, true);
+CMS2ResultIO.write(src2, testFile2, true);
+
+merged = CMS2Result.merge({CMS2ResultIO.read(testFile1), CMS2ResultIO.read(testFile2)});
+
+testCase.verifyEqual(length(merged.Peptides), 2);
+testCase.verifyEqual(merged.Peptides(1).peptide_sequence, 'PEPTIDE_SHARED');
+testCase.verifyEqual(length(merged.Peptides(1).spectrum_list), 2);
+testCase.verifyEqual(merged.Peptides(2).peptide_sequence, 'PEPTIDE_UNIQUE');
+testCase.verifyEqual(length(merged.Peptides(2).spectrum_list), 1);
+
+sharedSpec1 = merged.Peptides(1).spectrum_list(1);
+sharedSpec2 = merged.Peptides(1).spectrum_list(2);
+testCase.verifyEqual(sharedSpec1.dataset_name, 'Dataset1');
+testCase.verifyEqual(sharedSpec2.dataset_name, 'Dataset2');
+testCase.verifyEqual(sharedSpec1.peptidoform_list_support_freq(1), 0.90, 'AbsTol', 1e-12);
+testCase.verifyEqual(sharedSpec2.peptidoform_list_vif(1), 6.5, 'AbsTol', 1e-12);
+testCase.verifyEqual(sharedSpec2.peptidoform_list_abundance_mad(1), 0.03, 'AbsTol', 1e-12);
+end
+
 function testWriteDefaultsToNoVifFields(testCase)
 % TESTWRITEDEFAULTSTONOVIFFIELDS Validate default MSMS output omits VIF fields.
 

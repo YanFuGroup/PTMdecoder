@@ -49,6 +49,68 @@ testCase.verifyEqual(cfg.requant_output_path, 'output/demo/report_peptide_all_re
 testCase.verifyEmpty(cfg.align_requant_rt_stats_path);
 testCase.verifyFalse(cfg.split_by_dataset_on);
 testCase.verifyEmpty(cfg.split_output_dir);
+testCase.verifyFalse(cfg.msms_res_multi_file_on);
+testCase.verifyEmpty(cfg.msms_res_paths);
+end
+
+
+function testMultiMsmsResultPathsParse(testCase)
+% Verify multi-file MS/MS result parameters are parsed in indexed order.
+% Inputs:
+%    testCase (matlab.unittest.TestCase)
+%        Test case context.
+% Outputs:
+%    (none)
+
+param_map = makeBaseParamMap();
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_MSMS_RES_PATH_NUM) = '2';
+param_map([CPTMdecoderWorkflowParamKeys.PARAM_MSMS_RES_PATH_PREFIX, '1']) = 'output/demo/run1/report_msms.txt';
+param_map([CPTMdecoderWorkflowParamKeys.PARAM_MSMS_RES_PATH_PREFIX, '2']) = 'output/demo/run2/report_msms.txt';
+
+cfg = CPeptideAlignRequantServiceConfig.fromParamMap(param_map);
+
+testCase.verifyTrue(cfg.msms_res_multi_file_on);
+testCase.verifyEqual(cfg.msms_res_path, 'output/demo/report_msms.txt');
+testCase.verifyEqual(cfg.msms_res_paths, { ...
+    'output/demo/run1/report_msms.txt', ...
+    'output/demo/run2/report_msms.txt'});
+end
+
+
+function testInvalidMultiMsmsPathNumThrowsError(testCase)
+% Verify non-positive and non-integer multi-file counts are rejected.
+% Inputs:
+%    testCase (matlab.unittest.TestCase)
+%        Test case context.
+% Outputs:
+%    (none)
+
+param_map = makeBaseParamMap();
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_MSMS_RES_PATH_NUM) = '0';
+
+f = @() CPeptideAlignRequantServiceConfig.fromParamMap(param_map);
+verifyLoggedErrorContains(testCase, f, 'CPeptideAlignRequantServiceConfig:InvalidMsmsResPathNum');
+
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_MSMS_RES_PATH_NUM) = '1.5';
+f = @() CPeptideAlignRequantServiceConfig.fromParamMap(param_map);
+verifyLoggedErrorContains(testCase, f, 'CPeptideAlignRequantServiceConfig:InvalidMsmsResPathNum');
+end
+
+
+function testMissingIndexedMultiMsmsPathThrowsError(testCase)
+% Verify missing indexed path is rejected when multi-file mode is enabled.
+% Inputs:
+%    testCase (matlab.unittest.TestCase)
+%        Test case context.
+% Outputs:
+%    (none)
+
+param_map = makeBaseParamMap();
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_MSMS_RES_PATH_NUM) = '2';
+param_map([CPTMdecoderWorkflowParamKeys.PARAM_MSMS_RES_PATH_PREFIX, '1']) = 'output/demo/run1/report_msms.txt';
+
+f = @() CPeptideAlignRequantServiceConfig.fromParamMap(param_map);
+verifyLoggedErrorContains(testCase, f, 'CPeptideAlignRequantServiceConfig:MissingMsmsResPathIndexed');
 end
 
 
