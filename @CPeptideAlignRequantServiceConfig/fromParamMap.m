@@ -31,6 +31,7 @@ cfg.output_dir_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWork
 
 cfg.filtered_res_file_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_FILTERED_RES_FILE_PATH, '', 'CPeptideAlignRequantServiceConfig');
 cfg.msms_res_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MSMS_RES_PATH, '', 'CPeptideAlignRequantServiceConfig');
+cfg = parseMsmsResultPathsFromMap(cfg, task_param_map);
 cfg.peptide_quant_res_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_PEPTIDE_QUANT_RES_PATH, '', 'CPeptideAlignRequantServiceConfig');
 cfg.min_MSMS_num = CParamMapUtils.getOptionalNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MIN_MSMS_NUM, 1, 'CPeptideAlignRequantServiceConfig');
 cfg.alignment_report_path = CParamMapUtils.getOptional(task_param_map, ...
@@ -48,6 +49,47 @@ cfg.align_strategy_obj = parseAlignStrategyFromMap(task_param_map);
 cfg.align_options = parseAlignOptionsFromMap(task_param_map);
 cfg.msms_stability_filter = CMsmsStabilityFilterConfig.fromParamMap(task_param_map, 'CPeptideAlignRequantServiceConfig');
 cfg = CPeptideAlignRequantServiceConfig.finalize(cfg);
+end
+
+
+function cfg = parseMsmsResultPathsFromMap(cfg, task_param_map)
+% Parse single-file or multi-file MS/MS result parameters.
+% Input:
+%   cfg (struct)
+%       partially built config struct containing legacy msms_res_path
+%   task_param_map (containers.Map)
+%       parameter key-value map for peptide align-requant service
+% Output:
+%   cfg (struct)
+%       config with msms_res_multi_file_on and msms_res_paths fields
+cfg.msms_res_multi_file_on = false;
+cfg.msms_res_paths = {};
+
+num_key = CPTMdecoderWorkflowParamKeys.PARAM_MSMS_RES_PATH_NUM;
+if ~task_param_map.isKey(num_key)
+    return;
+end
+
+path_num = CParamMapUtils.getRequiredNumber(task_param_map, num_key, ...
+    'number of MS/MS result paths', 'CPeptideAlignRequantServiceConfig');
+if path_num <= 0 || floor(path_num) ~= path_num
+    CLogger.error(['[CPeptideAlignRequantServiceConfig:InvalidMsmsResPathNum] ', ...
+        'msms_res_path_num must be a positive integer.']);
+end
+
+cfg.msms_res_multi_file_on = true;
+cfg.msms_res_paths = cell(1, path_num);
+for idx = 1:path_num
+    path_key = [CPTMdecoderWorkflowParamKeys.PARAM_MSMS_RES_PATH_PREFIX, num2str(idx)];
+    path_value = CParamMapUtils.getOptional(task_param_map, path_key, '', ...
+        'CPeptideAlignRequantServiceConfig');
+    if isempty(path_value)
+        CLogger.error(['[CPeptideAlignRequantServiceConfig:MissingMsmsResPathIndexed] ', ...
+            'Param ''%s'' must be provided when msms_res_path_num is %d.'], ...
+            path_key, path_num);
+    end
+    cfg.msms_res_paths{idx} = path_value;
+end
 end
 
 

@@ -22,6 +22,12 @@ end
 if ~isfield(cfg, 'msms_res_path')
     cfg.msms_res_path = '';
 end
+if ~isfield(cfg, 'msms_res_multi_file_on') || isempty(cfg.msms_res_multi_file_on)
+    cfg.msms_res_multi_file_on = false;
+end
+if ~isfield(cfg, 'msms_res_paths')
+    cfg.msms_res_paths = {};
+end
 if ~isfield(cfg, 'peptide_quant_res_path')
     cfg.peptide_quant_res_path = '';
 end
@@ -63,7 +69,15 @@ if cfg.align_options.max_rt_residual < 0
     cfg.align_options.max_rt_residual = [];
 end
 
-if isempty(cfg.msms_res_path)
+if cfg.msms_res_multi_file_on
+    if isempty(cfg.msms_res_paths)
+        CLogger.error(['[CPeptideAlignRequantServiceConfig:MissingMsmsResPaths] ', ...
+            'msms_res_path_1 ... msms_res_path_N must be provided for peptide align-requant stage.']);
+    end
+else
+    cfg.msms_res_paths = {};
+end
+if ~cfg.msms_res_multi_file_on && isempty(cfg.msms_res_path)
     CLogger.error(['[CPeptideAlignRequantServiceConfig:MissingMsmsResPath] ', ...
         'msms_res_path must be provided for peptide align-requant stage.']);
 end

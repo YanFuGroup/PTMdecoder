@@ -77,8 +77,7 @@ classdef CPeptideAlignRequantService < handle
                     'FDR filtered result path is required for alignment.');
             end
 
-            msms_res_path = cfg.msms_res_path;
-            msms_result = CMS2ResultIO.read(msms_res_path);
+            msms_result = obj.loadMsmsResult();
 
             quant_output_path = cfg.peptide_quant_res_path;
             obj.ensureParentDirForFile(quant_output_path);
@@ -187,6 +186,42 @@ classdef CPeptideAlignRequantService < handle
                 obj.m_cMgfDatasetIO, obj.m_cMs12DatasetIO, obj.m_cMsFileMapper, obj.m_cfg.ms1_tolerance, ...
                 obj.m_fixedModNameMass, obj.m_variableModNameMass, obj.m_cfg.msms_stability_filter);
             rawIdentManager = CPeptideRawIdentAssembler.buildFromSpectrumList(spectrum_list, deps);
+        end
+
+
+        function msms_result = loadMsmsResult(obj)
+            % Load one or more MS/MS result files into a single CMS2Result.
+            % Input:
+            %   (none)
+            % Output:
+            %   msms_result (CMS2Result)
+            %       merged MS/MS result object used by downstream alignment logic
+            cfg = obj.m_cfg;
+            if isfield(cfg, 'msms_res_multi_file_on') && cfg.msms_res_multi_file_on
+                result_list = cell(1, numel(cfg.msms_res_paths));
+                for idx = 1:numel(cfg.msms_res_paths)
+                    msms_res_path = cfg.msms_res_paths{idx};
+                    if isempty(msms_res_path)
+                        CLogger.error(['[CPeptideAlignRequantService:MissingMsmsResPathIndexed] ', ...
+                            'MS/MS result path %d is empty.'], idx);
+                    end
+                    if exist(msms_res_path, 'file') ~= 2
+                        CLogger.error(['[CPeptideAlignRequantService:MsmsResPathNotFound] ', ...
+                            'MS/MS result path %d does not exist: %s'], idx, msms_res_path);
+                    end
+                    try
+                        result_list{idx} = CMS2ResultIO.read(msms_res_path);
+                    catch me
+                        CLogger.error(['[CPeptideAlignRequantService:ReadMsmsResPathFailed] ', ...
+                            'Failed to read MS/MS result path %d (%s): %s'], ...
+                            idx, msms_res_path, me.message);
+                    end
+                end
+                msms_result = CMS2Result.merge(result_list);
+                return;
+            end
+
+            msms_result = CMS2ResultIO.read(cfg.msms_res_path);
         end
 
 

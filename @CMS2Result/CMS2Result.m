@@ -41,6 +41,10 @@ classdef CMS2Result < handle
         compress(obj)
     end
 
+    methods (Static)
+        mergedResult = merge(resultList)
+    end
+
     methods (Access = private)
         rebuildPeptideIndexMap(obj)
     end

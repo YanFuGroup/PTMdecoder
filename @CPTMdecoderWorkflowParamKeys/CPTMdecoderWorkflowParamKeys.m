@@ -44,6 +44,8 @@ classdef CPTMdecoderWorkflowParamKeys
         PARAM_PEP_SPEC_FILE_PATH = 'pep_spec_file_path'
         PARAM_CHECKED_PEPTIDES_RES_PATH = 'checked_peptides_res_path'
         PARAM_MSMS_RES_PATH = 'msms_res_path'
+        PARAM_MSMS_RES_PATH_NUM = 'msms_res_path_num'
+        PARAM_MSMS_RES_PATH_PREFIX = 'msms_res_path_'
         PARAM_PEPTIDE_QUANT_RES_PATH = 'peptide_quant_res_path'
         PARAM_PEPTIDE_QUANT_STABILITY_FILTER_ON = 'peptide_quant_stability_filter_on'
         PARAM_PEPTIDE_QUANT_MIN_JACCARD_STABILITY = 'peptide_quant_min_jaccard_stability'
