@@ -36,8 +36,11 @@ for idx_header = 1:3
     end
 end
 
-dataset_lines_map = containers.Map('KeyType', 'char', 'ValueType', 'any');
+dataset_index_map = containers.Map('KeyType', 'char', 'ValueType', 'double');
 dataset_order = {};
+dataset_lines = {};
+dataset_line_counts = zeros(1, 0);
+dataset_line_capacities = zeros(1, 0);
 current_protein_line = '';
 block_dataset_written = containers.Map('KeyType', 'char', 'ValueType', 'logical');
 current_record_dataset = '';
@@ -49,21 +52,39 @@ current_record_lines = {};
         end
 
         dataset_name = current_record_dataset;
-        if ~dataset_lines_map.isKey(dataset_name)
-            dataset_lines_map(dataset_name) = header_lines;
+        if ~dataset_index_map.isKey(dataset_name)
             dataset_order{end + 1} = dataset_name; %#ok<AGROW>
+            dataset_index_map(dataset_name) = numel(dataset_order);
+            dataset_lines{end + 1} = cell(1, 64); %#ok<AGROW>
+            dataset_line_counts(end + 1) = 0; %#ok<AGROW>
+            dataset_line_capacities(end + 1) = 64; %#ok<AGROW>
+            appendLinesToDataset(numel(dataset_order), header_lines);
         end
 
-        lines = dataset_lines_map(dataset_name);
+        idx_dataset_current = dataset_index_map(dataset_name);
         if ~block_dataset_written.isKey(dataset_name)
-            lines{end + 1} = current_protein_line; %#ok<AGROW>
+            appendLinesToDataset(idx_dataset_current, {current_protein_line});
             block_dataset_written(dataset_name) = true;
         end
-        lines = [lines, current_record_lines]; %#ok<AGROW>
-        dataset_lines_map(dataset_name) = lines;
+        appendLinesToDataset(idx_dataset_current, current_record_lines);
 
         current_record_dataset = '';
         current_record_lines = {};
+    end
+
+    function appendLinesToDataset(idx_dataset_append, new_lines)
+        needed_count = dataset_line_counts(idx_dataset_append) + numel(new_lines);
+        if needed_count > dataset_line_capacities(idx_dataset_append)
+            new_capacity = max(needed_count, dataset_line_capacities(idx_dataset_append) * 2);
+            lines = dataset_lines{idx_dataset_append};
+            lines(end + 1:new_capacity) = {''};
+            dataset_lines{idx_dataset_append} = lines;
+            dataset_line_capacities(idx_dataset_append) = new_capacity;
+        end
+
+        idx_start = dataset_line_counts(idx_dataset_append) + 1;
+        dataset_lines{idx_dataset_append}(idx_start:needed_count) = new_lines;
+        dataset_line_counts(idx_dataset_append) = needed_count;
     end
 
 while ~feof(fin)
@@ -92,11 +113,15 @@ clear cleanup_input;
 
 CPathResolver.ensureDir(output_dir);
 output_paths = cell(1, numel(dataset_order));
+safe_name_dataset_map = containers.Map('KeyType', 'char', 'ValueType', 'char');
 for idx_dataset = 1:numel(dataset_order)
     dataset_name = dataset_order{idx_dataset};
     safe_dataset_name = makeSafeDatasetName(dataset_name);
+    safe_name_dataset_map = assertUniqueDatasetName( ...
+        safe_dataset_name, dataset_name, safe_name_dataset_map);
     output_path = fullfile(output_dir, [output_prefix, '__', safe_dataset_name, '.txt']);
-    writeLines(output_path, dataset_lines_map(dataset_name));
+    lines = dataset_lines{idx_dataset}(1:dataset_line_counts(idx_dataset));
+    writeLines(output_path, lines);
     output_paths{idx_dataset} = output_path;
 end
 end
@@ -130,6 +155,23 @@ safe_name = regexprep(dataset_name, '[^A-Za-z0-9._-]', '_');
 if isempty(safe_name)
     safe_name = 'dataset';
 end
+end
+
+
+function safe_name_dataset_map = assertUniqueDatasetName(safe_name, dataset_name, safe_name_dataset_map)
+% Fail fast when different Dataset values would write the same split file.
+if safe_name_dataset_map.isKey(safe_name)
+    existing_dataset_name = safe_name_dataset_map(safe_name);
+    if ~strcmp(existing_dataset_name, dataset_name)
+        error('CIMPQuantResultIO:SplitDatasetNameCollision', ...
+            ['Dataset values "%s" and "%s" both map to split output basename "%s". ', ...
+            'Rename one Dataset or choose non-conflicting input names.'], ...
+            existing_dataset_name, dataset_name, safe_name);
+    end
+    return;
+end
+
+safe_name_dataset_map(safe_name) = dataset_name;
 end
 
 
