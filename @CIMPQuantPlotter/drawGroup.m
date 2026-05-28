@@ -118,7 +118,7 @@ for idx_cat = 1:max(categorized_indices)
     plot_each_xic_group(group_current_ric, total_xic, categorized_intervals(idx_cat, :), ...
         group_current_imp_name, fullfile(dir_save, [raw_name, '_', ...
         num2str(low_mz_bound), '-', num2str(high_mz_bound), '_+', ...
-        num2str(selected_charge), '_', num2str(idx_cat), '.svg']), ...
+        num2str(selected_charge), '_', num2str(idx_cat)]), ...
         color_map, legend_map);
 end
 end
@@ -178,7 +178,7 @@ end
 
 
 
-function plot_each_xic_group(ric, total_xic, categorized_intervals, current_imp_name, file_name, color_map, legend_map)
+function plot_each_xic_group(ric, total_xic, categorized_intervals, current_imp_name, file_base_path, color_map, legend_map)
 % Plot the XIC of each IMP and the total XIC, only one rt category
 % input:
 %   ric (K x 2 cell)
@@ -189,8 +189,8 @@ function plot_each_xic_group(ric, total_xic, categorized_intervals, current_imp_
 %       categorized retention time intervals [start_rt, end_rt]
 %   current_imp_name (K x 1 cellstr/string)
 %       names of current IMPs
-%   file_name (1 x 1 char/string)
-%       the file name to save the plot
+%   file_base_path (1 x 1 char/string)
+%       the file path without extension for saving the plot
 %   color_map (containers.Map or [])
 %       color map
 %   legend_map (containers.Map or [])
@@ -287,7 +287,13 @@ h_legend = legend('show', 'Location', 'northwest');
 set(h_legend, 'FontSize', all_font_size, 'Box','off');
 set(h_legend, 'Units','normalized');
 set(h_legend, 'Position', [0.82 0.6 0.16 0.3]);
-print(f, file_name, '-dsvg', ['-r', num2str(dpi)]);
+svg_file = [file_base_path, '.svg'];
+png_file = [file_base_path, '.png'];
+pdf_file = [file_base_path, '.pdf'];
+print(f, svg_file, '-dsvg', ['-r', num2str(dpi)]);
+print(f, png_file, '-dpng', ['-r', num2str(dpi)]);
+print(f, pdf_file, '-dpdf', '-vector', ['-r', num2str(dpi)]);
+close(f);
 end
 
 
