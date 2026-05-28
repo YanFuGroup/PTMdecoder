@@ -292,7 +292,7 @@ png_file = [file_base_path, '.png'];
 pdf_file = [file_base_path, '.pdf'];
 print(f, svg_file, '-dsvg', ['-r', num2str(dpi)]);
 print(f, png_file, '-dpng', ['-r', num2str(dpi)]);
-print(f, pdf_file, '-dpdf', '-vector', ['-r', num2str(dpi)]);
+print(f, pdf_file, '-dpdf', '-vector');
 close(f);
 end
 
