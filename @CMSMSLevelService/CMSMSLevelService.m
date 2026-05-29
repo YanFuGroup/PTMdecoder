@@ -137,6 +137,13 @@ classdef CMSMSLevelService < handle
                     % a spectrum for an old peptide
                     if ~is_current_peptide_eligible
                         filtered_spectrum_count = filtered_spectrum_count + 1;
+                        if pep_len > cfg.max_peptide_length
+                            CLogger.debug('[CMSMSLevelService:run] Skipped spectrum (%s/%s) because its peptide (%s) is too long (length: %d > %d).', ...
+                                str{1}, str{2}, pepSeq, pep_len, cfg.max_peptide_length);
+                        elseif pep_len < cfg.min_peptide_length
+                            CLogger.debug('[CMSMSLevelService:run] Skipped spectrum (%s/%s) because its peptide (%s) is too short (length: %d < %d).', ...
+                                str{1}, str{2}, pepSeq, pep_len, cfg.min_peptide_length);
+                        end
                         continue;
                     end
                     dataset_name = str{1};
