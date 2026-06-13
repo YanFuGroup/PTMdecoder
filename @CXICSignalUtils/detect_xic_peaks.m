@@ -1,4 +1,4 @@
-function xic_peak_idx_bounds = detect_xic_peaks(xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, alpha)
+function [xic_peak_idx_bounds, diagnostics] = detect_xic_peaks(xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, alpha, min_nonzero_points)
     % Detect XIC peaks using smoothed intensity and identified MSMS events
     % Inputs:
     %   xic_rt (N x 1 double) minutes
@@ -11,10 +11,21 @@ function xic_peak_idx_bounds = detect_xic_peaks(xic_rt, xic_intensity_smoothed, 
     %       Sorted retention times of PSMs
     %   alpha (1 x 1 double)
     %       Threshold parameter for peak boundary detection
+    %   min_nonzero_points (1 x 1 double/int, optional)
+    %       minimum non-zero raw MS1 points required within a candidate peak
     % Output:
     %   xic_peak_idx_bounds (1 x P struct)
     %       Struct array with fields: idx_start/idx_end (indices into xic_rt)
     
+    if nargin < 6 || isempty(min_nonzero_points)
+        min_nonzero_points = 5;
+    end
+    diagnostics = struct( ...
+        'candidate_peak_count', 0, ...
+        'filtered_sparse_peak_count', 0, ...
+        'candidate_nonzero_points', zeros(0, 1), ...
+        'min_nonzero_points', min_nonzero_points);
+
     % Extract the XIC peaks around the identified MSMS precursor
     % Extract from left to right
     idx_PSM = 1;
@@ -101,9 +112,16 @@ function xic_peak_idx_bounds = detect_xic_peaks(xic_rt, xic_intensity_smoothed, 
         idx_PSM = idx_PSM + 1;
     end
 
-    % remove the XIC peaks only with less than 5 point
+    diagnostics.candidate_peak_count = length(xic_peak_idx_bounds);
+    diagnostics.candidate_nonzero_points = zeros(diagnostics.candidate_peak_count, 1);
+
+    % Remove XIC peaks with too few non-zero raw MS1 points.
     for i_Xp = length(xic_peak_idx_bounds):-1:1
-        if sum(xic_intensity_raw(xic_peak_idx_bounds(i_Xp).idx_start:xic_peak_idx_bounds(i_Xp).idx_end)~=0) < 5
+        nonzero_points = sum(xic_intensity_raw( ...
+            xic_peak_idx_bounds(i_Xp).idx_start:xic_peak_idx_bounds(i_Xp).idx_end) ~= 0);
+        diagnostics.candidate_nonzero_points(i_Xp) = nonzero_points;
+        if nonzero_points < min_nonzero_points
+            diagnostics.filtered_sparse_peak_count = diagnostics.filtered_sparse_peak_count + 1;
             xic_peak_idx_bounds(i_Xp) = [];
         end
     end

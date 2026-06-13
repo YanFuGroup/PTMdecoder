@@ -87,7 +87,8 @@ classdef CPeptideAlignRequantService < handle
                 'ms1_tolerance', cfg.ms1_tolerance, ...
                 'minMSMSnum', cfg.min_MSMS_num, ...
                 'alpha', cfg.alpha, ...
-                'resFilterThres', 0));  % cfg.result_filter_threshold
+                'resFilterThres', 0, ...  % cfg.result_filter_threshold
+                'minXicNonzeroPoints', cfg.min_xic_nonzero_points));
             proc_executor = CIMPProcessingExecutor(proc_cfg);
 
             rawIdentManagers = cell(1, length(msms_result.Peptides));
@@ -106,6 +107,7 @@ classdef CPeptideAlignRequantService < handle
             print_progress.last_update();
 
             quant_report = CIMPQuantReport();
+            CIMPQuantStats.quant_group_stats('init', []);
             print_progress = CPrintProgress(length(msms_result.Peptides), 'peptide_quant_before_alignment');
             CLogger.info('Quantifying at peptide level before alignment...');
             for i_pep = 1:length(msms_result.Peptides)
@@ -117,6 +119,7 @@ classdef CPeptideAlignRequantService < handle
                 quant_report = quant_report.append_block(block);
             end
             print_progress.last_update();
+            CIMPQuantStats.log_quant_group_summary('Pre-alignment peptide-level');
             CLogger.info('Peptide-level quantification before alignment done.');
 
             CIMPQuantResultIO.write(quant_report, quant_output_path);

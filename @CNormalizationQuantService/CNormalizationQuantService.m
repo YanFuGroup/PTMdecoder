@@ -60,9 +60,11 @@ classdef CNormalizationQuantService < handle
                 'ms1_tolerance', msms_cfg.ms1_tolerance, ...
                 'minMSMSnum', 1, ...
                 'alpha', msms_cfg.alpha, ...
-                'resFilterThres', msms_cfg.result_filter_threshold));
+                'resFilterThres', msms_cfg.result_filter_threshold, ...
+                'minXicNonzeroPoints', msms_cfg.min_xic_nonzero_points));
             executor = CIMPProcessingExecutor(pipeline_cfg);
             CIMPQuantStats.rt_sorted_stats('init');
+            CIMPQuantStats.quant_group_stats('init', []);
             stats_cleanup = onCleanup(@() CIMPQuantStats.rt_sorted_stats('flush', ...
                 CPathResolver.resolveFilePath(msms_cfg.output_dir_path, 'rt_sorted_stats.mat', '')));
             report = CIMPQuantReport();
@@ -72,6 +74,7 @@ classdef CNormalizationQuantService < handle
                 block = executor.quantifyPeptideBlock({prot_list{i_list}, -1}, pep_quant{i_list});
                 report = report.append_block(block);
             end
+            CIMPQuantStats.log_quant_group_summary('Normalization peptide-level');
             CLogger.info('Quantifying %s done.', msms_cfg.spec_dir_path);
 
             % TODO: Set the output path for peptide level results

@@ -7,6 +7,7 @@ classdef CIMPProcessingExecutorConfig
         minMSMSnum
         alpha
         resFilterThres
+        minXicNonzeroPoints
     end
 
     methods
@@ -27,6 +28,7 @@ classdef CIMPProcessingExecutorConfig
             obj.minMSMSnum = cfg.minMSMSnum;
             obj.alpha = cfg.alpha;
             obj.resFilterThres = cfg.resFilterThres;
+            obj.minXicNonzeroPoints = cfg.minXicNonzeroPoints;
         end
     end
 
@@ -46,6 +48,9 @@ classdef CIMPProcessingExecutorConfig
             end
             if ~isfield(cfg, 'resFilterThres') || isempty(cfg.resFilterThres)
                 cfg.resFilterThres = 0;
+            end
+            if ~isfield(cfg, 'minXicNonzeroPoints') || isempty(cfg.minXicNonzeroPoints)
+                cfg.minXicNonzeroPoints = 5;
             end
 
             if isempty(cfg.ms12DatasetIO)
@@ -72,6 +77,12 @@ classdef CIMPProcessingExecutorConfig
             if ~isscalar(cfg.resFilterThres) || ~isnumeric(cfg.resFilterThres) || cfg.resFilterThres < 0
                 error('CIMPProcessingExecutorConfig:InvalidResFilterThres', ...
                     'resFilterThres must be a numeric scalar >= 0.');
+            end
+            if ~isscalar(cfg.minXicNonzeroPoints) || ~isnumeric(cfg.minXicNonzeroPoints) || ...
+                    ~isfinite(cfg.minXicNonzeroPoints) || cfg.minXicNonzeroPoints < 1 || ...
+                    floor(cfg.minXicNonzeroPoints) ~= cfg.minXicNonzeroPoints
+                error('CIMPProcessingExecutorConfig:InvalidMinXicNonzeroPoints', ...
+                    'minXicNonzeroPoints must be a positive integer.');
             end
         end
     end

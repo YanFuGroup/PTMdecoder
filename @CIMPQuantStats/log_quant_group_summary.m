@@ -1,0 +1,9 @@
+function log_quant_group_summary(stage_name)
+% Write an INFO summary for initial quantification group outcomes.
+
+stats = CIMPQuantStats.quant_group_stats('get', []);
+CLogger.info(['%s quant group summary: success=%d, insufficient_psm_inputs=%d, ', ...
+    'no_xic_peak=%d, sparse_xic_peaks=%d, zero_imp_area=%d, unknown=%d.'], ...
+    stage_name, stats.success, stats.insufficient_psm_inputs, stats.no_xic_peak, ...
+    stats.sparse_xic_peaks, stats.zero_imp_area, stats.unknown);
+end

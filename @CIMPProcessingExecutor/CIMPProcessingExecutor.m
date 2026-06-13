@@ -7,6 +7,7 @@ classdef CIMPProcessingExecutor < handle
         m_minMSMSnum
         m_alpha
         m_resFilterThres
+        m_minXicNonzeroPoints
     end
 
     methods
@@ -19,6 +20,7 @@ classdef CIMPProcessingExecutor < handle
                 obj.m_minMSMSnum = cfg.minMSMSnum;
                 obj.m_alpha = cfg.alpha;
                 obj.m_resFilterThres = cfg.resFilterThres;
+                obj.m_minXicNonzeroPoints = cfg.minXicNonzeroPoints;
                 return;
             end
 
@@ -27,6 +29,7 @@ classdef CIMPProcessingExecutor < handle
             obj.m_minMSMSnum = minMSMSnum;
             obj.m_alpha = alpha;
             obj.m_resFilterThres = resFilterThres;
+            obj.m_minXicNonzeroPoints = 5;
         end
     end
 

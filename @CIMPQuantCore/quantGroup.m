@@ -1,5 +1,5 @@
-function [has_nonzero_imp, imp_idx_nonzero, area_imp_final, xic_peak_rt_bounds, idx_selected, ratio_each_XIC_peak] = ...
-    quantGroup(cMs12DatasetIO, raw_name, ratio_raw, rt_raw, intensity_raw, low_mz_bound, high_mz_bound, selected_charge, minMSMSnum, alpha, resFilterThres)
+function [has_nonzero_imp, imp_idx_nonzero, area_imp_final, xic_peak_rt_bounds, idx_selected, ratio_each_XIC_peak, diagnostics] = ...
+    quantGroup(cMs12DatasetIO, raw_name, ratio_raw, rt_raw, intensity_raw, low_mz_bound, high_mz_bound, selected_charge, minMSMSnum, alpha, resFilterThres, minXicNonzeroPoints)
 % Quantify each group
 % input:
 %   cMs12DatasetIO (object)
@@ -45,6 +45,15 @@ area_imp_final = [];
 xic_peak_rt_bounds = [];
 idx_selected = [];
 ratio_each_XIC_peak = [];
+if nargin < 12 || isempty(minXicNonzeroPoints)
+    minXicNonzeroPoints = 5;
+end
+diagnostics = struct( ...
+    'reason', 'unknown', ...
+    'candidate_peak_count', 0, ...
+    'filtered_sparse_peak_count', 0, ...
+    'candidate_nonzero_points', zeros(0, 1), ...
+    'min_nonzero_points', minXicNonzeroPoints);
 
 % Preprocess inputs (Sort, Smooth, Denoise)
 [rt_sorted, ratio_sorted, xic_rt, xic_intensity_smoothed, xic_intensity_raw, is_valid] = ...
@@ -53,6 +62,7 @@ ratio_each_XIC_peak = [];
         minMSMSnum, low_mz_bound, high_mz_bound, selected_charge);
 
 if ~is_valid
+    diagnostics.reason = 'insufficient_psm_inputs';
     return;
 end
 
@@ -60,9 +70,18 @@ end
 CIMPQuantStats.rt_sorted_stats('record', numel(rt_sorted));
 
 % Extract the XIC peaks around the identified MSMS precursor
-xic_peak_idx_bounds = CXICSignalUtils.detect_xic_peaks(xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, alpha);
+[xic_peak_idx_bounds, peak_diagnostics] = CXICSignalUtils.detect_xic_peaks( ...
+    xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, alpha, minXicNonzeroPoints);
+diagnostics.candidate_peak_count = peak_diagnostics.candidate_peak_count;
+diagnostics.filtered_sparse_peak_count = peak_diagnostics.filtered_sparse_peak_count;
+diagnostics.candidate_nonzero_points = peak_diagnostics.candidate_nonzero_points;
 
 if isempty(xic_peak_idx_bounds)
+    if diagnostics.filtered_sparse_peak_count > 0
+        diagnostics.reason = 'sparse_xic_peaks';
+    else
+        diagnostics.reason = 'no_xic_peak';
+    end
     return;
 end
 
@@ -101,5 +120,8 @@ valid_peaks = sums > 0;
 ratio_each_XIC_peak(:, valid_peaks) = area_imp_by_peak(:, valid_peaks) ./ sums(valid_peaks);
 if ~isempty(imp_idx_nonzero)
     has_nonzero_imp = true;
+    diagnostics.reason = 'success';
+else
+    diagnostics.reason = 'zero_imp_area';
 end
 end

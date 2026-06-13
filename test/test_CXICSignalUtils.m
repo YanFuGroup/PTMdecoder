@@ -290,6 +290,28 @@ classdef test_CXICSignalUtils < matlab.unittest.TestCase
             testCase.verifyEmpty(xic_peak_idx_bounds_filtered);
         end
 
+        function testDetectXicPeaksConfigurableMinimumNonzeroPoints(testCase)
+            % Verify sparse PSM-anchored peaks follow the configured point threshold.
+            xic_rt = (0:0.1:1)';
+            xic_intensity_smoothed = [0; 0; 10; 20; 10; 0; 0; 0; 0; 0; 0];
+            xic_intensity_raw = [0; 0; 10; 20; 10; 0; 0; 0; 0; 0; 0];
+            rt_sorted = 0.3;
+
+            [default_bounds, default_diag] = CXICSignalUtils.detect_xic_peaks( ...
+                xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, 0.01);
+            [relaxed_bounds, relaxed_diag] = CXICSignalUtils.detect_xic_peaks( ...
+                xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, 0.01, 3);
+
+            testCase.verifyEmpty(default_bounds);
+            testCase.verifyEqual(default_diag.filtered_sparse_peak_count, 1);
+            testCase.verifyEqual(default_diag.candidate_nonzero_points, 3);
+            testCase.verifyEqual(default_diag.min_nonzero_points, 5);
+
+            testCase.verifyNumElements(relaxed_bounds, 1);
+            testCase.verifyEqual(relaxed_diag.filtered_sparse_peak_count, 0);
+            testCase.verifyEqual(relaxed_diag.min_nonzero_points, 3);
+        end
+
         function testParseImpRtRanges(testCase)
             % Test parse_imp_rt_ranges functionality
             
