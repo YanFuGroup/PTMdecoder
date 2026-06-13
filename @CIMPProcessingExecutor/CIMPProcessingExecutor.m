@@ -12,7 +12,9 @@ classdef CIMPProcessingExecutor < handle
 
     methods
         function obj = CIMPProcessingExecutor(ms12DatasetIO, ms1_tolerance, minMSMSnum, alpha, resFilterThres)
-            % Construct an executor with shared processing parameters
+            % Construct an executor with shared processing parameters.
+            % The five-argument constructor is deprecated. New callers
+            % should pass a CIMPProcessingExecutorConfig instance.
             if nargin == 1 && isa(ms12DatasetIO, 'CIMPProcessingExecutorConfig')
                 cfg = ms12DatasetIO;
                 obj.m_ms12DatasetIO = cfg.ms12DatasetIO;
@@ -22,6 +24,12 @@ classdef CIMPProcessingExecutor < handle
                 obj.m_resFilterThres = cfg.resFilterThres;
                 obj.m_minXicNonzeroPoints = cfg.minXicNonzeroPoints;
                 return;
+            end
+
+            if nargin == 5
+                warning('CIMPProcessingExecutor:DeprecatedLegacyConstructor', ...
+                    ['The five-argument CIMPProcessingExecutor constructor is deprecated. ', ...
+                    'Use CIMPProcessingExecutor(CIMPProcessingExecutorConfig(...)) instead.']);
             end
 
             obj.m_ms12DatasetIO = ms12DatasetIO;
