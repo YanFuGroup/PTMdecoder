@@ -20,6 +20,8 @@ classdef CPeptideQuantService < handle
         function run(obj)
             % Run peptide-level quantification stage.
             cfg = obj.m_msms_cfg;
+            min_xic_nonzero_points = CStructOptionUtils.get( ...
+                cfg, 'min_xic_nonzero_points', 5);
 
             [fixedModNameMass, variableModNameMass] = CModificationRegistry.fromConfig(cfg);
 
@@ -46,10 +48,10 @@ classdef CPeptideQuantService < handle
                 'minMSMSnum', cfg.min_MSMS_num, ...
                 'alpha', cfg.alpha, ...
                 'resFilterThres', cfg.result_filter_threshold, ...
-                'minXicNonzeroPoints', cfg.min_xic_nonzero_points));
+                'minXicNonzeroPoints', min_xic_nonzero_points));
             executor = CIMPProcessingExecutor(pipeline_cfg);
             CIMPQuantStats.rt_sorted_stats('init');
-            CIMPQuantStats.quant_group_stats('init', cfg.min_xic_nonzero_points);
+            CIMPQuantStats.quant_group_stats('init', min_xic_nonzero_points);
             stats_cleanup = onCleanup(@() CIMPQuantStats.rt_sorted_stats('flush', ...
                 CPathResolver.resolveFilePath(cfg.output_dir_path, 'rt_sorted_stats.mat', '')));
 

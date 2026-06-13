@@ -28,6 +28,8 @@ classdef CNormalizationQuantService < handle
             % Run normalization peptide quantification stage.
             cfg = obj.m_cfg;
             msms_cfg = cfg.msms_cfg;
+            min_xic_nonzero_points = CStructOptionUtils.get( ...
+                msms_cfg, 'min_xic_nonzero_points', 5);
 
             peptide_list = cfg.peptide_list;
             prot_list = cfg.prot_list;
@@ -61,10 +63,10 @@ classdef CNormalizationQuantService < handle
                 'minMSMSnum', 1, ...
                 'alpha', msms_cfg.alpha, ...
                 'resFilterThres', msms_cfg.result_filter_threshold, ...
-                'minXicNonzeroPoints', msms_cfg.min_xic_nonzero_points));
+                'minXicNonzeroPoints', min_xic_nonzero_points));
             executor = CIMPProcessingExecutor(pipeline_cfg);
             CIMPQuantStats.rt_sorted_stats('init');
-            CIMPQuantStats.quant_group_stats('init', msms_cfg.min_xic_nonzero_points);
+            CIMPQuantStats.quant_group_stats('init', min_xic_nonzero_points);
             stats_cleanup = onCleanup(@() CIMPQuantStats.rt_sorted_stats('flush', ...
                 CPathResolver.resolveFilePath(msms_cfg.output_dir_path, 'rt_sorted_stats.mat', '')));
             report = CIMPQuantReport();

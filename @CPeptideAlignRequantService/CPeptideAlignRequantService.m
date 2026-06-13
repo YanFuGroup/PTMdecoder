@@ -60,6 +60,8 @@ classdef CPeptideAlignRequantService < handle
             %             'zero-label' -> keep peaks but set all check_label = 0
             %       unknown keys are ignored by this service and forwarded downstream
             cfg = obj.m_cfg;
+            min_xic_nonzero_points = CStructOptionUtils.get( ...
+                cfg, 'min_xic_nonzero_points', 5);
             align_strategy = cfg.align_strategy_obj;
             align_options = cfg.align_options;
 
@@ -88,7 +90,7 @@ classdef CPeptideAlignRequantService < handle
                 'minMSMSnum', cfg.min_MSMS_num, ...
                 'alpha', cfg.alpha, ...
                 'resFilterThres', 0, ...  % cfg.result_filter_threshold
-                'minXicNonzeroPoints', cfg.min_xic_nonzero_points));
+                'minXicNonzeroPoints', min_xic_nonzero_points));
             proc_executor = CIMPProcessingExecutor(proc_cfg);
 
             rawIdentManagers = cell(1, length(msms_result.Peptides));
@@ -107,7 +109,7 @@ classdef CPeptideAlignRequantService < handle
             print_progress.last_update();
 
             quant_report = CIMPQuantReport();
-            CIMPQuantStats.quant_group_stats('init', cfg.min_xic_nonzero_points);
+            CIMPQuantStats.quant_group_stats('init', min_xic_nonzero_points);
             print_progress = CPrintProgress(length(msms_result.Peptides), 'peptide_quant_before_alignment');
             CLogger.info('Quantifying at peptide level before alignment...');
             for i_pep = 1:length(msms_result.Peptides)
