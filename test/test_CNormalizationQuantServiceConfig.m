@@ -24,6 +24,20 @@ for idx = 1:numel(invalid_values)
 end
 end
 
+function testMinMsmsNumDefaultsAndParses(testCase)
+[param_map, cleanup] = makeBaseParamMap(); %#ok<NASGU>
+cfg = CNormalizationQuantServiceConfig.fromParamMap(param_map);
+testCase.verifyEqual(cfg.msms_cfg.min_MSMS_num, 1);
+
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_MIN_MSMS_NUM) = '';
+cfg = CNormalizationQuantServiceConfig.fromParamMap(param_map);
+testCase.verifyEqual(cfg.msms_cfg.min_MSMS_num, 1);
+
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_MIN_MSMS_NUM) = '3';
+cfg = CNormalizationQuantServiceConfig.fromParamMap(param_map);
+testCase.verifyEqual(cfg.msms_cfg.min_MSMS_num, 3);
+end
+
 function [param_map, cleanup] = makeBaseParamMap()
 test_dir = fileparts(mfilename('fullpath'));
 pair_path = fullfile(test_dir, ['norm_pair_', char(java.util.UUID.randomUUID), '.txt']);
