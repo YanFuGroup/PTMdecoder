@@ -114,13 +114,18 @@ function verifyLoggedErrorContains(testCase, funcHandle, expectedTag)
 % Outputs:
 %    (none)
 
-testCase.verifyError(funcHandle, 'CLogger:LoggedError');
+did_throw = false;
+caught_error = [];
 try
-	funcHandle();
+    funcHandle();
 catch me
-	testCase.verifyTrue(contains(me.message, expectedTag), ...
-		['Expected error message to contain tag: ', expectedTag]);
+    did_throw = true;
+    caught_error = me;
 end
+testCase.assertTrue(did_throw, 'Expected function to raise an error.');
+testCase.assertEqual(caught_error.identifier, 'CLogger:LoggedError');
+testCase.verifyTrue(contains(caught_error.message, expectedTag), ...
+    ['Expected error message to contain tag: ', expectedTag]);
 end
 
 

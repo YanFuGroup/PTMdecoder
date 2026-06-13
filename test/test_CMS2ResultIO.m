@@ -378,14 +378,18 @@ function verifyLoggedErrorContains(testCase, funcHandle, expectedBusinessTag)
 %   expectedBusinessTag (1 x N char/string)
 %       business tag like [CMS2ResultIO:InvalidSpectrumLine]
 
-testCase.verifyError(funcHandle, 'CLogger:LoggedError');
-
+did_throw = false;
+caught_error = [];
 try
     funcHandle();
 catch me
-    testCase.verifyTrue(contains(me.message, expectedBusinessTag), ...
-        ['Expected error message to contain business tag: ', expectedBusinessTag]);
+    did_throw = true;
+    caught_error = me;
 end
+testCase.assertTrue(did_throw, 'Expected function to raise an error.');
+testCase.assertEqual(caught_error.identifier, 'CLogger:LoggedError');
+testCase.verifyTrue(contains(caught_error.message, expectedBusinessTag), ...
+    ['Expected error message to contain business tag: ', expectedBusinessTag]);
 end
 
 function deleteTestFile(testFile)
