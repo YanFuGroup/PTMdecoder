@@ -4,7 +4,7 @@ classdef test_CIMPProcessingExecutor < matlab.unittest.TestCase
     methods (Test)
         function testBuildBaseGroupsMatchesLegacyAggregation(testCase)
             ms1_tolerance = struct('value', 10, 'isppm', true);
-            executor = CIMPProcessingExecutor([], ms1_tolerance, 1, 0.01, 0);
+            executor = makeExecutorWithConfig(struct('placeholder', true), ms1_tolerance);
 
             rawIdentManager = CIMPRawIdentManager();
             rawStore = rawIdentManager.getOrCreate('rawA.mgf');
@@ -32,6 +32,27 @@ classdef test_CIMPProcessingExecutor < matlab.unittest.TestCase
                 testCase.verifyEqual(base_groups(idx).impMass, legacy_groups(idx).impMass, 'AbsTol', 1e-10);
                 testCase.verifyEqual(base_groups(idx).chargeGroupIdxs, legacy_groups(idx).chargeGroupIdxs);
             end
+        end
+
+        function testLegacyConstructorWarnsAndRemainsUsable(testCase)
+            ms1_tolerance = struct('value', 10, 'isppm', true);
+            executor = [];
+
+            testCase.verifyWarning(@constructLegacyExecutor, ...
+                'CIMPProcessingExecutor:DeprecatedLegacyConstructor');
+            base_groups = executor.buildBaseGroups([]);
+
+            testCase.verifyEmpty(base_groups);
+
+            function constructLegacyExecutor()
+                executor = CIMPProcessingExecutor([], ms1_tolerance, 1, 0.01, 0);
+            end
+        end
+
+        function testConfigConstructorDoesNotWarn(testCase)
+            ms1_tolerance = struct('value', 10, 'isppm', true);
+            testCase.verifyWarningFree(@() makeExecutorWithConfig( ...
+                struct('placeholder', true), ms1_tolerance));
         end
 
         function testSparseFilterDebugDistinguishesPartialAndAllFiltered(testCase)
@@ -73,6 +94,17 @@ classdef test_CIMPProcessingExecutor < matlab.unittest.TestCase
             testCase.verifyEqual(stats.no_xic_peak, 1);
         end
     end
+end
+
+
+function executor = makeExecutorWithConfig(dataset, ms1_tolerance)
+cfg = CIMPProcessingExecutorConfig(struct( ...
+    'ms12DatasetIO', dataset, ...
+    'ms1_tolerance', ms1_tolerance, ...
+    'minMSMSnum', 1, ...
+    'alpha', 0.01, ...
+    'resFilterThres', 0));
+executor = CIMPProcessingExecutor(cfg);
 end
 
 
