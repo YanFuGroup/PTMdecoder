@@ -27,6 +27,21 @@ testCase.verifyEmpty(cfg.msms_stability_filter.min_jaccard);
 testCase.verifyEmpty(cfg.msms_stability_filter.min_support_frequency);
 testCase.verifyEmpty(cfg.msms_stability_filter.max_abundance_mad);
 testCase.verifyTrue(cfg.msms_stability_filter.nan_as_fail);
+testCase.verifyEqual(cfg.min_xic_nonzero_points, 5);
+end
+
+function testMinXicNonzeroPointsParsingAndValidation(testCase)
+param_map = makeBaseParamMap();
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_MIN_XIC_NONZERO_POINTS) = '3';
+cfg = CPeptideAlignRequantServiceConfig.fromParamMap(param_map);
+testCase.verifyEqual(cfg.min_xic_nonzero_points, 3);
+
+invalid_values = {'0', '-1', '2.5'};
+for idx = 1:numel(invalid_values)
+    param_map(CPTMdecoderWorkflowParamKeys.PARAM_MIN_XIC_NONZERO_POINTS) = invalid_values{idx};
+    f = @() CPeptideAlignRequantServiceConfig.fromParamMap(param_map);
+    verifyLoggedErrorContains(testCase, f, 'CPeptideAlignRequantServiceConfig:InvalidMinXicNonzeroPoints');
+end
 end
 
 

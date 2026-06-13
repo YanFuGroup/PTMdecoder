@@ -38,6 +38,7 @@ classdef CPTMdecoderWorkflowParamKeys
         PARAM_ENZYME_LIMIT_C_TERM_POSSIBLE_MOD = 'enzyme_limit_C_term_possible_mod'
         PARAM_OUTPUT_DIR_PATH = 'output_dir_path'
         PARAM_MIN_MSMS_NUM = 'min_MSMS_num'
+        PARAM_MIN_XIC_NONZERO_POINTS = 'min_xic_nonzero_points'
         PARAM_PEPTIDE_MIN_LENGTH = 'peptide_min_length'
         PARAM_PEPTIDE_MAX_LENGTH = 'peptide_max_length'
         PARAM_MAX_MOD_PER_PEPTIDE = 'max_mod_per_peptide'

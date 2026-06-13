@@ -10,7 +10,7 @@ classdef CXICSignalUtils
         
         fwhm = get_fwhm(peak_rts, peak_intens)
         
-        xic_peak_idx_bounds = detect_xic_peaks(xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, alpha)
+        [xic_peak_idx_bounds, diagnostics] = detect_xic_peaks(xic_rt, xic_intensity_smoothed, xic_intensity_raw, rt_sorted, alpha, min_nonzero_points)
         
         [xic_peak_rt_bounds, max_label, is_skip_vec] = parse_imp_rt_ranges(imp_rt_range, is_skip_vec)
         

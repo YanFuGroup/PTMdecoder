@@ -29,6 +29,14 @@ cfg.result_filter_threshold = CParamMapUtils.getRequiredNumber(task_param_map, C
 cfg.output_dir_path = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_OUTPUT_DIR_PATH, 'output directory path', 'CPeptideQuantServiceConfig');
 
 cfg.min_MSMS_num = CParamMapUtils.getOptionalNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MIN_MSMS_NUM, 1, 'CPeptideQuantServiceConfig');
+cfg.min_xic_nonzero_points = CParamMapUtils.getOptionalNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MIN_XIC_NONZERO_POINTS, 5, 'CPeptideQuantServiceConfig');
+validateMinXicNonzeroPoints(cfg.min_xic_nonzero_points, 'CPeptideQuantServiceConfig');
 cfg.msms_res_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MSMS_RES_PATH, [], 'CPeptideQuantServiceConfig');
 cfg.msms_stability_filter = CMsmsStabilityFilterConfig.fromParamMap(task_param_map, 'CPeptideQuantServiceConfig');
+end
+
+function validateMinXicNonzeroPoints(value, context)
+if ~isscalar(value) || ~isfinite(value) || value < 1 || floor(value) ~= value
+    CLogger.error('[%s:InvalidMinXicNonzeroPoints] min_xic_nonzero_points must be a positive integer.', context);
+end
 end

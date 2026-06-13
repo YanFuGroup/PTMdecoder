@@ -34,6 +34,8 @@ cfg.msms_res_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkfl
 cfg = parseMsmsResultPathsFromMap(cfg, task_param_map);
 cfg.peptide_quant_res_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_PEPTIDE_QUANT_RES_PATH, '', 'CPeptideAlignRequantServiceConfig');
 cfg.min_MSMS_num = CParamMapUtils.getOptionalNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MIN_MSMS_NUM, 1, 'CPeptideAlignRequantServiceConfig');
+cfg.min_xic_nonzero_points = CParamMapUtils.getOptionalNumber(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MIN_XIC_NONZERO_POINTS, 5, 'CPeptideAlignRequantServiceConfig');
+validateMinXicNonzeroPoints(cfg.min_xic_nonzero_points);
 cfg.alignment_report_path = CParamMapUtils.getOptional(task_param_map, ...
     CPTMdecoderWorkflowParamKeys.PARAM_ALIGN_REPORT_PATH, '', 'CPeptideAlignRequantServiceConfig');
 cfg.requant_output_path = CParamMapUtils.getOptional(task_param_map, ...
@@ -49,6 +51,13 @@ cfg.align_strategy_obj = parseAlignStrategyFromMap(task_param_map);
 cfg.align_options = parseAlignOptionsFromMap(task_param_map);
 cfg.msms_stability_filter = CMsmsStabilityFilterConfig.fromParamMap(task_param_map, 'CPeptideAlignRequantServiceConfig');
 cfg = CPeptideAlignRequantServiceConfig.finalize(cfg);
+end
+
+function validateMinXicNonzeroPoints(value)
+if ~isscalar(value) || ~isfinite(value) || value < 1 || floor(value) ~= value
+    CLogger.error(['[CPeptideAlignRequantServiceConfig:InvalidMinXicNonzeroPoints] ', ...
+        'min_xic_nonzero_points must be a positive integer.']);
+end
 end
 
 

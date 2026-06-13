@@ -20,6 +20,8 @@ classdef CPeptideQuantService < handle
         function run(obj)
             % Run peptide-level quantification stage.
             cfg = obj.m_msms_cfg;
+            min_xic_nonzero_points = CStructOptionUtils.get( ...
+                cfg, 'min_xic_nonzero_points', 5);
 
             [fixedModNameMass, variableModNameMass] = CModificationRegistry.fromConfig(cfg);
 
@@ -45,9 +47,11 @@ classdef CPeptideQuantService < handle
                 'ms1_tolerance', cfg.ms1_tolerance, ...
                 'minMSMSnum', cfg.min_MSMS_num, ...
                 'alpha', cfg.alpha, ...
-                'resFilterThres', cfg.result_filter_threshold));
+                'resFilterThres', cfg.result_filter_threshold, ...
+                'minXicNonzeroPoints', min_xic_nonzero_points));
             executor = CIMPProcessingExecutor(pipeline_cfg);
             CIMPQuantStats.rt_sorted_stats('init');
+            CIMPQuantStats.quant_group_stats('init', min_xic_nonzero_points);
             stats_cleanup = onCleanup(@() CIMPQuantStats.rt_sorted_stats('flush', ...
                 CPathResolver.resolveFilePath(cfg.output_dir_path, 'rt_sorted_stats.mat', '')));
 
@@ -79,6 +83,7 @@ classdef CPeptideQuantService < handle
                 report = report.append_block(block);
             end
             print_progress.last_update();
+            CIMPQuantStats.log_quant_group_summary('Peptide-level');
 
             if cfg.msms_stability_filter.enabled
                 CLogger.info(['MSMS stability filter summary: spectra(total=%d, kept=%d, dropped_by_jaccard=%d), ', ...
