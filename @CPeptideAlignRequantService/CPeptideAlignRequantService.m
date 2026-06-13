@@ -107,7 +107,7 @@ classdef CPeptideAlignRequantService < handle
             print_progress.last_update();
 
             quant_report = CIMPQuantReport();
-            CIMPQuantStats.quant_group_stats('init', []);
+            CIMPQuantStats.quant_group_stats('init', cfg.min_xic_nonzero_points);
             print_progress = CPrintProgress(length(msms_result.Peptides), 'peptide_quant_before_alignment');
             CLogger.info('Quantifying at peptide level before alignment...');
             for i_pep = 1:length(msms_result.Peptides)

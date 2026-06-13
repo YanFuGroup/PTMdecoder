@@ -36,9 +36,12 @@ param_map(CPTMdecoderWorkflowParamKeys.PARAM_MIN_XIC_NONZERO_POINTS) = '3';
 cfg = CPeptideQuantServiceConfig.fromParamMap(param_map);
 testCase.verifyEqual(cfg.min_xic_nonzero_points, 3);
 
-param_map(CPTMdecoderWorkflowParamKeys.PARAM_MIN_XIC_NONZERO_POINTS) = '2.5';
-f = @() CPeptideQuantServiceConfig.fromParamMap(param_map);
-verifyLoggedErrorContains(testCase, f, 'CPeptideQuantServiceConfig:InvalidMinXicNonzeroPoints');
+invalid_values = {'0', '-1', '2.5'};
+for idx = 1:numel(invalid_values)
+    param_map(CPTMdecoderWorkflowParamKeys.PARAM_MIN_XIC_NONZERO_POINTS) = invalid_values{idx};
+    f = @() CPeptideQuantServiceConfig.fromParamMap(param_map);
+    verifyLoggedErrorContains(testCase, f, 'CPeptideQuantServiceConfig:InvalidMinXicNonzeroPoints');
+end
 end
 
 

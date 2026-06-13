@@ -14,14 +14,13 @@ testCase.verifyEqual(cfg_explicit.minXicNonzeroPoints, 3);
 end
 
 function testInvalidMinXicNonzeroPoints(testCase)
-base = makeBaseConfig();
-base.minXicNonzeroPoints = 0;
-testCase.verifyError(@() CIMPProcessingExecutorConfig(base), ...
-    'CIMPProcessingExecutorConfig:InvalidMinXicNonzeroPoints');
-
-base.minXicNonzeroPoints = 1.5;
-testCase.verifyError(@() CIMPProcessingExecutorConfig(base), ...
-    'CIMPProcessingExecutorConfig:InvalidMinXicNonzeroPoints');
+invalid_values = {0, -1, 1.5, NaN, Inf};
+for idx = 1:numel(invalid_values)
+    base = makeBaseConfig();
+    base.minXicNonzeroPoints = invalid_values{idx};
+    testCase.verifyError(@() CIMPProcessingExecutorConfig(base), ...
+        'CIMPProcessingExecutorConfig:InvalidMinXicNonzeroPoints');
+end
 end
 
 function cfg = makeBaseConfig()

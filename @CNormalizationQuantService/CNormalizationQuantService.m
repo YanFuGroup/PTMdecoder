@@ -64,7 +64,7 @@ classdef CNormalizationQuantService < handle
                 'minXicNonzeroPoints', msms_cfg.min_xic_nonzero_points));
             executor = CIMPProcessingExecutor(pipeline_cfg);
             CIMPQuantStats.rt_sorted_stats('init');
-            CIMPQuantStats.quant_group_stats('init', []);
+            CIMPQuantStats.quant_group_stats('init', msms_cfg.min_xic_nonzero_points);
             stats_cleanup = onCleanup(@() CIMPQuantStats.rt_sorted_stats('flush', ...
                 CPathResolver.resolveFilePath(msms_cfg.output_dir_path, 'rt_sorted_stats.mat', '')));
             report = CIMPQuantReport();

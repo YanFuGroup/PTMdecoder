@@ -312,6 +312,44 @@ classdef test_CXICSignalUtils < matlab.unittest.TestCase
             testCase.verifyEqual(relaxed_diag.min_nonzero_points, 3);
         end
 
+        function testDetectXicPeaksKeepsExactDefaultMinimum(testCase)
+            xic_rt = (0:0.1:1)';
+            xic_intensity = [0; 0; 10; 20; 20; 10; 5; 0; 0; 0; 0];
+
+            [bounds, diagnostics] = CXICSignalUtils.detect_xic_peaks( ...
+                xic_rt, xic_intensity, xic_intensity, 0.4, 0.01);
+
+            testCase.verifyNumElements(bounds, 1);
+            testCase.verifyEqual(diagnostics.candidate_nonzero_points, 5);
+            testCase.verifyEqual(diagnostics.filtered_sparse_peak_count, 0);
+        end
+
+        function testDetectXicPeaksReportsPartialSparseFiltering(testCase)
+            xic_rt = (0:0.1:2)';
+            xic_intensity = [0; 10; 20; 10; 0; 0; 0; 0; 0; 0; ...
+                0; 10; 20; 20; 10; 5; 0; 0; 0; 0; 0];
+
+            [bounds, diagnostics] = CXICSignalUtils.detect_xic_peaks( ...
+                xic_rt, xic_intensity, xic_intensity, [0.2; 1.3], 0.01, 5);
+
+            testCase.verifyNumElements(bounds, 1);
+            testCase.verifyEqual(diagnostics.candidate_peak_count, 2);
+            testCase.verifyEqual(diagnostics.filtered_sparse_peak_count, 1);
+            testCase.verifyEqual(diagnostics.candidate_nonzero_points, [3; 5]);
+        end
+
+        function testDetectXicPeaksRejectsInvalidMinimum(testCase)
+            xic_rt = (0:0.1:1)';
+            xic_intensity = ones(size(xic_rt));
+            invalid_values = {0, -1, 1.5, NaN, Inf};
+
+            for idx = 1:numel(invalid_values)
+                testCase.verifyError(@() CXICSignalUtils.detect_xic_peaks( ...
+                    xic_rt, xic_intensity, xic_intensity, 0.5, 0.01, invalid_values{idx}), ...
+                    'CXICSignalUtils:InvalidMinNonzeroPoints');
+            end
+        end
+
         function testParseImpRtRanges(testCase)
             % Test parse_imp_rt_ranges functionality
             
