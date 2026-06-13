@@ -53,10 +53,15 @@ cfg = struct( ...
 end
 
 function verifyLoggedErrorContains(testCase, func_handle, expected_tag)
-testCase.verifyError(func_handle, 'CLogger:LoggedError');
+did_throw = false;
+caught_error = [];
 try
     func_handle();
 catch me
-    testCase.verifyTrue(contains(me.message, expected_tag));
+    did_throw = true;
+    caught_error = me;
 end
+testCase.assertTrue(did_throw, 'Expected function to raise an error.');
+testCase.assertEqual(caught_error.identifier, 'CLogger:LoggedError');
+testCase.verifyTrue(contains(caught_error.message, expected_tag));
 end
