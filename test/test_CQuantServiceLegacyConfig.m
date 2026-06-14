@@ -25,3 +25,17 @@ for idx = 1:numel(service_files)
         '''minXicNonzeroPoints'', msms_cfg.min_xic_nonzero_points'), service_files{idx});
 end
 end
+
+function testNormalizationQuantUsesConfiguredMinMsmsNum(testCase)
+service_file = fullfile('@CNormalizationQuantService', 'CNormalizationQuantService.m');
+content = fileread(service_file);
+
+testCase.verifyTrue(contains(content, ...
+    'min_msms_num = CStructOptionUtils.get('));
+testCase.verifyTrue(contains(content, ...
+    'msms_cfg, ''min_MSMS_num'', 1)'));
+testCase.verifyTrue(contains(content, ...
+    '''minMSMSnum'', min_msms_num'));
+testCase.verifyFalse(contains(content, ...
+    '''minMSMSnum'', 1'));
+end
