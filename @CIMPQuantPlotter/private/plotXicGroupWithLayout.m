@@ -72,7 +72,7 @@ for idx_plot = 1:plot_count
 end
 
 xlabel(ax, 'Retention Time (min)', 'FontSize', all_font_size);
-ylabel(ax, 'Relative intensity', 'FontSize', all_font_size);
+ylabel(ax, 'Intensity', 'FontSize', all_font_size);
 
 ax_pos = [layout.left_margin_px, layout.bottom_margin_px, layout.axes_width_px, axes_height_px];
 set(ax, 'Position', ax_pos);
