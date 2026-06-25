@@ -88,6 +88,7 @@ diagnostics = struct();
 h_legend = [];
 legend_col = legend_x_fig;
 png_file = [file_base_path, '.png'];
+cleanupXicExportArtifacts(file_base_path);
 final_legend_labels = {};
 export_retry_count = 0;
 max_export_retries = 3;
@@ -172,7 +173,14 @@ while true
         line_chars = max(min_line_chars, line_chars - 4);
     end
 
-    exportXicFigureWithLayout(f, file_base_path, layout, fig_w, fig_h);
+    cleanupXicExportArtifacts(file_base_path);
+    try
+        exportXicFigureWithLayout(f, file_base_path, layout, fig_w, fig_h);
+    catch ME
+        close(f);
+        cleanupXicExportArtifacts(file_base_path);
+        rethrow(ME);
+    end
     exported_this_run = true;
     exported_margin_px = CIMPQuantPlotter.measureExportedLegendRightMarginPx(png_file, legend_col);
     if exported_margin_px >= min_export_margin_px
