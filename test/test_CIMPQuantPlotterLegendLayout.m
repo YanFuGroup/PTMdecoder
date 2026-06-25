@@ -217,6 +217,7 @@ testCase.verifyEqual(layout.axes_width_px, 480);
 testCase.verifyEqual(layout.legend_max_width_px, 28);
 
 output_base = fullfile(testCase.TestData.output_dir, 'unsatisfiable_fixed_width');
+writeStaleXicArtifacts(testCase, output_base);
 rt = linspace(10, 12, 40);
 total_xic = {rt, exp(-((rt - 11).^2) / 0.08)};
 ric = {rt, total_xic{2}};
@@ -230,6 +231,39 @@ testCase.verifyError(@() CIMPQuantPlotter.plotXicGroupWithLayout( ...
 for ext = {'.png', '.pdf', '.svg'}
     testCase.verifyFalse(isfile([output_base, ext{1}]), ...
         'Failed layout should not leave export artifacts.');
+end
+end
+
+function testPreExportLegendLayoutFailureRemovesStaleArtifacts(testCase)
+layout = CIMPQuantPlotter.getXicLegendLayoutConfig();
+layout.figure_width_px = 180;
+layout.figure_height_px = 180;
+layout.left_margin_px = 80;
+layout.bottom_margin_px = 50;
+layout.top_margin_px = 40;
+layout.axes_width_px = 100;
+layout.axes_legend_gap_px = 40;
+layout.legend_max_width_px = 20;
+layout.legend_min_width_px = 20;
+layout.legend_padding_px = 16;
+layout.legend_min_line_chars = 4;
+
+output_base = fullfile(testCase.TestData.output_dir, 'pre_export_layout_failure');
+writeStaleXicArtifacts(testCase, output_base);
+
+rt = linspace(10, 12, 40);
+total_xic = {rt, exp(-((rt - 11).^2) / 0.08)};
+ric = {rt, total_xic{2}};
+names = {'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW'};
+colors = [0.0000, 0.4470, 0.7410];
+
+[color_map, legend_map] = buildXicLegendMaps(names, colors);
+testCase.verifyError(@() CIMPQuantPlotter.plotXicGroupWithLayout( ...
+    ric, total_xic, [10, 12], names, output_base, color_map, legend_map, layout), ...
+    'CIMPQuantPlotter:LegendLayoutClipped');
+for ext = {'.png', '.pdf', '.svg'}
+    testCase.verifyFalse(isfile([output_base, ext{1}]), ...
+        'Pre-export layout failure should remove stale export artifacts.');
 end
 end
 
@@ -277,4 +311,14 @@ testCase.verifyGreaterThan(metrics.ink_row_fraction, 0.20);
 testCase.verifyLessThan(metrics.ink_row_fraction, 0.85);
 testCase.verifyLessThanOrEqual(metrics.right_blank_fraction, 0.20);
 testCase.verifyTrue(metrics.svg_checked);
+end
+
+function writeStaleXicArtifacts(testCase, output_base)
+for ext = {'.png', '.pdf', '.svg'}
+    fid = fopen([output_base, ext{1}], 'w');
+    testCase.assertGreaterThan(fid, 0, ['Could not create stale ', ext{1}, ' fixture.']);
+    cleanup_obj = onCleanup(@() fclose(fid));
+    fwrite(fid, 'stale export from previous run');
+    clear cleanup_obj;
+end
 end
