@@ -115,11 +115,12 @@ for idx_cat = 1:max(categorized_indices)
     % Extract the retention times and intensities of each IMP in the current category
     group_current_ric = ric(sort_idx(categorized_indices == idx_cat), :);
     group_current_imp_name = current_imp_name(sort_idx(categorized_indices == idx_cat));
-    plot_each_xic_group(group_current_ric, total_xic, categorized_intervals(idx_cat, :), ...
+    layout = CIMPQuantPlotter.getXicLegendLayoutConfig();
+    CIMPQuantPlotter.plotXicGroupWithLayout(group_current_ric, total_xic, categorized_intervals(idx_cat, :), ...
         group_current_imp_name, fullfile(dir_save, [raw_name, '_', ...
         num2str(low_mz_bound), '-', num2str(high_mz_bound), '_+', ...
         num2str(selected_charge), '_', num2str(idx_cat)]), ...
-        color_map, legend_map);
+        color_map, legend_map, layout);
 end
 end
 
@@ -174,155 +175,4 @@ function intersection = is_intersecting(interval1, interval2)
 % output:
 %   intersection (1 x 1 logical)
 intersection = (interval1(1) <= interval2(2)) && (interval1(2) >= interval2(1));
-end
-
-
-
-function plot_each_xic_group(ric, total_xic, categorized_intervals, current_imp_name, file_base_path, color_map, legend_map)
-% Plot the XIC of each IMP and the total XIC, only one rt category
-% input:
-%   ric (K x 2 cell)
-%       retention times and intensities of each IMP; ric{i,1}=rt (minutes), ric{i,2}=intensity
-%   total_xic (1 x 2 cell)
-%       retention times, intensities of the total XIC
-%   categorized_intervals (1 x 2 double) minutes
-%       categorized retention time intervals [start_rt, end_rt]
-%   current_imp_name (K x 1 cellstr/string)
-%       names of current IMPs
-%   file_base_path (1 x 1 char/string)
-%       the file path without extension for saving the plot
-%   color_map (containers.Map or [])
-%       color map
-%   legend_map (containers.Map or [])
-%       legend map
-
-% Init plot
-% fig_w = 300;
-fig_w = 2000;
-fig_h = 800;
-dpi = 300;
-f = figure('Visible','off', 'Units','pixels', 'Position',[50, 50, fig_w, fig_h], 'Color','white');
-set(f, 'PaperUnits','inches');
-set(f, 'PaperPosition', [0, 0, fig_w/dpi, fig_h/dpi]);
-set(f, 'PaperSize', [fig_w/dpi, fig_h/dpi]);
-set(f, 'PaperPositionMode','manual', 'InvertHardcopy','off', 'Renderer','painters');
-all_font_size = 7;
-all_line_width = 1;
-set(gca,'LooseInset',get(gca,'TightInset'), 'FontSize', all_font_size);
-hold on
-
-% Find the index of total boundary
-total_idx_start = find(total_xic{1} <= categorized_intervals(1), 1, 'last');
-total_idx_end = find(total_xic{1} >= categorized_intervals(2), 1);
-if isempty(total_idx_start) || total_idx_start < 1
-    total_idx_start = 1;
-end
-if isempty(total_idx_end) || total_idx_end > length(total_xic{1})
-    total_idx_end = length(total_xic{1});
-end
-% Plot the total XIC
-totalxic_plot = plot(total_xic{1}(total_idx_start:total_idx_end), total_xic{2}(total_idx_start:total_idx_end), ...
-    'k', 'DisplayName','Total XIC');
-set(totalxic_plot, 'LineWidth', all_line_width);
-
-% Collect plot information for sorting
-plot_info = struct('x_data', {}, 'y_data', {}, 'legend_string', {}, 'color', {});
-plot_count = 0;
-
-% Helper function to generate hash-based color from string to distinguish similar strings with different character orders
-string_to_color = @(str) hsv2rgb([mod(hash_string_positional(str), 360)/360, 0.7, 0.9]);
-
-% Collect information for each IMP plot
-for idx_imp = 1:size(ric, 1)
-    if trapz(ric{idx_imp, 1}, ric{idx_imp, 2}) < 1e-6
-        continue;
-    end
-    
-    plot_count = plot_count + 1;
-    plot_info(plot_count).x_data = ric{idx_imp, 1};
-    plot_info(plot_count).y_data = ric{idx_imp, 2};
-    
-    is_in_legend_map = ~isempty(legend_map) && legend_map.isKey(current_imp_name{idx_imp});
-    is_in_color_map = ~isempty(color_map) && color_map.isKey(current_imp_name{idx_imp});
-
-    if is_in_legend_map
-        plot_info(plot_count).legend_string = ['XIC of ',legend_map(current_imp_name{idx_imp})];
-    else
-        legend_string = ['XIC of ',current_imp_name{idx_imp}];
-        legend_string = strrep(legend_string, '_', '\_');
-        legend_string = strrep(legend_string, '{', '\{');
-        legend_string = strrep(legend_string, '}', '\}');
-        plot_info(plot_count).legend_string = legend_string;
-    end
-
-    if is_in_color_map
-        plot_info(plot_count).color = color_map(current_imp_name{idx_imp});
-    else
-        % Generate hash-based color from string
-        plot_info(plot_count).color = string_to_color(current_imp_name{idx_imp});
-    end
-end
-
-% Sort plot information by legend string
-if plot_count > 0
-    [~, sort_idx] = sort({plot_info.legend_string});
-    plot_info = plot_info(sort_idx);
-end
-
-% Plot the XIC of each IMP in sorted order
-for idx_plot = 1:plot_count
-    imp_xic_plot = plot(plot_info(idx_plot).x_data, plot_info(idx_plot).y_data, ...
-        'DisplayName', plot_info(idx_plot).legend_string, 'Color', plot_info(idx_plot).color);
-    set(imp_xic_plot, 'LineWidth', all_line_width);
-end
-
-% Other setings of the plot
-xlabel('Retention Time (min)', 'FontSize', all_font_size)
-ylabel('Absolute intensity', 'FontSize', all_font_size)
-
-ax = gca;
-set(ax, 'Units','normalized');
-set(ax, 'Position', [0.08 0.2 0.72 0.7]);
-h_legend = legend('show', 'Location', 'northwest');
-set(h_legend, 'FontSize', all_font_size, 'Box','off');
-set(h_legend, 'Units','normalized');
-set(h_legend, 'Position', [0.82 0.6 0.16 0.3]);
-svg_file = [file_base_path, '.svg'];
-png_file = [file_base_path, '.png'];
-pdf_file = [file_base_path, '.pdf'];
-print(f, svg_file, '-dsvg', ['-r', num2str(dpi)]);
-print(f, png_file, '-dpng', ['-r', num2str(dpi)]);
-print(f, pdf_file, '-dpdf', '-vector');
-close(f);
-end
-
-
-
-% Position-sensitive string hash function
-function hash_val = hash_string_positional(str)
-    if isempty(str)
-        hash_val = 0;
-        return;
-    end
-    
-    % Convert string to double array
-    char_codes = double(str);
-    
-    % Method 1: Position-weighted polynomial hash (Horner's method)
-    hash1 = 0;
-    base = 31; % Prime number for better distribution
-    for i = 1:length(char_codes)
-        hash1 = mod(hash1 * base + char_codes(i), 2^32);
-    end
-    
-    % Method 2: Position-indexed weighting
-    positions = 1:length(char_codes);
-    hash2 = sum(char_codes .* positions .* 137); % 137 is prime
-    
-    % Method 3: Alternating sign with position
-    signs = (-1).^(positions - 1);
-    hash3 = sum(char_codes .* signs .* positions);
-    
-    % Combine all three methods for maximum differentiation
-    hash_val = mod(hash1 + hash2 * 17 + abs(hash3) * 23, 360);
 end
