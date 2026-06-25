@@ -77,7 +77,7 @@ ylabel(ax, 'Intensity', 'FontSize', all_font_size);
 ax_pos = [layout.left_margin_px, layout.bottom_margin_px, layout.axes_width_px, axes_height_px];
 set(ax, 'Position', ax_pos);
 
-line_chars = getInitialLegendLineChars(layout);
+line_chars = getXicLegendMaxLineChars(layout);
 if isfield(layout, 'legend_min_line_chars') && ~isempty(layout.legend_min_line_chars)
     min_line_chars = layout.legend_min_line_chars;
 else
@@ -172,8 +172,9 @@ while true
     end
 
     exportXicFigureWithLayout(f, file_base_path, layout, fig_w, fig_h);
-    exported_margin_px = measureExportedLegendRightMarginPx(png_file, legend_col);
+    exported_margin_px = CIMPQuantPlotter.measureExportedLegendRightMarginPx(png_file, legend_col);
     if exported_margin_px >= min_export_margin_px
+        assertXicExportIntegrity(file_base_path, layout, fig_w, fig_h);
         break;
     end
 
@@ -194,27 +195,6 @@ diagnostics.final_legend_labels = final_legend_labels;
 diagnostics.final_legend_line_chars = line_chars;
 diagnostics.rendered_legend_right_margin_px = measureRenderedLegendRightMarginPx(f, legend_col, fig_w);
 close(f);
-end
-
-function line_chars = getInitialLegendLineChars(layout)
-if isfield(layout, 'legend_default_icon_width_px') && ~isempty(layout.legend_default_icon_width_px)
-    icon_width_px = layout.legend_default_icon_width_px;
-else
-    icon_width_px = 30;
-end
-text_width_px = layout.legend_max_width_px - layout.legend_padding_px - icon_width_px;
-text_width_px = max(1, text_width_px);
-if isfield(layout, 'legend_chars_per_px') && ~isempty(layout.legend_chars_per_px)
-    chars_per_px = layout.legend_chars_per_px;
-else
-    chars_per_px = 0.13;
-end
-line_chars = floor(text_width_px * chars_per_px);
-if isfield(layout, 'legend_min_line_chars') && ~isempty(layout.legend_min_line_chars)
-    line_chars = max(layout.legend_min_line_chars, line_chars);
-else
-    line_chars = max(1, line_chars);
-end
 end
 
 function scale = getLegendPrintWidthScale(layout)

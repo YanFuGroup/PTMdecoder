@@ -80,11 +80,11 @@ testCase.verifyEqual(layout.axes_width_px, 480);
 testCase.verifyEqual(layout.legend_max_width_px, 360);
 
 output_base = fullfile(testCase.TestData.output_dir, 'long_legend_export');
-if exist([output_base, '.png'], 'file')
-    delete([output_base, '.png']);
-end
-if exist([output_base, '.pdf'], 'file')
-    delete([output_base, '.pdf']);
+for ext = {'.png', '.pdf'}
+    out_file = [output_base, ext{1}];
+    if exist(out_file, 'file')
+        delete(out_file);
+    end
 end
 
 rt = linspace(10, 12, 80);
@@ -102,14 +102,10 @@ colors = [
     0.8500, 0.3250, 0.0980
 ];
 
-diagnostics = CIMPQuantPlotter.drawXicGroupForLayoutTest(ric, total_xic, [10, 12], names, colors, output_base, layout);
+[color_map, legend_map] = buildXicLegendMaps(names, colors);
+diagnostics = CIMPQuantPlotter.plotXicGroupWithLayout( ...
+    ric, total_xic, [10, 12], names, output_base, color_map, legend_map, layout);
 
-png_info = dir([output_base, '.png']);
-pdf_info = dir([output_base, '.pdf']);
-testCase.verifyFalse(isempty(png_info));
-testCase.verifyFalse(isempty(pdf_info));
-testCase.verifyGreaterThan(png_info.bytes, 1000);
-testCase.verifyGreaterThan(pdf_info.bytes, 1000);
 testCase.verifyTrue(diagnostics.is_legend_inside_figure, diagnostics.summary);
 testCase.verifyTrue(diagnostics.is_text_inside_figure, diagnostics.summary);
 testCase.verifyTrue(diagnostics.is_text_clear_of_axes, diagnostics.summary);
@@ -142,7 +138,7 @@ testCase.verifyLessThan(abs(text_center_y - plot_band_center_y), vertical_center
     sprintf('Legend text block not vertically centered: text_center=%.1f, band_center=%.1f', ...
     text_center_y, plot_band_center_y));
 
-metrics = assertXicLegendExportStructure([output_base, '.png'], layout, diagnostics);
+metrics = assertXicLegendExports(output_base, layout, diagnostics);
 testCase.verifyGreaterThan(metrics.legend_right_margin_px, 0);
 testCase.verifyLessThanOrEqual(metrics.right_blank_fraction, 0.20);
 end
@@ -185,7 +181,9 @@ colors = [
     0.8500, 0.3250, 0.0980
 ];
 
-diagnostics = CIMPQuantPlotter.drawXicGroupForLayoutTest(ric, total_xic, [10, 12], names, colors, output_base, layout);
+[color_map, legend_map] = buildXicLegendMaps(names, colors);
+diagnostics = CIMPQuantPlotter.plotXicGroupWithLayout( ...
+    ric, total_xic, [10, 12], names, output_base, color_map, legend_map, layout);
 
 testCase.verifyGreaterThanOrEqual(diagnostics.rendered_legend_right_margin_px, 8, diagnostics.summary);
 testCase.verifyGreaterThan(diagnostics.final_legend_line_chars, 0);
@@ -197,8 +195,9 @@ for idx_label = 1:numel(diagnostics.final_legend_labels)
 end
 testCase.verifyEqual(sort(compact_labels(:)), sort(names(:)));
 
-metrics = assertXicLegendExportStructure([output_base, '.png'], layout, diagnostics);
+metrics = assertXicLegendExports(output_base, layout, diagnostics);
 testCase.verifyGreaterThanOrEqual(metrics.legend_right_margin_px, 8);
+testCase.verifyTrue(metrics.svg_checked);
 end
 
 function testUnsatisfiableFixedWidthLegendFailsClearly(testCase)
@@ -224,8 +223,9 @@ ric = {rt, total_xic{2}};
 names = {'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW'};
 colors = [0.0000, 0.4470, 0.7410];
 
-testCase.verifyError(@() CIMPQuantPlotter.drawXicGroupForLayoutTest( ...
-    ric, total_xic, [10, 12], names, colors, output_base, layout), ...
+[color_map, legend_map] = buildXicLegendMaps(names, colors);
+testCase.verifyError(@() CIMPQuantPlotter.plotXicGroupWithLayout( ...
+    ric, total_xic, [10, 12], names, output_base, color_map, legend_map, layout), ...
     'CIMPQuantPlotter:LegendLayoutClipped');
 end
 
@@ -252,9 +252,10 @@ for ext = {'.png', '.pdf', '.svg'}
     end
 end
 
-diagnostics = CIMPQuantPlotter.drawXicGroupForLayoutTest( ...
+[color_map, legend_map] = buildXicLegendMaps(fixture.names, fixture.colors);
+diagnostics = CIMPQuantPlotter.plotXicGroupWithLayout( ...
     fixture.ric, fixture.total_xic, fixture.categorized_intervals, ...
-    fixture.names, fixture.colors, output_base, layout);
+    fixture.names, output_base, color_map, legend_map, layout);
 
 testCase.verifyTrue(diagnostics.is_legend_inside_figure, diagnostics.summary);
 testCase.verifyTrue(diagnostics.is_text_inside_figure, diagnostics.summary);
@@ -266,18 +267,10 @@ plot_band_center_y = diagnostics.axes_center_y_px;
 text_center_y = diagnostics.legend_center_y_px;
 testCase.verifyLessThan(abs(text_center_y - plot_band_center_y), 2, diagnostics.summary);
 
-metrics = assertXicLegendExportStructure([output_base, '.png'], layout, diagnostics);
+metrics = assertXicLegendExports(output_base, layout, diagnostics);
 testCase.verifyGreaterThan(metrics.legend_right_margin_px, 0);
 testCase.verifyGreaterThan(metrics.ink_row_fraction, 0.20);
 testCase.verifyLessThan(metrics.ink_row_fraction, 0.85);
 testCase.verifyLessThanOrEqual(metrics.right_blank_fraction, 0.20);
-
-png_info = dir([output_base, '.png']);
-pdf_info = dir([output_base, '.pdf']);
-svg_info = dir([output_base, '.svg']);
-testCase.verifyFalse(isempty(png_info));
-testCase.verifyFalse(isempty(pdf_info));
-testCase.verifyFalse(isempty(svg_info));
-testCase.verifyGreaterThan(png_info.bytes, 1000);
-testCase.verifyGreaterThan(pdf_info.bytes, 1000);
+testCase.verifyTrue(metrics.svg_checked);
 end

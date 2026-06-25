@@ -1,5 +1,7 @@
 classdef CIMPQuantPlotter
     % Plot XICs for IMP groups
+    %
+    % Static method prototypes below; implementations live in same-named .m files.
 
     methods (Static)
         drawGroup(ms12DatasetIO, minMSMSnum, raw_name, ratio_raw, rt_raw, ...
@@ -7,7 +9,11 @@ classdef CIMPQuantPlotter
             current_imp_rt_range, current_imp_name, dir_save, color_map, legend_map)
         layout = getXicLegendLayoutConfig()
         labels = prepareXicLegendLabels(labels, layout, max_line_chars)
-        diagnostics = drawXicGroupForLayoutTest(ric, total_xic, categorized_intervals, ...
-            current_imp_name, colors, file_base_path, layout)
+        diagnostics = plotXicGroupWithLayout(ric, total_xic, categorized_intervals, ...
+            current_imp_name, file_base_path, color_map, legend_map, layout)
+    end
+
+    methods (Hidden, Static)
+        margin_px = measureExportedLegendRightMarginPx(png_path, legend_column_start)
     end
 end
