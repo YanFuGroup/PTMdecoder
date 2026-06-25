@@ -227,6 +227,10 @@ colors = [0.0000, 0.4470, 0.7410];
 testCase.verifyError(@() CIMPQuantPlotter.plotXicGroupWithLayout( ...
     ric, total_xic, [10, 12], names, output_base, color_map, legend_map, layout), ...
     'CIMPQuantPlotter:LegendLayoutClipped');
+for ext = {'.png', '.pdf', '.svg'}
+    testCase.verifyFalse(isfile([output_base, ext{1}]), ...
+        'Failed layout should not leave export artifacts.');
+end
 end
 
 function testProductionLayoutExportStructure(testCase)

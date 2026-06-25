@@ -91,6 +91,7 @@ png_file = [file_base_path, '.png'];
 final_legend_labels = {};
 export_retry_count = 0;
 max_export_retries = 3;
+exported_this_run = false;
 
 while true
     while true
@@ -172,15 +173,25 @@ while true
     end
 
     exportXicFigureWithLayout(f, file_base_path, layout, fig_w, fig_h);
+    exported_this_run = true;
     exported_margin_px = CIMPQuantPlotter.measureExportedLegendRightMarginPx(png_file, legend_col);
     if exported_margin_px >= min_export_margin_px
-        assertXicExportIntegrity(file_base_path, layout, fig_w, fig_h);
+        try
+            assertXicExportIntegrity(file_base_path, layout, fig_w, fig_h);
+        catch ME
+            close(f);
+            cleanupXicExportArtifacts(file_base_path);
+            rethrow(ME);
+        end
         break;
     end
 
     export_retry_count = export_retry_count + 1;
     if line_chars <= min_line_chars || export_retry_count > max_export_retries
         close(f);
+        if exported_this_run
+            cleanupXicExportArtifacts(file_base_path);
+        end
         error('CIMPQuantPlotter:LegendLayoutClipped', ...
             ['Exported PNG legend right margin too small: %d px. ', ...
             'Longest label: "%s". Legend budget: %.1f px. Figure width: %.1f px. ', ...
