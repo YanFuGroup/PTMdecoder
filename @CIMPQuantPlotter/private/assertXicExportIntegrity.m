@@ -103,8 +103,9 @@ try
       end
   end
 catch
-  warning('CIMPQuantPlotter:LegendExportIntegrity', ...
-      'Skipping PDF dimension check for %s.', pdf_file);
+  % Some MATLAB/Image Processing Toolbox configurations cannot read PDF
+  % page dimensions with imfinfo. The PDF existence, size, and header
+  % checks above still guard against missing or corrupt exports.
 end
 end
 
