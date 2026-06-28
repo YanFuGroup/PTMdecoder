@@ -1,10 +1,17 @@
 clear
+% syn_ind shared preprocess pepSpec selection matches preprocess_syn_mix.m:
+% +2 precursor charge and >= 8 Mascot matched fragment ions.
 %% read Mascot(*.Dat) path
-res_path = 'D:\research\project\Mixspec_code\paper_data\syn_ind\mascot_dat';
-workspacePath = 'D:\research\project\Mixspec_code\paper_data\syn_ind\result';
+res_path = 'D:\research\project\Mixspec_code\paper_data_revision\syn_ind\mascot_dat';
+workspacePath = 'D:\research\project\Mixspec_code\paper_data_revision\syn_ind\preprocess_result';
 experimentNames = {'ind1','ind2','ind3','ind4','ind5','ind6','ind7','ind8','ind9','ind10', ...
     'ind11','ind12','ind13','ind14','ind15','ind16'};
 for idx = 1:length(experimentNames)
+    outputDir = fullfile(workspacePath,experimentNames{idx});
+    if ~isfolder(outputDir)
+        mkdir(outputDir);
+    end
+
     result = ReadDatResultFolder(fullfile(res_path,experimentNames{idx}));
     
     % Some prior chemical knowledge, such as there should be no more than 2
@@ -25,12 +32,12 @@ for idx = 1:length(experimentNames)
     %% select using some criteria and write to file
     % Write all grouped result
     group_filtered_result = result(I(~GroupType));
-    grouped_filename = fullfile(workspacePath,experimentNames{idx},'group_result_mascot.txt');
+    grouped_filename = fullfile(outputDir,'group_result_mascot.txt');
     write_mascot_result_table(group_filtered_result, grouped_filename);
 
     % Write all filtered result
     FDR_filtered_result = result(Iid.SF);
-    filtered_fileName = fullfile(workspacePath,experimentNames{idx},'filtered_result_mascot.txt');
+    filtered_fileName = fullfile(outputDir,'filtered_result_mascot.txt');
     write_mascot_result_table(FDR_filtered_result, filtered_fileName);
 
     % select the unique identified spectra
@@ -42,11 +49,11 @@ for idx = 1:length(experimentNames)
 
     % select the target peptides GKGGKGLGKGGAKR
     peptides = {unique_filtered_result.peptide}';
-    charges = {unique_filtered_result.Charge}';
+    charge_values = str2double({unique_filtered_result.Charge}');
     calc_neutral_pepmass = [unique_filtered_result.Calc_neutral_pepmass]';
-    num_match_ions = [unique_filtered_result.num_match_ions]';
+    num_match_ions = str2double({unique_filtered_result.num_match_ions}');
     is_result_selected = strcmp(peptides,'GKGGKGLGKGGAKR') ...
-        & strcmp(charges,'2') ...
+        & charge_values == 2 ...
         & abs(calc_neutral_pepmass-1535.878357)<0.0001 ...
         & num_match_ions >= 8;
     final_result = unique_filtered_result(is_result_selected);
@@ -56,6 +63,6 @@ for idx = 1:length(experimentNames)
     output_res = final_result(sorted_idx);
 
     % write pep_spec to files
-    fileName = fullfile(workspacePath,experimentNames{idx},'pepSpecFile.txt');
+    fileName = fullfile(outputDir,'pepSpecFile.txt');
     write_peptide_spectra_list_file(output_res, fileName);
 end
