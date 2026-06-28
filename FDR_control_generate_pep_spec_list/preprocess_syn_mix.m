@@ -1,10 +1,15 @@
 clear
 %% read Mascot(*.Dat) path
-res_path = 'D:\research\project\Mixspec_code\paper_data\syn_mix\mascot_dat';
-work_dir_res = 'D:\research\project\Mixspec_code\paper_data\syn_mix\result';
+res_path = 'D:\research\project\Mixspec_code\paper_data_revision\syn_mix\mascot_dat';
+work_dir_res = 'D:\research\project\Mixspec_code\paper_data_revision\syn_mix\preprocess_result';
 experimentNames = {'mix1', 'mix2', 'mix3', 'mix4', 'mix5', 'mix6', 'mix7', 'mix8', ...
     'mix9', 'mix10', 'mix11', 'mix12', 'mix13', 'mix14', 'mix15', 'mix16', 'mix17', 'mix18'};
 for idx = 1:length(experimentNames)
+    outputDir = fullfile(work_dir_res,experimentNames{idx});
+    if ~isfolder(outputDir)
+        mkdir(outputDir);
+    end
+
     result = ReadDatResultFolder(fullfile(res_path,experimentNames{idx}));
     % result = FilterWithChemPrior(result); % Do not need to filter with chemical prior
 
@@ -23,12 +28,12 @@ for idx = 1:length(experimentNames)
     %% select using some criteria and write to file
     % Write all grouped result
     group_filtered_result = result(I(~GroupType));
-    grouped_filename = fullfile(work_dir_res,experimentNames{idx},'group_result_mascot.txt');
+    grouped_filename = fullfile(outputDir,'group_result_mascot.txt');
     write_mascot_result_table(group_filtered_result, grouped_filename);
 
     % Write all filtered result
     FDR_filtered_result = result(Iid.SF);
-    filtered_fileName = fullfile(work_dir_res,experimentNames{idx},'filtered_result_mascot.txt');
+    filtered_fileName = fullfile(outputDir,'filtered_result_mascot.txt');
     write_mascot_result_table(FDR_filtered_result, filtered_fileName);
 
     % select the unique identified spectra
@@ -50,7 +55,7 @@ for idx = 1:length(experimentNames)
     output_res = final_result(sorted_idx);
 
     % write pep_spec to files
-    fileName = fullfile(work_dir_res,experimentNames{idx},'pepSpecFile.txt');
+    fileName = fullfile(outputDir,'pepSpecFile.txt');
     write_peptide_spectra_list_file(output_res, fileName);
 
 end
