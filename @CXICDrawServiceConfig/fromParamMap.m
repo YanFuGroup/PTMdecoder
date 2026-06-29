@@ -30,5 +30,6 @@ cfg.output_dir_path = CParamMapUtils.getRequired(task_param_map, CPTMdecoderWork
 cfg.checked_peptides_res_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_CHECKED_PEPTIDES_RES_PATH, [], 'CXICDrawServiceConfig');
 cfg.msms_res_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MSMS_RES_PATH, [], 'CXICDrawServiceConfig');
 cfg.min_MSMS_num = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_MIN_MSMS_NUM, 1, 'CXICDrawServiceConfig');
+cfg.xic_layout = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_XIC_LAYOUT, [], 'CXICDrawServiceConfig');
 cfg.msms_stability_filter = CMsmsStabilityFilterConfig.fromParamMap(task_param_map, 'CXICDrawServiceConfig');
 end

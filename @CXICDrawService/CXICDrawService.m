@@ -44,6 +44,11 @@ classdef CXICDrawService < handle
             end
 
             cfg = obj.m_cfg;
+            if isfield(cfg, 'xic_layout')
+                xic_layout = cfg.xic_layout;
+            else
+                xic_layout = [];
+            end
 
             checked_pep_path = CPathResolver.resolveFilePath(cfg.output_dir_path, ...
                 'report_peptide_all_checked.txt', cfg.checked_peptides_res_path);
@@ -72,7 +77,8 @@ classdef CXICDrawService < handle
             for idx_psf = 1:length(msms_result.Peptides)
                 print_progress = print_progress.update_show(idx_psf);
                 rawIdentManager = obj.buildRawIdentManagerFromSpectrumList(msms_result.Peptides(idx_psf).spectrum_list);
-                executor.drawImpXicForBlock(rawIdentManager, pep_rtrange_map, dir_save, color_map, legend_map);
+                executor.drawImpXicForBlock(rawIdentManager, pep_rtrange_map, ...
+                    dir_save, color_map, legend_map, xic_layout);
             end
             print_progress.last_update();
             CLogger.info('Drawing XIC done.');

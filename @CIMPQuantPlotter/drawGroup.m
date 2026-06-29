@@ -1,6 +1,6 @@
 function drawGroup(ms12DatasetIO, minMSMSnum, raw_name, ratio_raw, rt_raw, ...
     intensity_raw, low_mz_bound, high_mz_bound, selected_charge, ...
-    current_imp_rt_range, current_imp_name, dir_save, color_map, legend_map)
+    current_imp_rt_range, current_imp_name, dir_save, color_map, legend_map, xic_layout)
 % Re-quantify each group
 % input:
 %   ms12DatasetIO (CMs12DatasetIO)
@@ -31,6 +31,11 @@ function drawGroup(ms12DatasetIO, minMSMSnum, raw_name, ratio_raw, rt_raw, ...
 %       color map (key: imp name, value: RGB 1x3)
 %   legend_map (containers.Map or [])
 %       legend map (key: imp name, value: display string)
+%   xic_layout (struct or [], optional)
+%       optional XIC layout override
+    if nargin < 15
+        xic_layout = [];
+    end
     if nargin < 14
         legend_map = [];
     end
@@ -70,13 +75,13 @@ function drawGroup(ms12DatasetIO, minMSMSnum, raw_name, ratio_raw, rt_raw, ...
     end
 
     plot_xics(ric, current_imp_name, total_xic, dir_save, raw_name, ...
-        low_mz_bound, high_mz_bound, selected_charge, color_map, legend_map);
+        low_mz_bound, high_mz_bound, selected_charge, color_map, legend_map, xic_layout);
 end
 
 
 
 function plot_xics(ric, current_imp_name, total_xic, dir_save, raw_name, ...
-    low_mz_bound, high_mz_bound, selected_charge, color_map, legend_map)
+    low_mz_bound, high_mz_bound, selected_charge, color_map, legend_map, xic_layout)
 % Plot the XIC of each IMP and the total XIC, all rt category
 % input:
 %   ric (K x 2 cell)
@@ -99,6 +104,8 @@ function plot_xics(ric, current_imp_name, total_xic, dir_save, raw_name, ...
 %       color map
 %   legend_map (containers.Map or [])
 %       legend map
+%   xic_layout (struct or [])
+%       optional XIC layout override
 
 if any(cellfun(@(x) isempty(x), ric(:, 1)))
     del_rows = cellfun(@(x) isempty(x), ric(:, 1));
@@ -115,7 +122,10 @@ for idx_cat = 1:max(categorized_indices)
     % Extract the retention times and intensities of each IMP in the current category
     group_current_ric = ric(sort_idx(categorized_indices == idx_cat), :);
     group_current_imp_name = current_imp_name(sort_idx(categorized_indices == idx_cat));
-    layout = CIMPQuantPlotter.getXicLegendLayoutConfig();
+    layout = xic_layout;
+    if isempty(layout)
+        layout = CIMPQuantPlotter.getXicLegendLayoutConfig();
+    end
     CIMPQuantPlotter.plotXicGroupWithLayout(group_current_ric, total_xic, categorized_intervals(idx_cat, :), ...
         group_current_imp_name, fullfile(dir_save, [raw_name, '_', ...
         num2str(low_mz_bound), '-', num2str(high_mz_bound), '_+', ...
