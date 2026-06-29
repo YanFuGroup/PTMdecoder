@@ -24,6 +24,31 @@ cfg = CXICDrawServiceConfig.fromParamMap(param_map);
 testCase.verifyTrue(isfield(cfg, 'msms_stability_filter'));
 testCase.verifyFalse(cfg.msms_stability_filter.enabled);
 testCase.verifyTrue(cfg.msms_stability_filter.nan_as_fail);
+testCase.verifyTrue(isfield(cfg, 'xic_layout'));
+testCase.verifyEmpty(cfg.xic_layout);
+end
+
+
+function testOptionalXicLayoutPreserved(testCase)
+% Verify draw config preserves an optional XIC layout override.
+% Inputs:
+%    testCase (matlab.unittest.TestCase)
+%        Test case context.
+% Outputs:
+%    (none)
+
+param_map = makeBaseParamMap();
+xic_layout = struct();
+xic_layout.figure_width_px = 1333;
+xic_layout.figure_height_px = 667;
+xic_layout.axes_width_fraction = 0.75;
+param_map(CPTMdecoderWorkflowParamKeys.PARAM_XIC_LAYOUT) = xic_layout;
+
+cfg = CXICDrawServiceConfig.fromParamMap(param_map);
+
+testCase.verifyEqual(cfg.xic_layout.figure_width_px, 1333);
+testCase.verifyEqual(cfg.xic_layout.figure_height_px, 667);
+testCase.verifyEqual(cfg.xic_layout.axes_width_fraction, 0.75);
 end
 
 
