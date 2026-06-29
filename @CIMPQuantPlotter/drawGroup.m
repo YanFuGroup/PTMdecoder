@@ -122,10 +122,7 @@ for idx_cat = 1:max(categorized_indices)
     % Extract the retention times and intensities of each IMP in the current category
     group_current_ric = ric(sort_idx(categorized_indices == idx_cat), :);
     group_current_imp_name = current_imp_name(sort_idx(categorized_indices == idx_cat));
-    layout = xic_layout;
-    if isempty(layout)
-        layout = CIMPQuantPlotter.getXicLegendLayoutConfig();
-    end
+    layout = CIMPQuantPlotter.resolveXicLegendLayoutConfig(xic_layout);
     CIMPQuantPlotter.plotXicGroupWithLayout(group_current_ric, total_xic, categorized_intervals(idx_cat, :), ...
         group_current_imp_name, fullfile(dir_save, [raw_name, '_', ...
         num2str(low_mz_bound), '-', num2str(high_mz_bound), '_+', ...

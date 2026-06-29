@@ -18,6 +18,41 @@ function teardown(testCase)
 close all force;
 end
 
+function testEmptyXicLayoutOverrideReturnsDefaultLayout(testCase)
+layout = CIMPQuantPlotter.resolveXicLegendLayoutConfig([]);
+default_layout = CIMPQuantPlotter.getXicLegendLayoutConfig();
+
+testCase.verifyEqual(layout, default_layout);
+end
+
+function testPartialXicLayoutOverrideMergesDefaults(testCase)
+override = struct();
+override.figure_width_px = 1333;
+override.figure_height_px = 667;
+override.axes_width_fraction = 0.75;
+
+layout = CIMPQuantPlotter.resolveXicLegendLayoutConfig(override);
+default_layout = CIMPQuantPlotter.getXicLegendLayoutConfig();
+
+testCase.verifyEqual(layout.figure_width_px, 1333);
+testCase.verifyEqual(layout.figure_height_px, 667);
+testCase.verifyEqual(layout.axes_width_fraction, 0.75);
+testCase.verifyEqual(layout.left_margin_px, default_layout.left_margin_px);
+testCase.verifyTrue(isfield(layout, 'axes_width_px'));
+testCase.verifyTrue(isfield(layout, 'legend_max_width_px'));
+
+available_width_px = layout.figure_width_px ...
+    - layout.left_margin_px - layout.axes_legend_gap_px ...
+    - layout.right_margin_px - layout.legend_print_safety_px;
+testCase.verifyEqual(layout.axes_width_px, round(available_width_px * layout.axes_width_fraction));
+testCase.verifyEqual(layout.legend_max_width_px, available_width_px - layout.axes_width_px);
+end
+
+function testInvalidXicLayoutOverrideFailsClearly(testCase)
+testCase.verifyError(@() CIMPQuantPlotter.resolveXicLegendLayoutConfig('figure_width_px=1333'), ...
+    'CIMPQuantPlotter:InvalidXicLayoutOverride');
+end
+
 function testLegendLabelsDoNotUseXicOfOrTexSubscripts(testCase)
 layout = CIMPQuantPlotter.getXicLegendLayoutConfig();
 labels = {'_PEPT{phospho}IDESK_', '_PEPTIDES{phospho}K_'};
