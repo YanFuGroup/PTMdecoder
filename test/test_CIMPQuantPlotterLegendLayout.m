@@ -53,6 +53,22 @@ testCase.verifyError(@() CIMPQuantPlotter.resolveXicLegendLayoutConfig('figure_w
     'CIMPQuantPlotter:InvalidXicLayoutOverride');
 end
 
+function testAxesWidthPxOverrideFailsClearly(testCase)
+override = struct();
+override.axes_width_px = 100;
+
+testCase.verifyError(@() CIMPQuantPlotter.resolveXicLegendLayoutConfig(override), ...
+    'CIMPQuantPlotter:InvalidXicLayoutOverride');
+end
+
+function testLegendMaxWidthPxOverrideFailsClearly(testCase)
+override = struct();
+override.legend_max_width_px = 100;
+
+testCase.verifyError(@() CIMPQuantPlotter.resolveXicLegendLayoutConfig(override), ...
+    'CIMPQuantPlotter:InvalidXicLayoutOverride');
+end
+
 function testLegendLabelsDoNotUseXicOfOrTexSubscripts(testCase)
 layout = CIMPQuantPlotter.getXicLegendLayoutConfig();
 labels = {'_PEPT{phospho}IDESK_', '_PEPTIDES{phospho}K_'};

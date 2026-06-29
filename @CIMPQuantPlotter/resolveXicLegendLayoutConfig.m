@@ -19,6 +19,7 @@ end
 
 layout = CIMPQuantPlotter.getXicLegendLayoutConfig();
 override_fields = fieldnames(xic_layout);
+validateNoDerivedFieldOverrides(override_fields);
 for idx_field = 1:numel(override_fields)
     field_name = override_fields{idx_field};
     layout.(field_name) = xic_layout.(field_name);
@@ -40,4 +41,16 @@ if isfield(layout, 'axes_width_fraction') && ~isempty(layout.axes_width_fraction
 end
 
 layout.legend_max_width_px = available_width_px - layout.axes_width_px;
+end
+
+function validateNoDerivedFieldOverrides(override_fields)
+% Reject output-only geometry fields that must stay derived from source layout inputs.
+derived_fields = {'axes_width_px', 'legend_max_width_px'};
+invalid_mask = ismember(derived_fields, override_fields);
+if any(invalid_mask)
+    error('CIMPQuantPlotter:InvalidXicLayoutOverride', ...
+        ['xic_layout must not override derived fields: %s. ', ...
+        'Use figure_width_px and axes_width_fraction instead.'], ...
+        strjoin(derived_fields(invalid_mask), ', '));
+end
 end
