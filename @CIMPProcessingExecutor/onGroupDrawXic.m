@@ -4,7 +4,7 @@ function state = onGroupDrawXic(obj, state, group)
 %   obj (CIMPProcessingExecutor)
 %       processing executor instance
 %   state (struct)
-%       draw state with fields: dir_save, color_map, legend_map
+%       draw state with fields: dir_save, color_map, legend_map, xic_layout
 %   group (CIMPGroup)
 %       group payload for one raw and charge
 % Output:
@@ -21,5 +21,6 @@ CIMPQuantPlotter.drawGroup(obj.m_ms12DatasetIO, obj.m_minMSMSnum, group.rawName,
     group.intensity(group.chargeGroupIdxs,:), ...
     group.lowMzBound, group.highMzBound, ...
     group.selectedCharge, group.impRtRanges, ...
-    group.impNames, state.dir_save, state.color_map, state.legend_map);
+    group.impNames, state.dir_save, state.color_map, state.legend_map, ...
+    state.xic_layout);
 end

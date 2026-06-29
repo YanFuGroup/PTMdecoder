@@ -1,4 +1,4 @@
-function drawImpXicForBlock(obj, rawIdentManager, pep_rtrange_map, dir_save, color_map, legend_map)
+function drawImpXicForBlock(obj, rawIdentManager, pep_rtrange_map, dir_save, color_map, legend_map, xic_layout)
 % Draw XICs for IMP groups using checked RT ranges
 % Input:
 %   obj (CIMPProcessingExecutor)
@@ -13,8 +13,15 @@ function drawImpXicForBlock(obj, rawIdentManager, pep_rtrange_map, dir_save, col
 %       color map (key: imp name, value: RGB 1x3)
 %   legend_map (containers.Map or [])
 %       legend map (key: imp name, value: display string)
+%   xic_layout (struct or [], optional)
+%       optional XIC layout override
 
-state = struct('dir_save', dir_save, 'color_map', color_map, 'legend_map', legend_map);
+if nargin < 7
+    xic_layout = [];
+end
+
+state = struct('dir_save', dir_save, 'color_map', color_map, ...
+    'legend_map', legend_map, 'xic_layout', xic_layout);
 [raw_names, raw_ident_stores] = rawIdentManager.getEntries();
 
 groupAggregator = CIMPGroupAggregator(obj.m_ms1_tolerance);
