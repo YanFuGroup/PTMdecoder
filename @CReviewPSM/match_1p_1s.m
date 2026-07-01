@@ -87,7 +87,8 @@ pep_len = length(peptide.seq);
 theo_ions = zeros(length(ion_types)*maxCharge*(pep_len-1), 4);
 iStart = 1;
 for i_charge = 1:maxCharge
-    b = (cumsum(vPepAAMass(2:pep_len))+i_charge*CConstant.pmass)/i_charge;
+    b = (cumsum(vPepAAMass(1:pep_len))+i_charge*CConstant.pmass)/i_charge;
+    b = b(2:end);
     y = (cumsum(vPepAAMass(pep_len+1:-1:3))+2*CConstant.hmass+CConstant.omass ...
         + i_charge*CConstant.pmass)/i_charge;
 

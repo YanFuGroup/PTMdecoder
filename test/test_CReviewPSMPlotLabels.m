@@ -184,7 +184,7 @@ options = makeColorOptions({'IMP06'}, {[0.10, 0.20, 0.30]}, [NaN]);
 testCase.verifyError(@() review.plotMatch(options), 'CReviewPSM:InvalidImpProportion');
 end
 
-function testPlotMatchFallsBackForPeakWithOnlyZeroProportionImps(testCase)
+function testPlotMatchRejectsPeakWithOnlyZeroProportionImps(testCase)
 review = makeReviewPsm(makePeptides({'IMP06', 'IMP10'}));
 review.m_all_match_ions = [
     1, 5, 1, 1, 1;
@@ -195,15 +195,8 @@ options = makeColorOptions( ...
     {[0.10, 0.20, 0.30], [0.70, 0.80, 0.90]}, ...
     [1, 0]);
 
-review.plotMatch(options);
-
-colored_stems = findall(gca, 'Tag', 'CReviewPSMImpColoredStem');
-testCase.verifyNumElements(colored_stems, 1);
-legacy_zero_sum_peak = findall(gca, 'Tag', 'CReviewPSMLegacyZeroProportionPeak');
-testCase.assertNumElements(legacy_zero_sum_peak, 1);
-testCase.verifyEqual(legacy_zero_sum_peak.Color, [1, 0, 0], 'AbsTol', 1e-12);
-testCase.verifyEqual(legacy_zero_sum_peak.XData, [200, 200], 'AbsTol', 1e-12);
-testCase.verifyEqual(legacy_zero_sum_peak.YData, [0, 80], 'AbsTol', 1e-12);
+testCase.verifyError(@() review.plotMatch(options), ...
+    'CReviewPSM:ZeroImpProportionMatchedPeak');
 end
 
 function testPlotMatchShowsOutsideImpColorLegendWhenRequested(testCase)
@@ -241,6 +234,27 @@ review.plotMatch();
 
 labels = getFigureTextLabels();
 testCase.verifyTrue(any(strcmp(labels, '[M]++')));
+end
+
+function testMatchIncludesNtermModificationInBIons(testCase)
+n_term_mod_mass = 56.026215;
+peptide = struct( ...
+    'seq', 'GK', ...
+    'mod_mass', n_term_mod_mass, ...
+    'mod_pos', 0 ...
+);
+b1_mz_with_nterm_mod = CConstant.vAAmass('G' - 64) + ...
+    n_term_mod_mass + CConstant.pmass;
+spectrum = struct( ...
+    'peaks', [b1_mz_with_nterm_mod, 100], ...
+    'pre_charge', 2, ...
+    'pre_mz', 500 ...
+);
+tolerance = struct('value', 0.02, 'is_ppm', false);
+
+review = CReviewPSM(peptide, spectrum, tolerance);
+
+testCase.verifyEqual(review.m_all_match_ions, [2, 1, 1, 1, 1]);
 end
 
 function review = makeReviewPsm(peptides)
