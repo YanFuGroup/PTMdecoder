@@ -35,7 +35,7 @@ multi_peak_indexes = matched_peaks(count_idx>1);
 
 % match precursor -> fragment ion
 if obj.m_tolerance.is_ppm
-    mz_tol = obj.m_spectrum.pre_mz * tolerance.value / 1e6;
+    mz_tol = obj.m_spectrum.pre_mz * obj.m_tolerance.value / 1e6;
 else
     mz_tol = obj.m_spectrum.pre_mz;
 end

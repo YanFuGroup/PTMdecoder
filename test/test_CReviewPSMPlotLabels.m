@@ -226,6 +226,23 @@ testCase.verifyEqual(string(legends.String), string({'IMP06', 'IMP08'}));
 testCase.verifyEqual(char(legends.Location), 'eastoutside');
 end
 
+function testPlotMatchSupportsPpmTolerance(testCase)
+peptides = makePeptides({'IMP06'});
+spectrum = struct( ...
+    'peaks', [100, 100; 300, 80; 500.005, 60], ...
+    'pre_charge', 2, ...
+    'pre_mz', 500 ...
+);
+tolerance = struct('value', 20, 'is_ppm', true);
+review = CReviewPSM(peptides, spectrum, tolerance);
+review.m_all_match_ions = [1, 5, 1, 1, 1];
+
+review.plotMatch();
+
+labels = getFigureTextLabels();
+testCase.verifyTrue(any(strcmp(labels, '[M]++')));
+end
+
 function review = makeReviewPsm(peptides)
 spectrum = struct( ...
     'peaks', [100, 100; 200, 80; 300, 70], ...
