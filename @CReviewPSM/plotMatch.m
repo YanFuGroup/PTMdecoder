@@ -232,6 +232,7 @@ for idx_peptide = 1:numel(matched_peptide_indexes)
     end
 end
 validate_matched_imp_proportion_sum(obj, matched_peptide_indexes, options.imp_proportions);
+validate_no_zero_proportion_matched_peaks(obj, options.imp_proportions);
 
 color_config.is_enabled = true;
 color_config.colors = options.imp_colors;
@@ -247,6 +248,24 @@ end
 if matched_sum <= 0
     error('CReviewPSM:InvalidImpProportion', ...
         'The matched IMP proportions for a colored plot must have a positive sum.');
+end
+end
+
+function validate_no_zero_proportion_matched_peaks(obj, proportion_map)
+matched_peak_indexes = unique(obj.m_all_match_ions(:, 4));
+for idx_peak = 1:numel(matched_peak_indexes)
+    peak_index = matched_peak_indexes(idx_peak);
+    selected_ions = obj.m_all_match_ions(obj.m_all_match_ions(:,4)==peak_index, :);
+    peak_imp_labels = get_unique_ion_imp_labels(obj, selected_ions);
+    peak_proportion_sum = 0;
+    for idx_label = 1:numel(peak_imp_labels)
+        peak_proportion_sum = peak_proportion_sum + proportion_map(peak_imp_labels{idx_label});
+    end
+    if peak_proportion_sum <= 0
+        error('CReviewPSM:ZeroImpProportionMatchedPeak', ...
+            'Matched peak %d only maps to zero-proportion IMP labels: %s.', ...
+            peak_index, strjoin(peak_imp_labels, ','));
+    end
 end
 end
 
@@ -310,8 +329,9 @@ for idx_peak = 1:size(matched_peak_indexes, 1)
     end
     proportion_sum = sum(peak_proportions);
     if proportion_sum <= 0
-        plot_legacy_zero_proportion_peak(experimental_peaks, peak_index, selected_ions);
-        continue
+        error('CReviewPSM:ZeroImpProportionMatchedPeak', ...
+            'Matched peak %d only maps to zero-proportion IMP labels: %s.', ...
+            peak_index, strjoin(peak_imp_labels, ','));
     end
     peak_proportions = peak_proportions ./ proportion_sum;
 
@@ -334,22 +354,6 @@ for idx_peak = 1:size(matched_peak_indexes, 1)
     end
     used_imp_labels = append_new_labels(used_imp_labels, peak_imp_labels);
 end
-end
-
-function plot_legacy_zero_proportion_peak(experimental_peaks, peak_index, selected_ions)
-% Use legacy matched coloring when a peak only maps to zero-proportion IMPs.
-
-if size(selected_ions, 1) == 1
-    color_value = [1, 0, 0];
-else
-    color_value = [0, 0, 1];
-end
-x_value = experimental_peaks(peak_index, 1);
-y_value = experimental_peaks(peak_index, 2);
-line([x_value, x_value], [0, y_value], ...
-    'Color', color_value, ...
-    'LineWidth', 1.5, ...
-    'Tag', 'CReviewPSMLegacyZeroProportionPeak');
 end
 
 function peak_imp_labels = get_unique_ion_imp_labels(obj, selected_ions)
