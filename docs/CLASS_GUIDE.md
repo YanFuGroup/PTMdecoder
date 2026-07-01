@@ -18,6 +18,7 @@ Use this guide as a "which class do I need?" index.
 | XIC peak area and final ratio logic | `CXICAreaUtils`, `CXICPeakUtils` | `CIMPQuantCore` |
 | IMP group aggregation | `CIMPGroupAggregator` | `CIMPGroup`, `CIMPProcessingExecutor` |
 | Draw XIC plots | `CXICDrawService`, `CIMPQuantPlotter` | `CXICDrawServiceConfig` |
+| Draw one MS/MS matching plot | `CReviewPSM.plotMatch` | optional plot options struct |
 | Site-level summaries | `CSiteLevelSummary`, `CSiteLevelDatasetSummary` | `CSiteLevel*Config` |
 | Pairwise comparison output | `CMergeEachPair`, `CMergePairs` | `CMergeEachPairConfig`, `CMergePairsConfig` |
 | Logging | `CLogger` | `CLoggerCore` |
@@ -55,6 +56,25 @@ utilities.
 - `CMS2PeakMatcher` matches theoretical and experimental peaks.
 - `CMS2QuantSolver` solves IMP abundance and diagnostics.
 - `CMS2Result` and `CMS2ResultIO` hold and serialize stage output.
+- `CReviewPSM.plotMatch()` draws one spectrum-level matching figure. By
+  default it keeps the legacy gray/red/blue peak colors. Callers may opt into
+  IMP-colored matched peaks by passing both `options.imp_colors` and
+  `options.imp_proportions` as `containers.Map` objects keyed by explicit
+  `peptide.label` values. Color values must be finite `1x3` RGB vectors in
+  `[0, 1]`; proportion values must be finite non-negative scalars.
+- IMP coloring is all-or-nothing per figure. If a color or proportion is
+  missing for any matched explicit peptide label, `plotMatch()` falls back to
+  the legacy rendering. Invalid option types or invalid color/proportion values
+  raise `CReviewPSM:*` errors. Shared experimental peaks are drawn as stacked
+  same-x color segments after normalizing the configured proportions over the
+  unique IMP labels matched to that peak. Zero proportions are allowed; if a
+  single peak only matches zero-proportion IMPs, that peak uses the legacy
+  matched color locally instead of failing or assigning false colored
+  contribution.
+- `options.show_imp_color_legend` optionally draws an east-outside legend for
+  the IMP colors used in the current figure. `options.msms_layout` can set
+  `figure_width_px`, `figure_height_px`, and `axes_width_fraction` when callers
+  need right-side space for that legend.
 
 ### Peptide-Level IMP Quantification and XIC Integration
 

@@ -89,7 +89,7 @@ classdef CReviewPSM
         review_score = reviewScoreing(obj);
 
         % Plot the spectra and mark the matched peaks in the spectrum
-        plotMatch(obj);
+        plotMatch(obj, varargin);
 
         
     end
