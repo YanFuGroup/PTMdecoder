@@ -1,6 +1,4 @@
 clear
-% syn_ind shared preprocess pepSpec selection matches preprocess_syn_mix.m:
-% +2 precursor charge and >= 8 Mascot matched fragment ions.
 %% User configuration
 % Update these paths before running this script.
 % The input and output folders do not need to share the same parent folder.
