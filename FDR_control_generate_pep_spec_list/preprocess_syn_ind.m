@@ -1,15 +1,34 @@
 clear
-% syn_ind shared preprocess pepSpec selection matches preprocess_syn_mix.m:
-% +2 precursor charge and >= 8 Mascot matched fragment ions.
-%% read Mascot(*.Dat) path
-res_path = 'D:\research\project\Mixspec_code\paper_data_revision\syn_ind\mascot_dat';
-workspacePath = 'D:\research\project\Mixspec_code\paper_data_revision\syn_ind\preprocess_result';
+%% User configuration
+% Update these paths before running this script.
+% The input and output folders do not need to share the same parent folder.
+res_path = '<path_to_syn_ind_mascot_dat>';
+work_dir_res = '<path_to_syn_ind_preprocess_result>';
 experimentNames = {'ind1','ind2','ind3','ind4','ind5','ind6','ind7','ind8','ind9','ind10', ...
     'ind11','ind12','ind13','ind14','ind15','ind16'};
+
+if strcmp(res_path,'<path_to_syn_ind_mascot_dat>') || ~isfolder(res_path)
+    error('Please set res_path to an existing Mascot DAT folder before running this script: %s', res_path);
+end
+
+if strcmp(work_dir_res,'<path_to_syn_ind_preprocess_result>')
+    error('Please set work_dir_res before running this script.');
+end
+
+if ~isfolder(work_dir_res)
+    [status,message] = mkdir(work_dir_res);
+    if ~status
+        error('Failed to create output folder "%s": %s', work_dir_res, message);
+    end
+end
+
 for idx = 1:length(experimentNames)
-    outputDir = fullfile(workspacePath,experimentNames{idx});
+    outputDir = fullfile(work_dir_res,experimentNames{idx});
     if ~isfolder(outputDir)
-        mkdir(outputDir);
+        [status,message] = mkdir(outputDir);
+        if ~status
+            error('Failed to create experiment output folder "%s": %s', outputDir, message);
+        end
     end
 
     result = ReadDatResultFolder(fullfile(res_path,experimentNames{idx}));
