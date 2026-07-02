@@ -2,21 +2,16 @@ clear
 %% User configuration
 % Update these paths before running this script.
 % The input and output folders do not need to share the same parent folder.
-res_path = '<path_to_MCF7_SAHA_mascot_dat>';
-work_dir_res = '<path_to_MCF7_SAHA_result>';
-work_dir_res_top1 = '<path_to_MCF7_SAHA_result_top1>';
-experimentNames = {'DMSO_R1','DMSO_R2','SAHA_R1','SAHA_R2'};
+res_path = '<path_to_DNA_histone_mascot_dat>';
+work_dir_res = '<path_to_DNA_histone_results>';
+experimentNames = {'wt1','wt2','wt3','ir1','ir2','ir3'};
 
-if strcmp(res_path,'<path_to_MCF7_SAHA_mascot_dat>') || ~isfolder(res_path)
+if strcmp(res_path,'<path_to_DNA_histone_mascot_dat>') || ~isfolder(res_path)
     error('Please set res_path to an existing Mascot DAT folder before running this script: %s', res_path);
 end
 
-if strcmp(work_dir_res,'<path_to_MCF7_SAHA_result>')
+if strcmp(work_dir_res,'<path_to_DNA_histone_results>')
     error('Please set work_dir_res before running this script.');
-end
-
-if strcmp(work_dir_res_top1,'<path_to_MCF7_SAHA_result_top1>')
-    error('Please set work_dir_res_top1 before running this script.');
 end
 
 if ~isfolder(work_dir_res)
@@ -26,27 +21,12 @@ if ~isfolder(work_dir_res)
     end
 end
 
-if ~isfolder(work_dir_res_top1)
-    [status,message] = mkdir(work_dir_res_top1);
-    if ~status
-        error('Failed to create output folder "%s": %s', work_dir_res_top1, message);
-    end
-end
-
 for idx = 1:length(experimentNames)
     outputDir = fullfile(work_dir_res,experimentNames{idx});
     if ~isfolder(outputDir)
         [status,message] = mkdir(outputDir);
         if ~status
             error('Failed to create experiment output folder "%s": %s', outputDir, message);
-        end
-    end
-
-    outputDirTop1 = fullfile(work_dir_res_top1,experimentNames{idx});
-    if ~isfolder(outputDirTop1)
-        [status,message] = mkdir(outputDirTop1);
-        if ~status
-            error('Failed to create experiment output folder "%s": %s', outputDirTop1, message);
         end
     end
 
@@ -72,15 +52,11 @@ for idx = 1:length(experimentNames)
     group_filtered_result = result(I(~GroupType));
     grouped_filename = fullfile(outputDir,'group_result_mascot.txt');
     write_mascot_result_table(group_filtered_result, grouped_filename);
-    grouped_filename = fullfile(outputDirTop1,'group_result_mascot.txt');
-    write_mascot_result_table(group_filtered_result, grouped_filename);
 
     % Write all filtered result
     FDR_filtered_result = result(Iid.SF);
-    filtered_filename = fullfile(outputDir,'filtered_result_mascot.txt');
-    write_mascot_result_table(FDR_filtered_result, filtered_filename);
-    filtered_filename = fullfile(outputDirTop1,'filtered_result_mascot.txt');
-    write_mascot_result_table(FDR_filtered_result, filtered_filename);
+    filtered_fileName = fullfile(outputDir,'filtered_result_mascot.txt');
+    write_mascot_result_table(FDR_filtered_result, filtered_fileName);
 
     % select the unique identified spectra
     mgf_scan_strings = strcat({FDR_filtered_result.DatasetName}',' ',{FDR_filtered_result.Scan}');
@@ -89,22 +65,23 @@ for idx = 1:length(experimentNames)
     is_result_selected = (group_counts(group_idx) == 1);
     unique_filtered_result = FDR_filtered_result(is_result_selected);
 
-    % select the modified peptides
+    % Select the modified peptides without Oxidation, cannot be all fixed modification
     modifications = {unique_filtered_result.modification}';
-    is_result_selected = ~strcmp(modifications,'-') & ~contains(modifications,'Oxidation');%...
-%                 && ~is_C_terminal_error_mod(unique_filtered_result(i_final).peptide, ...
-%                 unique_filtered_result(i_final).modification,unique_filtered_result(i_final).modificationlocation)
+    is_not_dash = ~strcmp(modifications,'-');
+    is_not_oxidation = ~contains(modifications,'Oxidation');
+    candidate_idx = is_not_dash & is_not_oxidation;
+    is_all_label_only = false(size(modifications));
+    is_all_label_only(candidate_idx) = cellfun(@(mod_text) all(ismember(strsplit(mod_text, ','), ...
+        {'Label:13C(6) (K)','Label:13C(6)15N(4) (R)'})), modifications(candidate_idx));
+    is_result_selected = candidate_idx & ~is_all_label_only;
     final_result = unique_filtered_result(is_result_selected);
 
     % sort the results by peptide sequence
     [~,sorted_idx] = sort({final_result.peptide});
     output_res = final_result(sorted_idx);
-    
+
     % write pep_spec to files
-    filename = fullfile(outputDir,'pepSpecFile.txt');
-    write_peptide_spectra_list_file(output_res, filename);
-    % write the top scoring results to file in report_msms.txt format
-    filename = fullfile(outputDirTop1,'report_msms_top1.txt');
-    write_report_msms_top1(output_res, filename);
+    fileName = fullfile(outputDir,'pepSpecFile.txt');
+    write_peptide_spectra_list_file(output_res, fileName);
 
 end
