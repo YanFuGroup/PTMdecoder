@@ -12,6 +12,7 @@ Free for academic uses. Licensed under BSD-3-Clause-Clear license.
 - [Features](#features)
 - [Installation](#installation)
 - [Getting Started](#getting-started)
+- [Mascot Preprocess Example](docs/PREPROCESS_EXAMPLE.md)
 - [Developer Notes](#developer-notes)
 
 # Features
@@ -97,3 +98,6 @@ Developer-facing architecture notes are kept under [docs](docs/README.md):
   classes that own them.
 - [Maintainer Guide](docs/MAINTAINER_GUIDE.md) records conventions for adding
   classes and keeping the documentation current.
+- [Mascot Preprocess Example](docs/PREPROCESS_EXAMPLE.md) shows how an
+  analysis repository can call the generic preprocess building blocks while
+  owning dataset-specific paths and rules.
