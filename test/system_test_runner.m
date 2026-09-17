@@ -65,12 +65,6 @@ function system_test_runner()
     fprintf('Running normalization peptide quantification test...\n');
     helper_test_quant_norm_pep(projectDir, testDataDir, outputDir);
 
-    fprintf('Running FDR filtering test...\n');
-    helper_test_FDR_filtering(projectDir, testDataDir, outputDir);
-
-    fprintf('Running report_msms_top1 generation test...\n');
-    helper_test_report_msms_top1(projectDir, testDataDir, outputDir);
-
     mergeFlagName = 'REQUANT_RT_PEAKS_MERGE_ON';
     previousMergeFlag = getenv(mergeFlagName);
     mergeFlagCleanup = onCleanup(@() setenv(mergeFlagName, previousMergeFlag));
@@ -87,8 +81,10 @@ function system_test_runner()
 
     fprintf('\nRun completed, start comparing results...\n');
     
-    % Comparison section
-    allMatch = compare_dir_recursive(goldenDir, goldenDir, outputDir);
+    % Comparison section. Golden data is ignored locally, so retired workflows
+    % can leave stale subtrees in an existing checkout. Compare only outputs
+    % that this runner still generates instead of scanning the whole golden tree.
+    allMatch = compare_active_golden_outputs(goldenDir, outputDir);
     
     if allMatch
         fprintf('\n=== Test passed: Refactoring safe ===\n');
@@ -97,6 +93,72 @@ function system_test_runner()
     end
 
     toc
+end
+
+function allMatch = compare_active_golden_outputs(goldenDir, outputDir)
+    % COMPARE_ACTIVE_GOLDEN_OUTPUTS Compare only outputs produced by this runner
+    % Input:
+    %   goldenDir (1 x N char/string) - root golden output directory
+    %   outputDir (1 x N char/string) - root generated output directory
+    % Output:
+    %   allMatch (1 x 1 logical)
+    activeGoldenDirs = { ...
+        'auto_align_quant_workflow', ...
+        'auto_align_quant_workflow_merge_on', ...
+        'demo', ...
+        'msms_pep_site', ...
+        'pairwise', ...
+        'requant_norm_pep', ...
+        'requant_pep_site', ...
+        'site_dataset_from_file', ...
+        'site_from_file' ...
+    };
+
+    allMatch = true;
+    for i_dir = 1:numel(activeGoldenDirs)
+        goldenPath = fullfile(goldenDir, activeGoldenDirs{i_dir});
+        if ~isfolder(goldenPath)
+            fprintf('[Missing] Active golden output is unavailable: %s\n', activeGoldenDirs{i_dir});
+            allMatch = false;
+            continue;
+        end
+
+        if ~compare_dir_recursive(goldenPath, goldenDir, outputDir)
+            allMatch = false;
+        end
+    end
+
+    % drawXIC writes SVG golden files directly below the golden root. The
+    % directory comparator requires a directory root, so compare these files
+    % without wrapping each one in a recursive directory call.
+    activeGoldenFiles = { ...
+        'MCF7_DMSO_2_HISTONE_0723_HCDFT.mgf_376.7296-376.7372_+4_1.svg', ...
+        'MCF7_DMSO_2_HISTONE_0723_HCDFT.mgf_501.9704-501.9805_+3_1.svg' ...
+    };
+    for i_file = 1:numel(activeGoldenFiles)
+        relativePath = activeGoldenFiles{i_file};
+        goldenPath = fullfile(goldenDir, relativePath);
+        outputPath = fullfile(outputDir, relativePath);
+
+        if ~isfile(goldenPath)
+            fprintf('[Missing] Active golden output is unavailable: %s\n', relativePath);
+            allMatch = false;
+            continue;
+        end
+
+        if ~isfile(outputPath)
+            fprintf('[Missing] New result did not generate file: %s\n', relativePath);
+            allMatch = false;
+            continue;
+        end
+
+        if compare_binary_files(goldenPath, outputPath)
+            fprintf('[Pass] %s\n', relativePath);
+        else
+            fprintf('xFailx %s content inconsistent!\n', relativePath);
+            allMatch = false;
+        end
+    end
 end
 
 function isMatch = compare_binary_files(file1, file2)
