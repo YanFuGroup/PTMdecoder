@@ -44,10 +44,12 @@ project; do not submit the customized copy to PTMdecoder.
 
 ```matlab
 ptmdecoderRoot = '<path-to-PTMdecoder>';
+addpath(ptmdecoderRoot);  % Required for @CFdrFilteredResultIO.
+
 preprocessDir = fullfile(ptmdecoderRoot, 'FDR_control_generate_pep_spec_list');
 addpath(preprocessDir);
 
-mascotDatRoot = '<folder-containing-run-subdirectories-with-.dat-files>';
+mascotDatDir = '<folder-containing-.dat-files-for-one-run>';
 outputRoot = '<new-explicit-output-directory>';
 if isfolder(outputRoot)
     error('Refusing to overwrite the existing output directory: %s', outputRoot);
@@ -66,8 +68,11 @@ if ~any(strcmp(selectedFdrMode, validFdrModes))
     error('selectedFdrMode must be GF, SF, or TF.');
 end
 
-% PTMdecoder reads all .dat files in each run folder of mascotDatRoot.
-result = ReadDatResultFolder(mascotDatRoot);
+% ReadDatResultFolder reads only the .dat files directly inside one run folder.
+result = ReadDatResultFolder(mascotDatDir);
+
+% The calling analysis repository owns iteration across runs. Invoke this
+% skeleton once per run, or compose the per-run results according to project policy.
 
 % Apply analysis-owned pre-FDR rules here, before JudgeGroup and ComputeFDR.
 % Leave this step out entirely when the analysis has no such rule.
@@ -107,8 +112,13 @@ same three fields.
 
 - `ComputeFDR` retains the legacy GF/SF/TF behavior and calls `robustfit`, so
   this skeleton requires MATLAB and the Statistics Toolbox.
-- `CFdrFilteredResultIO` reads and writes the current 14-column text table.
-  Numeric values are text after a read/write round trip.
+- `CFdrFilteredResultIO` reads and writes the current 14-column text table,
+  but its reader splits rows on either tabs or runs of spaces. Numeric values
+  become text after a round trip. Fields that contain spaces—such as decoded
+  spectrum titles, `Site` paths, and modification text—can therefore shift
+  columns, and tokens after the first 14 are silently ignored. This legacy
+  behavior is a compatibility limitation rather than a whitespace-safe TSV
+  contract; callers must test tables containing spaced fields.
 - `write_peptide_spectra_list_file` does not sort, deduplicate, or validate
   peptide grouping. The caller must make those decisions before writing.
 - `ReadDatResult` preserves the current Mascot DAT parser assumptions. Projects
