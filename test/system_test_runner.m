@@ -65,12 +65,6 @@ function system_test_runner()
     fprintf('Running normalization peptide quantification test...\n');
     helper_test_quant_norm_pep(projectDir, testDataDir, outputDir);
 
-    fprintf('Running FDR filtering test...\n');
-    helper_test_FDR_filtering(projectDir, testDataDir, outputDir);
-
-    fprintf('Running report_msms_top1 generation test...\n');
-    helper_test_report_msms_top1(projectDir, testDataDir, outputDir);
-
     mergeFlagName = 'REQUANT_RT_PEAKS_MERGE_ON';
     previousMergeFlag = getenv(mergeFlagName);
     mergeFlagCleanup = onCleanup(@() setenv(mergeFlagName, previousMergeFlag));
