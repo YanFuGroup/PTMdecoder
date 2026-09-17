@@ -9,6 +9,8 @@ MATLAB class layout.
   the right class or module.
 - [Maintainer Guide](MAINTAINER_GUIDE.md): conventions for adding classes,
   choosing ownership, and keeping documentation current.
+- [Mascot Preprocess Example](PREPROCESS_EXAMPLE.md): calling convention and
+  ownership boundary for analysis-side Mascot preprocess orchestration.
 
 For user installation and running instructions, see the repository-level
 [README](../README.md).
