@@ -1,13 +1,80 @@
-# Mascot preprocess example for analysis callers
+# Runnable Mascot preprocess example for analysis callers
 
 PTMdecoder provides reusable building blocks for converting Mascot result data
 into the inputs consumed by its MS/MS workflow. It intentionally does not own a
 dataset-specific preprocess pipeline. Paths, run names, publication rules, and
 scientific selectors belong to the calling analysis repository.
 
-This document is the stable, documentation-only example. A runnable minimal
-example may be added later, but it must use 3-5 fictional PSMs and must not
-turn this skeleton back into a dataset-specific template.
+The repository includes a runnable teaching example at
+[`run_mascot_preprocess_example.m`](../examples/mascot_preprocess/run_mascot_preprocess_example.m).
+It uses only fictional data, writes to an automatically cleaned temporary
+directory, and does not define scientific defaults or a stable public API.
+
+## Run the example
+
+From MATLAB, point `ptmdecoderRoot` at this source checkout and run:
+
+```matlab
+ptmdecoderRoot = '<path-to-PTMdecoder>';
+exampleDir = fullfile(ptmdecoderRoot, 'examples', 'mascot_preprocess');
+addpath(exampleDir);
+exampleResult = run_mascot_preprocess_example();
+```
+
+The function locates the repository from its own file, temporarily adds the
+repository root and `FDR_control_generate_pep_spec_list` to the MATLAB path,
+and restores the original path before returning. It prints every generated
+file before deleting its temporary output directory. The same text remains
+available under `exampleResult.outputText`.
+
+The example reads the public fixture
+[`minimal_mascot.dat`](../examples/mascot_preprocess/fixtures/minimal_mascot.dat).
+This is a small parser-oriented subset containing 12 fictional PSMs. It is not
+a complete example of the Mascot DAT specification and must not be treated as
+research data.
+
+## What the example demonstrates
+
+The runnable call chain is:
+
+```text
+ReadDatResult -> JudgeGroup -> ComputeFDR
+              -> write_mascot_result_table
+              -> write_peptide_spectra_list_file
+```
+
+The fixture includes six in-group targets, four in-group decoys, one
+out-of-group target, and one out-of-group decoy. This is enough to exercise the
+existing transfer-FDR fit instead of its small-sample `[0, 0]` fallback.
+
+Every policy value in the example is deliberately fictional and exists only to
+make the output easy to inspect:
+
+```matlab
+tagType = 'Protein';
+decoyTag = 'DECOY_';
+groupTag = 'EXAMPLE_GROUP';
+fdrThreshold = 0.5;
+selectedFdrMode = 'GF';
+```
+
+These values are not recommended defaults. In particular, the threshold and
+selected GF mode have no scientific meaning. The example applies no pre-FDR
+filter, PSM uniqueness policy, or post-FDR selector. It sorts only by peptide
+before calling the pepSpec writer because that writer expects equal peptides
+to be contiguous.
+
+The temporary directory contains three files while the example is running:
+
+| File | Example contents |
+| --- | --- |
+| `group_result_mascot.txt` | 14-column table with the 10 in-group target and decoy PSMs |
+| `filtered_result_mascot.txt` | 14-column table with the four in-group targets passing example-only GF filtering |
+| `pepSpecFile.txt` | peptide-grouped spectrum list derived from those four targets |
+
+`exampleResult` exposes the example-only policy, counts, FDR diagnostics, the
+three text snapshots, and `cleanupConfirmed`. It does not return temporary file
+paths that no longer exist.
 
 ## Ownership boundary
 
@@ -33,97 +100,55 @@ The calling analysis repository owns:
   modification rules.
 - Final sorting, output publication, overwrite protection, and archival.
 
-Do not add project-specific paths, run lists, selectors, or publication rules
-back to PTMdecoder. Keep the customized orchestration in the analysis repository.
+Do not copy the example's fictional values into an analysis without replacing
+and validating them. Do not add project-specific paths, run lists, selectors,
+or publication rules back to PTMdecoder. Keep customized orchestration in the
+analysis repository.
 
-## Minimal caller skeleton
+## Adapting the call chain
 
-The following skeleton is intentionally not runnable until every placeholder is
-replaced by the calling project. Copy the completed orchestration into that
-project; do not submit the customized copy to PTMdecoder.
+Use the runnable function as the maintained source example, then implement the
+following analysis-owned decisions in the calling repository:
 
-```matlab
-ptmdecoderRoot = '<path-to-PTMdecoder>';
-addpath(ptmdecoderRoot);  % Required for @CFdrFilteredResultIO.
+1. Choose a single DAT file for `ReadDatResult`, or a non-recursive run folder
+   for `ReadDatResultFolder`.
+2. Apply any justified pre-FDR rules before `JudgeGroup` and `ComputeFDR`.
+3. Supply and test the analysis-specific tags, threshold, and selected FDR
+   mode. `ComputeFDR` returns `GF`, `SF`, and `TF` fields in `FDR`, `Iid`,
+   `threshold`, and `finalFDR`; PTMdecoder does not choose a project default.
+4. Define uniqueness and post-FDR selectors in the analysis repository.
+5. Sort equal peptides contiguously before writing pepSpec output.
+6. Own publication paths, overwrite protection, and archival outside
+   PTMdecoder.
 
-preprocessDir = fullfile(ptmdecoderRoot, 'FDR_control_generate_pep_spec_list');
-addpath(preprocessDir);
-
-mascotDatDir = '<folder-containing-.dat-files-for-one-run>';
-outputRoot = '<new-explicit-output-directory>';
-if isfolder(outputRoot)
-    error('Refusing to overwrite the existing output directory: %s', outputRoot);
-end
-mkdir(outputRoot);
-
-% Every value below is an analysis-policy decision.
-tagType = '<Protein-or-Modification>';
-decoyTag = '<your-decoy-tag>';
-groupTag = {'<your-group-tag>'};
-fdrThreshold = <your-fdr-threshold>;
-selectedFdrMode = '<GF-or-SF-or-TF>';
-
-validFdrModes = {'GF', 'SF', 'TF'};
-if ~any(strcmp(selectedFdrMode, validFdrModes))
-    error('selectedFdrMode must be GF, SF, or TF.');
-end
-
-% ReadDatResultFolder reads only the .dat files directly inside one run folder.
-result = ReadDatResultFolder(mascotDatDir);
-
-% The calling analysis repository owns iteration across runs. Invoke this
-% skeleton once per run, or compose the per-run results according to project policy.
-
-% Apply analysis-owned pre-FDR rules here, before JudgeGroup and ComputeFDR.
-% Leave this step out entirely when the analysis has no such rule.
-
-[DecoyType, GroupType, ~, scores, numrst, I] = JudgeGroup( ...
-    result, tagType, decoyTag, groupTag);
-[FDR, Iid, threshold, finalFDR] = ComputeFDR( ...
-    DecoyType, GroupType, scores, numrst, I, fdrThreshold);
-
-% The caller explicitly chooses one of the computed modes. PTMdecoder does not
-% provide a project default and does not restrict callers to SF.
-groupedResult = result(I(~GroupType));
-filteredResult = result(Iid.(selectedFdrMode));
-
-write_mascot_result_table( ...
-    groupedResult, fullfile(outputRoot, 'group_result_mascot.txt'));
-write_mascot_result_table( ...
-    filteredResult, fullfile(outputRoot, 'filtered_result_mascot.txt'));
-
-% Define and test PSM uniqueness and all post-FDR selectors in the calling
-% project. Historical analysis workflows removed every PSM sharing an ambiguous
-% (DatasetName, Scan) key, but PTMdecoder does not prescribe that policy here.
-selectedResult = filteredResult;  % Replace with caller-owned selections.
-
-% The pepSpec writer preserves caller order and expects equal peptides to be
-% contiguous. Sort in the caller before writing.
-[~, sortedIndex] = sort({selectedResult.peptide});
-write_peptide_spectra_list_file( ...
-    selectedResult(sortedIndex), fullfile(outputRoot, 'pepSpecFile.txt'));
-```
-
-The `FDR` output contains all three modes. Inspect `FDR.GF`, `FDR.SF`, and
-`FDR.TF` when evaluating the policy; `Iid`, `threshold`, and `finalFDR` have the
-same three fields.
+For a single protein-group tag, pass a character vector or string scalar such
+as `'EXAMPLE_GROUP'`. A one-element cell is not a valid single-tag argument for
+the current `JudgeGroup` implementation.
 
 ## Compatibility notes
 
-- `ComputeFDR` retains the legacy GF/SF/TF behavior and calls `robustfit`, so
-  this skeleton requires MATLAB and the Statistics Toolbox.
-- `CFdrFilteredResultIO` reads and writes the current 14-column text table,
-  but its reader splits rows on either tabs or runs of spaces. Numeric values
-  become text after a round trip. Fields that contain spaces—such as decoded
-  spectrum titles, `Site` paths, and modification text—can therefore shift
-  columns, and tokens after the first 14 are silently ignored. This legacy
-  behavior is a compatibility limitation rather than a whitespace-safe TSV
-  contract; callers must test tables containing spaced fields.
+- The known source baseline is MATLAB R2022a. `ComputeFDR` calls `robustfit`,
+  so running this source example also requires Statistics and Machine Learning
+  Toolbox. Installing MATLAB or MATLAB Runtime R2022a alone does not guarantee
+  that this toolbox is installed and licensed.
+- The example uses platform-neutral MATLAB path and temporary-directory APIs,
+  but it does not create a new Linux or macOS support commitment. The compiled
+  application's supported platform remains documented in the repository
+  README.
+- `CFdrFilteredResultIO` writes the current 14-column tab-delimited table, but
+  its reader splits rows on either tabs or runs of spaces. Numeric values become
+  text after a round trip. Fields containing spaces can shift columns, and
+  tokens after the first 14 are silently ignored. This remains a legacy
+  compatibility limitation rather than a whitespace-safe TSV contract.
 - `write_peptide_spectra_list_file` does not sort, deduplicate, or validate
   peptide grouping. The caller must make those decisions before writing.
-- `ReadDatResult` preserves the current Mascot DAT parser assumptions. Projects
-  with unusual DAT layouts should characterize their files in the analysis
+- `ReadDatResult` preserves the current Mascot parser assumptions. Projects
+  with unusual DAT layouts must characterize their files in the analysis
   repository before relying on the reader.
-- A runnable demo, when added, must use only fictional PSMs and write to an
-  automatically cleaned temporary directory. It must not use research data or
-  values derived from research data.
+
+## Non-goals
+
+The example is not a production runner, general framework, dataset template,
+or new stable API. It does not restore removed dataset-specific workflows and
+does not implement batch processing, publishing, migration, promotion,
+archival, or scientific selection policy.
