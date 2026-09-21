@@ -41,6 +41,17 @@ testCase.verifySubstring(consoleText, 'Reading minimal_mascot.dat ... done.');
 testCase.verifySubstring(consoleText, '=== group_result_mascot.txt ===');
 testCase.verifySubstring(consoleText, '=== filtered_result_mascot.txt ===');
 testCase.verifySubstring(consoleText, '=== pepSpecFile.txt ===');
+
+normalizedConsoleText = normalizeNewlines(consoleText);
+testCase.verifySubstring( ...
+    normalizedConsoleText, ...
+    normalizeNewlines(exampleResult.outputText.groupResultMascot));
+testCase.verifySubstring( ...
+    normalizedConsoleText, ...
+    normalizeNewlines(exampleResult.outputText.filteredResultMascot));
+testCase.verifySubstring( ...
+    normalizedConsoleText, ...
+    normalizeNewlines(exampleResult.outputText.pepSpec));
 end
 
 
@@ -152,10 +163,16 @@ end
 
 function lines = textLines(content)
 % TEXTLINES Split text independent of platform newline conventions.
-content = strrep(content, sprintf('\r\n'), newline);
-content = strrep(content, sprintf('\r'), newline);
+content = normalizeNewlines(content);
 lines = regexp(content, '\n', 'split');
 if ~isempty(lines) && isempty(lines{end})
     lines(end) = [];
 end
+end
+
+
+function content = normalizeNewlines(content)
+% NORMALIZENEWLINES Convert platform line endings to newline characters.
+content = strrep(content, sprintf('\r\n'), newline);
+content = strrep(content, sprintf('\r'), newline);
 end
