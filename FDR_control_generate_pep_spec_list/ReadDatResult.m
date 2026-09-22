@@ -319,14 +319,11 @@ end
 % toc;
 
 
-if last_msg_len > 0
-    fprintf('done.\n');
-end
+fprintf('done.\n');
 
 
 fclose(fidin);
 
 
 end
-
 
