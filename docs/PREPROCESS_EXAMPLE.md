@@ -135,11 +135,10 @@ the current `JudgeGroup` implementation.
   but it does not create a new Linux or macOS support commitment. The compiled
   application's supported platform remains documented in the repository
   README.
-- `CFdrFilteredResultIO` writes the current 14-column tab-delimited table, but
-  its reader splits rows on either tabs or runs of spaces. Numeric values become
-  text after a round trip. Fields containing spaces can shift columns, and
-  tokens after the first 14 are silently ignored. This remains a legacy
-  compatibility limitation rather than a whitespace-safe TSV contract.
+- `CFdrFilteredResultIO` reads and writes the current 14-column tab-delimited
+  table. The reader preserves spaces within field values and the positions of
+  empty fields. Numeric values become text after a round trip. Rows with fewer
+  than 14 fields are rejected; fields after the first 14 are silently ignored.
 - `write_peptide_spectra_list_file` does not sort, deduplicate, or validate
   peptide grouping. The caller must make those decisions before writing.
 - `ReadDatResult` preserves the current Mascot parser assumptions. Projects

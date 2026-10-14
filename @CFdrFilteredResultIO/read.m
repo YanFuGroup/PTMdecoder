@@ -38,8 +38,8 @@ while ~feof(fin)
         continue;
     end
 
-    segment = regexp(strline, '\t| +', 'split');
-    segment = segment(~cellfun('isempty', segment));
+    % Preserve spaces within fields and the positions of empty columns.
+    segment = regexp(strline, '\t', 'split');
 
     if numel(segment) < 14
         error('Invalid FDR filtered line %d in "%s": %s', lineNo, filePath, strline);
