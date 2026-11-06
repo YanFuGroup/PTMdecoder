@@ -13,7 +13,7 @@ testCase.addTeardown(@() CLogger.configure(oldLogger));
 CLogger.configure(struct('file_path', fullfile(workDir, 'test.log'), ...
     'enabled', true, 'to_console', true, 'console_level', 'WARN'));
 writeLines(fullfile(workDir, 'proteins.fasta'), ...
-    {'>Pm'; 'MAK'; '>Pa'; 'AK'; '>Empty'; ''; '>InternalM'; 'AMAK'});
+    {'>Pm'; 'MAK'; '>Pa'; 'AK'; '>Empty'; ''; '>InternalM'; 'AMAK'; '>Unmapped'; 'AAAAK'});
 writeLines(fullfile(workDir, 'sample.mgf'), ...
     {'BEGIN IONS'; 'TITLE=SpecA'; 'PEPMASS=500.25'; 'CHARGE=2+'; 'END IONS'});
 writeLines(fullfile(workDir, 'msms.txt'), {'P\tAK'; 'S\tsample.mgf\tSpecA'; 'AK{Acetyl}\t1'});
@@ -21,12 +21,12 @@ end
 
 function testResidueNumberingUsesFullProteinSequence(testCase)
 % A peptide beginning with M must not imply that its protein begins with M.
-contexts = {'Pm,2;', 'Pa,1;', 'Missing,1;', 'Empty,1;', 'InternalM,2;'};
-peptides = {'_AK{Acetyl}_', '_AK{Acetyl}_', '_AK{Acetyl}_', '_AK{Acetyl}_', '_M{Acetyl}AK_'};
-legacyFalse = {'HK2ac', 'AK2ac', 'UK2ac', 'EK2ac', 'IM2ac'};
-legacyTrue = {'HK3ac', 'AK2ac', 'UK2ac', 'EK2ac', 'IM2ac'};
-matrixFalse = {'Pm,2; K_ac', 'Pa,2; K_ac', 'Missing,2; K_ac', 'Empty,2; K_ac', 'InternalM,2; M_ac'};
-matrixTrue = {'Pm,3; K_ac', 'Pa,2; K_ac', 'Missing,2; K_ac', 'Empty,2; K_ac', 'InternalM,2; M_ac'};
+contexts = {'Pm,2;', 'Pa,1;', 'InternalM,2;'};
+peptides = {'_AK{Acetyl}_', '_AK{Acetyl}_', '_M{Acetyl}AK_'};
+legacyFalse = {'HK2ac', 'AK2ac', 'IM2ac'};
+legacyTrue = {'HK3ac', 'AK2ac', 'IM2ac'};
+matrixFalse = {'Pm,2; K_ac', 'Pa,2; K_ac', 'InternalM,2; M_ac'};
+matrixTrue = {'Pm,3; K_ac', 'Pa,2; K_ac', 'InternalM,2; M_ac'};
 for countM = [false, true]
     for idx = 1:numel(contexts)
         cfg = makeConfig(testCase, countM, contexts{idx}, peptides{idx});
@@ -43,8 +43,8 @@ end
 end
 
 function testMultiProteinContextsUseIndependentOffsets(testCase)
-cfg = makeConfig(testCase, false, 'Pm,2;Pa,1;Missing,1;Empty,1;', '_AK{Acetyl}_');
-verifyOutputs(testCase, cfg, {'HK2ac'}, {'Pm,2;Pa,2;Missing,2;Empty,2; K_ac'});
+cfg = makeConfig(testCase, false, 'Pm,2;Pa,1;', '_AK{Acetyl}_');
+verifyOutputs(testCase, cfg, {'HK2ac'}, {'Pm,2;Pa,2; K_ac'});
 % Legacy still chooses the first mapped hit, and looks it up by original ID.
 cfg = makeConfig(testCase, false, 'Unmapped,4;Pa,1;Pm,2;', '_AK{Acetyl}_');
 verifyOutputs(testCase, cfg, {'AK2ac'}, {'Unmapped,5;Pa,2;Pm,2; K_ac'});
@@ -67,31 +67,78 @@ verifyOutputs(testCase, cfg, {'HN-term_ac', 'HC-term_ac'}, ...
     {'Pm,0;Pa,0; N-term_ac', 'Pm,3;Pa,3; C-term_ac'});
 end
 
-function testMissingFastaKeepsCoordinatesAndWarnsPerProtein(testCase)
+function testMissingFastaRaisesConfigurationError(testCase)
 cfg = makeConfig(testCase, false, 'Pm,2;Pa,1;', '_AK{Acetyl}_');
-cfg.fasta_file_path = '';
-for kind = {'legacy', 'matrix', 'trace'}
-    output = evalc('actual = runOutput(cfg, kind{1});');
-    testCase.verifyTrue(contains(output, 'Pm'));
-    testCase.verifyTrue(contains(output, 'original coordinates'));
-    if strcmp(kind{1}, 'legacy')
-        testCase.verifyEqual(actual, {'HK3ac'});
-    else
-        testCase.verifyTrue(contains(output, 'Pa'));
-        testCase.verifyEqual(actual, {'Pm,3;Pa,2; K_ac'});
+for pathValue = {'', "", [], '  '}
+    cfg.fasta_file_path = pathValue{1};
+    for kind = {'legacy', 'matrix', 'trace'}
+        testCase.verifyError(@() runOutput(cfg, kind{1}), 'CSitePositionNumbering:MissingFasta');
     end
 end
 end
 
-function testMissingAndEmptySequencesAreReportedOnce(testCase)
-cfg = makeConfig(testCase, false, 'Missing,1;Empty,1;', '_AK{Acetyl}K{Acetyl}_');
+function testMissingAndEmptySequencesRaiseErrorsAndCloseInputs(testCase)
+for protein = {'Missing', 'Empty'}
+    cfg = makeConfig(testCase, false, [protein{1}, ',1;'], '_AK{Acetyl}_');
+    if strcmp(protein{1}, 'Missing')
+        expectedId = 'CSitePositionNumbering:MissingProteinSequence';
+    else
+        expectedId = 'CSitePositionNumbering:EmptyProteinSequence';
+    end
+    for kind = {'legacy', 'matrix', 'trace'}
+        openFiles = fopen('all');
+        testCase.verifyError(@() runOutput(cfg, kind{1}), expectedId);
+        testCase.verifyEqual(fopen('all'), openFiles);
+    end
+end
+end
+
+function testTerminalOnlyReportsAlsoRequireSequenceEvidence(testCase)
+for peptide = {'_{Acetyl}AK_', '_AK_{Acetyl}'}
+    for protein = {'Missing', 'Empty'}
+        cfg = makeConfig(testCase, false, [protein{1}, ',1;'], peptide{1});
+        if strcmp(protein{1}, 'Missing')
+            expectedId = 'CSitePositionNumbering:MissingProteinSequence';
+        else
+            expectedId = 'CSitePositionNumbering:EmptyProteinSequence';
+        end
+        for kind = {'legacy', 'matrix', 'trace'}
+            testCase.verifyError(@() runOutput(cfg, kind{1}), expectedId);
+        end
+    end
+end
+end
+
+function testMatrixAndTraceValidateEveryReferencedProtein(testCase)
+cfg = makeConfig(testCase, false, 'Pm,2;Missing,1;', '_AK{Acetyl}_');
+% The site-list output references only its first mapped protein.
+testCase.verifyEqual(runOutput(cfg, 'legacy'), {'HK2ac'});
 for kind = {'matrix', 'trace'}
-    output = evalc('runOutput(cfg, kind{1});');
-    warnings = regexp(output, '\[WARN\][^\r\n]*', 'match');
-    testCase.verifyEqual(numel(warnings), 2);
-    testCase.verifyTrue(any(contains(warnings, 'Missing')));
-    testCase.verifyTrue(any(contains(warnings, 'Empty')));
-    testCase.verifyTrue(all(contains(warnings, 'original coordinates')));
+    testCase.verifyError(@() runOutput(cfg, kind{1}), 'CSitePositionNumbering:MissingProteinSequence');
+end
+end
+
+function testCountingKeepsCoordinatesWithoutSequenceEvidence(testCase)
+cfg = makeConfig(testCase, true, 'Missing,1;Empty,1;Pm,2;', '_AK{Acetyl}_');
+cfg.fasta_file_path = '';
+cfg.regular_express = '[';
+verifyOutputs(testCase, cfg, {'UK2ac'}, {'Missing,2;Empty,2;Pm,3; K_ac'});
+% A configured FASTA with absent/empty proteins is not consulted either.
+cfg.fasta_file_path = fullfile(testCase.TestData.workDir, 'proteins.fasta');
+verifyOutputs(testCase, cfg, {'UK2ac'}, {'Missing,2;Empty,2;Pm,3; K_ac'});
+end
+
+function testSequenceErrorsIdentifyTheProtein(testCase)
+numbering = CSitePositionNumbering(false, ...
+    fullfile(testCase.TestData.workDir, 'proteins.fasta'), '^>(\S+)');
+for protein = {'Missing', 'Empty'}
+    try
+        numbering.getOffset(protein{1});
+        testCase.verifyFail('Expected a protein sequence error.');
+    catch cause
+        testCase.verifyTrue(contains(cause.message, protein{1}));
+        testCase.verifyTrue(contains(cause.message, 'site_position_count_initial_m=false'));
+    end
 end
 end
 

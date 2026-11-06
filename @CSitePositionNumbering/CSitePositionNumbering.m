@@ -10,11 +10,11 @@ classdef CSitePositionNumbering < handle
     %   the site-list default. Supply fasta_file_path and regular_express from
     %   the upstream protein mapping; lookup uses the original protein ID.
     %
-    % Missing sequence evidence:
-    %   Omitted FASTA, absent IDs, and empty sequences return zero offsets and
-    %   log one warning per protein per instance through CLogger. When false
-    %   and a FASTA path is supplied, unavailable/unreadable files, missing or
-    %   invalid name rules, and conflicting sequences for one ID raise errors.
+    % Required sequence evidence when false:
+    %   Omitted FASTA is a configuration error. Referenced IDs must exist and
+    %   have nonempty sequences; missing evidence never falls back to zero.
+    %   Unavailable/unreadable files, missing or invalid name rules, and
+    %   conflicting sequences for one ID also raise errors.
     %   Identical duplicates are accepted. Strict duplicate checking is opt-in
     %   for these reports; other CFastaReader callers retain their defaults.
     %
@@ -29,7 +29,6 @@ classdef CSitePositionNumbering < handle
     properties (Access = private)
         count_initial_m
         protein_sequences
-        missing_sequence_warnings
     end
 
     methods
@@ -38,9 +37,12 @@ classdef CSitePositionNumbering < handle
             % Counting M needs no sequence evidence and performs no FASTA IO.
             obj.count_initial_m = count_initial_m;
             obj.protein_sequences = containers.Map('KeyType', 'char', 'ValueType', 'char');
-            obj.missing_sequence_warnings = containers.Map('KeyType', 'char', 'ValueType', 'logical');
-            if count_initial_m || strlength(string(fasta_file_path)) == 0
+            if count_initial_m
                 return;
+            end
+            if isempty(fasta_file_path) || strlength(strtrim(string(fasta_file_path))) == 0
+                error('CSitePositionNumbering:MissingFasta', ...
+                    'fasta_file_path is required when site_position_count_initial_m=false.');
             end
             if ~isfile(fasta_file_path)
                 error('CSitePositionNumbering:UnavailableFasta', ...
@@ -58,25 +60,25 @@ classdef CSitePositionNumbering < handle
 
         function offset = getOffset(obj, protein_name)
             % Subtract one only for a known initial M, using the original ID.
-            % Unknown and empty sequences retain coordinates with one warning
-            % per protein per numbering instance, even across multiple sites.
+            % Unknown and empty sequences are errors when excluding initial M.
             offset = 0;
             if obj.count_initial_m
                 return;
             end
-            if isKey(obj.protein_sequences, protein_name)
-                sequence = obj.protein_sequences(protein_name);
-                if ~isempty(sequence)
-                    offset = double(strcmpi(sequence(1), 'M'));
-                    return;
-                end
+            if ~isKey(obj.protein_sequences, protein_name)
+                error('CSitePositionNumbering:MissingProteinSequence', ...
+                    ['Protein "%s" is absent from the configured FASTA; ', ...
+                    'a complete protein sequence is required when site_position_count_initial_m=false.'], ...
+                    protein_name);
             end
-            if ~isKey(obj.missing_sequence_warnings, protein_name)
-                CLogger.warn(['[CSitePositionNumbering:MissingProteinSequence] ', ...
-                    'No sequence evidence for protein "%s"; retaining original coordinates ', ...
-                    'with site_position_count_initial_m=false.'], protein_name);
-                obj.missing_sequence_warnings(protein_name) = true;
+            sequence = obj.protein_sequences(protein_name);
+            if isempty(sequence)
+                error('CSitePositionNumbering:EmptyProteinSequence', ...
+                    ['Protein "%s" has an empty sequence in the configured FASTA; ', ...
+                    'a complete protein sequence is required when site_position_count_initial_m=false.'], ...
+                    protein_name);
             end
+            offset = double(strcmpi(sequence(1), 'M'));
         end
     end
 

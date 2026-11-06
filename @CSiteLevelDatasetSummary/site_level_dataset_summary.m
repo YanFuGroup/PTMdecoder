@@ -11,6 +11,7 @@ fin = fopen(obj.m_input_path);
 if fin < 0
     error(['Can not open the peptide level result file: "', obj.m_input_path, '"']);
 end
+cleanup_file = onCleanup(@() fclose(fin)); %#ok<NASGU>
 
 CLogger.info(['[CSiteLevelDatasetSummary:site_level_dataset_summary] Start summarizing. ', ...
     'input=%s'], obj.m_input_path);
@@ -202,8 +203,6 @@ while ~feof(fin)
         end
     end
 end
-
-fclose(fin);
 
 % -------------------------------------------------------------------------
 % Finalize outputs: sort dataset/site axes for deterministic downstream use,

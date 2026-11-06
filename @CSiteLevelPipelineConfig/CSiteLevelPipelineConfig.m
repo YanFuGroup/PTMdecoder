@@ -13,7 +13,7 @@ classdef CSiteLevelPipelineConfig
         mod_name_abbr        % containers.Map: modification full name -> abbreviation
         ignore_strings       % 1 x M cell: strings ignored in modified peptide sequence
         site_position_count_initial_m % logical: whether the first initial M is counted in site numbering
-        fasta_file_path      % Optional FASTA evidence for excluding initial M
+        fasta_file_path      % Required when site_position_count_initial_m is false
         regular_express      % Same protein-name extraction rule as upstream mapping
         column_idxs          % struct: column index settings (icol_seq, icol_auc)
     end
