@@ -155,12 +155,38 @@ end
 
 function testInvalidOrMissingRegexFails(testCase)
 cfg = makeConfig(testCase, false, 'Pm,2;', '_AK{Acetyl}_');
-for regexValue = {'[', ''}
+for regexValue = {'[', '', '(', ')', 'a)', 'a**', '(?invalid)', 'a{2,1}', ...
+        '\|([^|]+)\|(', '\|([^|]+)\|)', '\|([^|]+)\|**'}
     cfg.regular_express = regexValue{1};
     for kind = {'legacy', 'matrix', 'trace'}
         testCase.verifyError(@() runOutput(cfg, kind{1}), 'CSitePositionNumbering:InvalidRegularExpression');
     end
 end
+end
+
+function testLiteralPipeCharacterClassesUseReaderDialect(testCase)
+cfg = makeConfig(testCase, false, 'Pm,2;Pa,1;', '_AK{Acetyl}_');
+writeLines(cfg.fasta_file_path, {'>sp|Pm|ProteinM'; 'M A'; 'K'; '>sp|Pa|ProteinA'; 'AK'});
+expressions = {'\|([^|]+)\|', '\|([^\|]+)\|', ...
+    '^>sp[|]([^|]+)[|]', '^>sp\|(?<protein>[^|]+)\|', ...
+    string('\|([^|]+)\|')};
+maps = cell(size(expressions));
+for idx = 1:numel(expressions)
+    cfg.regular_express = expressions{idx};
+    reader = CFastaReader(cfg.fasta_file_path, cfg.regular_express);
+    maps{idx} = reader.read(true);
+    testCase.verifyEqual(sort(keys(maps{idx})), {'Pa', 'Pm'});
+    testCase.verifyEqual(maps{idx}('Pm'), 'MAK');
+    testCase.verifyEqual(maps{idx}('Pa'), 'AK');
+    numbering = CSitePositionNumbering(false, cfg.fasta_file_path, cfg.regular_express);
+    testCase.verifyEqual(numbering.getOffset('Pm'), 1);
+    testCase.verifyEqual(numbering.getOffset('Pa'), 0);
+    verifyOutputs(testCase, cfg, {'HK2ac'}, {'Pm,2;Pa,2; K_ac'});
+    cfg.site_position_count_initial_m = true;
+    verifyOutputs(testCase, cfg, {'HK3ac'}, {'Pm,3;Pa,2; K_ac'});
+    cfg.site_position_count_initial_m = false;
+end
+testCase.verifyEqual(values(maps{1}, {'Pa', 'Pm'}), values(maps{2}, {'Pa', 'Pm'}));
 end
 
 function testUpstreamBackreferenceRegexRemainsSupported(testCase)
@@ -173,21 +199,49 @@ end
 function testRegexValidationRestoresCallerWarningState(testCase)
 cfg = makeConfig(testCase, false, 'Pm,2;', '_AK{Acetyl}_');
 previousState = warning;
+[previousBacktrace, previousVerbose] = warningModes();
 [previousMessage, previousId] = lastwarn;
-cleanup = onCleanup(@() restoreWarnings(previousState, previousMessage, previousId)); %#ok<NASGU>
+cleanup = onCleanup(@() restoreWarnings(previousState, previousMessage, previousId, ...
+    previousBacktrace, previousVerbose)); %#ok<NASGU>
 warning('off', 'all');
+warning('on', 'backtrace');
+warning('off', 'verbose');
 lastwarn('caller diagnostic', 'test:CallerDiagnostic');
 expectedState = warning;
-cfg.regular_express = '[';
-testCase.verifyError(@() runOutput(cfg, 'matrix'), 'CSitePositionNumbering:InvalidRegularExpression');
-testCase.verifyEqual(warning, expectedState);
-[message, id] = lastwarn;
-testCase.verifyEqual(message, 'caller diagnostic');
-testCase.verifyEqual(id, 'test:CallerDiagnostic');
+[expectedBacktrace, expectedVerbose] = warningModes();
+for expression = {'[', '\|([^|]+)\|(', '\|([^|]+)\|', '^>(\w+)\|\1$'}
+    cfg.regular_express = expression{1};
+    if strcmp(expression{1}, '[') || endsWith(expression{1}, '(')
+        testCase.verifyError(@() CSitePositionNumbering(false, cfg.fasta_file_path, ...
+            cfg.regular_express), 'CSitePositionNumbering:InvalidRegularExpression');
+    else
+        if startsWith(expression{1}, '^>')
+            writeLines(cfg.fasta_file_path, {'>Pm|Pm'; 'MAK'});
+        else
+            writeLines(cfg.fasta_file_path, {'>sp|Pm|ProteinM'; 'MAK'});
+        end
+        numbering = CSitePositionNumbering(false, cfg.fasta_file_path, cfg.regular_express);
+        testCase.verifyEqual(numbering.getOffset('Pm'), 1);
+    end
+    testCase.verifyEqual(warning, expectedState);
+    [backtrace, verbose] = warningModes();
+    testCase.verifyEqual(backtrace, expectedBacktrace);
+    testCase.verifyEqual(verbose, expectedVerbose);
+    [message, id] = lastwarn;
+    testCase.verifyEqual(message, 'caller diagnostic');
+    testCase.verifyEqual(id, 'test:CallerDiagnostic');
+end
 end
 
-function restoreWarnings(state, message, id)
+function [backtrace, verbose] = warningModes()
+backtrace = warning('query', 'backtrace');
+verbose = warning('query', 'verbose');
+end
+
+function restoreWarnings(state, message, id, backtrace, verbose)
 warning(state);
+warning(backtrace);
+warning(verbose);
 lastwarn(message, id);
 end
 
