@@ -237,6 +237,9 @@ writeLines(peptidePath, {
 
 cfg = makeTraceConfig(specDir, msmsPath, peptidePath, workDir);
 cfg.site_position_count_initial_m = false;
+cfg.fasta_file_path = fullfile(workDir, 'proteins.fasta');
+cfg.regular_express = '^>(\S+)';
+writeLines(cfg.fasta_file_path, {'>P1', 'MAK', '>P2', 'MAK'});
 service = CTraceabilityReportService(cfg);
 cleanupAll = onCleanup(@() cleanupServiceAndDir(service, workDir));
 service.run();

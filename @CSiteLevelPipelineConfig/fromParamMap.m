@@ -25,6 +25,8 @@ else
 end
 
 cfg_struct = struct();
+cfg_struct.fasta_file_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_FASTA_FILE_PATH, '', 'CSiteLevelPipelineConfig');
+cfg_struct.regular_express = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_REGULAR_EXPRESS, '', 'CSiteLevelPipelineConfig');
 cfg_struct.input_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_PEP_LEVEL_FILE_PATH, pep_default, 'CSiteLevelPipelineConfig');
 cfg_struct.output_intere_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_OUTPUT_INTERE_PATH, intere_default, 'CSiteLevelPipelineConfig');
 cfg_struct.output_unintere_path = CParamMapUtils.getOptional(task_param_map, CPTMdecoderWorkflowParamKeys.PARAM_OUTPUT_UNINTERE_PATH, unintere_default, 'CSiteLevelPipelineConfig');

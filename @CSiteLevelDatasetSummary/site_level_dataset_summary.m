@@ -135,11 +135,8 @@ while ~feof(fin)
             protein_site_tokens = cell(1, numel(selected_protein_contexts));
             for idx_ctx = 1:numel(selected_protein_contexts)
                 mod_prot_pos = selected_protein_contexts(idx_ctx).start_pos + positions_seq(i_mod) - 1;
-                if obj.m_site_position_count_initial_m
-                    site_pos_curr = mod_prot_pos;
-                else
-                    site_pos_curr = mod_prot_pos - 1;
-                end
+                site_pos_curr = mod_prot_pos - obj.m_site_position_numbering.getOffset( ...
+                    selected_protein_contexts(idx_ctx).protein_name);
 
                 protein_site_tokens{idx_ctx} = [selected_protein_contexts(idx_ctx).protein_name, ...
                     ',', num2str(site_pos_curr), ';'];

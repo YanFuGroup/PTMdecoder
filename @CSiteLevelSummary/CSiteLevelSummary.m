@@ -12,6 +12,7 @@ classdef CSiteLevelSummary
         m_mod_name_abbr;        % Modification name and correspongding abbreviation (map)
         m_ignore_strings;       % Ignore strings, using for ignore heavy label modification strings in SILAC data
         m_site_position_count_initial_m; % logical: whether the first initial M is counted in site numbering
+        m_site_position_numbering; % Shared sequence-backed reporting coordinate policy
 
         % Format
         m_column_idxs;          % Column indices of interested sites
@@ -61,6 +62,8 @@ classdef CSiteLevelSummary
             obj.m_mod_name_abbr = config.mod_name_abbr;
             obj.m_ignore_strings = config.ignore_strings;
             obj.m_site_position_count_initial_m = config.site_position_count_initial_m;
+            obj.m_site_position_numbering = CSitePositionNumbering( ...
+                config.site_position_count_initial_m, config.fasta_file_path, config.regular_express);
             obj.m_column_idxs = config.column_idxs;
         end
         

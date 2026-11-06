@@ -15,6 +15,7 @@ classdef CTraceabilityReportService < handle
         m_cfg
         m_mgf_dataset_io
         m_dataset_charge_maps
+        m_site_position_numbering
     end
 
     methods
@@ -28,6 +29,8 @@ classdef CTraceabilityReportService < handle
                     'Expected a config struct.');
             end
             obj.m_cfg = obj.finalizeConfig(cfg);
+            obj.m_site_position_numbering = CSitePositionNumbering( ...
+                obj.m_cfg.site_position_count_initial_m, obj.m_cfg.fasta_file_path, obj.m_cfg.regular_express);
             obj.m_mgf_dataset_io = CMgfDatasetIO(obj.m_cfg.spec_dir_path);
             obj.m_dataset_charge_maps = containers.Map('KeyType', 'char', 'ValueType', 'any');
         end
@@ -398,9 +401,7 @@ classdef CTraceabilityReportService < handle
             protein_site_tokens = cell(1, numel(protein_contexts));
             for idx_ctx = 1:numel(protein_contexts)
                 site_pos = protein_contexts(idx_ctx).start_pos + local_pos - 1;
-                if ~obj.m_cfg.site_position_count_initial_m
-                    site_pos = site_pos - 1;
-                end
+                site_pos = site_pos - obj.m_site_position_numbering.getOffset(protein_contexts(idx_ctx).protein_name);
                 protein_site_tokens{idx_ctx} = [protein_contexts(idx_ctx).protein_name, ...
                     ',', num2str(site_pos), ';'];
             end
@@ -447,6 +448,8 @@ classdef CTraceabilityReportService < handle
             % Output:
             %   cfg (struct)
             %       Validated configuration with normalized ignore_strings.
+            if ~isfield(cfg, 'fasta_file_path') || isempty(cfg.fasta_file_path); cfg.fasta_file_path = ''; end
+            if ~isfield(cfg, 'regular_express') || isempty(cfg.regular_express); cfg.regular_express = ''; end
             required_fields = {'spec_dir_path', 'msms_res_path', 'pep_level_file_path', ...
                 'output_trace_peptide_msms_path', 'output_trace_site_peptide_path', ...
                 'mod_name_abbr', 'ignore_strings', 'site_position_count_initial_m', 'column_idxs'};

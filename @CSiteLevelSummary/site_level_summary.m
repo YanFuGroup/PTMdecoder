@@ -76,6 +76,7 @@ while ~feof(fin)
             if isKey(obj.m_protein_name_abbr, char(keyValue(1)))
                 % Keep legacy strategy: use the first resolvable hit.
                 selected_abbr_protein = obj.m_protein_name_abbr(char(keyValue(1)));
+                selected_protein_name = char(keyValue(1));
                 selected_start_pos_protein = str2double(char(keyValue(2)));
                 break;
             end
@@ -157,11 +158,7 @@ while ~feof(fin)
                             modified_peptides, '" is out of range.']);
                     end
                     mod_prot_pos(i) = selected_start_pos_protein + positions_seq(i) - 1;
-                    if obj.m_site_position_count_initial_m
-                        site_pos = mod_prot_pos(i);
-                    else
-                        site_pos = mod_prot_pos(i) - 1;
-                    end
+                    site_pos = mod_prot_pos(i) - obj.m_site_position_numbering.getOffset(selected_protein_name);
                     site_name = [selected_abbr_protein, mod_specificity{i} , num2str(site_pos), abbr_mod];
                 end
 

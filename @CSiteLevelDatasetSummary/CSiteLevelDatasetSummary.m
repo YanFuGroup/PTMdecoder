@@ -10,6 +10,7 @@ classdef CSiteLevelDatasetSummary
         m_mod_name_abbr                      % Modification full name -> abbreviation map
         m_ignore_strings                     % Strings to remove from modified peptide sequence
         m_site_position_count_initial_m      % logical: whether the first initial M is counted in site numbering
+        m_site_position_numbering            % Shared sequence-backed reporting coordinate policy
         m_column_idxs                        % Column index settings
 
         % Matrix result
@@ -38,6 +39,8 @@ classdef CSiteLevelDatasetSummary
             obj.m_mod_name_abbr = config.mod_name_abbr;
             obj.m_ignore_strings = config.ignore_strings;
             obj.m_site_position_count_initial_m = config.site_position_count_initial_m;
+            obj.m_site_position_numbering = CSitePositionNumbering( ...
+                config.site_position_count_initial_m, config.fasta_file_path, config.regular_express);
             obj.m_column_idxs = config.column_idxs;
 
             obj.m_site_names = {};
