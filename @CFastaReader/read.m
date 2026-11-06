@@ -1,11 +1,18 @@
-function mapProt = read(obj)
+function mapProt = read(obj, reject_conflicting_sequences)
 % Read sequence from file to mapProt
 % Input:
 %   obj (CFastaReader)
 %       FASTA reader instance
+%   reject_conflicting_sequences (logical, optional; default false)
+%       Reject different sequences resolving to the same protein name.
+%       Site numbering opts in; existing callers retain last-entry-wins.
 % Output:
 %   mapProt (containers.Map)
 %       key: protein name, value: sequence string
+
+if nargin < 2
+    reject_conflicting_sequences = false;
+end
 
 % Initialize map
 mapProt = containers.Map('KeyType', 'char', 'ValueType', 'char');
@@ -14,6 +21,7 @@ fin = fopen(obj.m_strFilePath, 'r');
 if fin <= 0
     error(['Can not open file: ', obj.m_strFilePath]);
 end
+cleanup_file = onCleanup(@() fclose(fin)); %#ok<NASGU>
 
 currentProtName = '';
 currentSeq = '';
@@ -27,7 +35,7 @@ while ~feof(fin)
     if strLine(1) == '>'
         % Save previous protein if it exists
         if ~isempty(currentProtName)
-            mapProt(currentProtName) = currentSeq;
+            storeSequence(mapProt, currentProtName, currentSeq, reject_conflicting_sequences);
         end
         
         % Extract protein name using regular expression
@@ -47,8 +55,16 @@ end
 
 % Save the last protein
 if ~isempty(currentProtName)
-    mapProt(currentProtName) = currentSeq;
+    storeSequence(mapProt, currentProtName, currentSeq, reject_conflicting_sequences);
 end
 
-fclose(fin);
+end
+
+function storeSequence(mapProt, name, sequence, reject_conflicts)
+% Check before assignment so conflicting evidence cannot be overwritten.
+if reject_conflicts && isKey(mapProt, name) && ~strcmp(mapProt(name), sequence)
+    error('CFastaReader:ConflictingProteinSequence', ...
+        'Conflicting FASTA sequences resolve to protein name "%s".', name);
+end
+mapProt(name) = sequence;
 end

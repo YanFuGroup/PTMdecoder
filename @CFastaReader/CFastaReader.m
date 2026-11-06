@@ -18,6 +18,6 @@ classdef CFastaReader
         end
         
         % Read sequence from file to m_mapProt
-        mapProt = read(obj);
+        mapProt = read(obj, reject_conflicting_sequences);
     end
 end

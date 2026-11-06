@@ -61,6 +61,19 @@ verifyEqual(testCase, mapProt('P11111'), 'AAAAA');
 end
 
 
+function testDuplicateNamesKeepLegacyDefault(testCase)
+% Strict site-numbering reads must not change existing search callers.
+filename = [tempname, '.fasta'];
+testCase.addTeardown(@() delete(filename));
+fid = fopen(filename, 'w');
+fprintf(fid, '>P1\nMAK\n>P1\nAK\n');
+fclose(fid);
+reader = CFastaReader(filename, '^>(\S+)');
+map = reader.read();
+testCase.verifyEqual(map('P1'), 'AK');
+end
+
+
 function testFileNotFound(testCase)
 % TESTFILENOTFOUND Validate missing file handling
 % Input:

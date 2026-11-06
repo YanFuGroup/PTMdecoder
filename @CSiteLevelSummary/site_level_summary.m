@@ -49,6 +49,7 @@ fin = fopen(obj.m_input_path);
 if fin < 0
     error(['Can not open the peptide level result file: "', obj.m_input_path, '"']);
 end
+cleanup_file = onCleanup(@() fclose(fin)); %#ok<NASGU>
 
 CLogger.info('[CSiteLevelSummary:site_level_summary] Start summarizing. input=%s', obj.m_input_path);
 
@@ -76,6 +77,7 @@ while ~feof(fin)
             if isKey(obj.m_protein_name_abbr, char(keyValue(1)))
                 % Keep legacy strategy: use the first resolvable hit.
                 selected_abbr_protein = obj.m_protein_name_abbr(char(keyValue(1)));
+                selected_protein_name = char(keyValue(1));
                 selected_start_pos_protein = str2double(char(keyValue(2)));
                 break;
             end
@@ -140,6 +142,8 @@ while ~feof(fin)
                     continue;
                 end
 
+                % Require sequence evidence for terminal-only output as well.
+                site_offset = obj.m_site_position_numbering.getOffset(selected_protein_name);
                 % record the specificity of the modification
                 mod_specificity{i} = modified_peptides(positions_str(i)-1);
                 if mod_specificity{i} == '_'
@@ -157,11 +161,7 @@ while ~feof(fin)
                             modified_peptides, '" is out of range.']);
                     end
                     mod_prot_pos(i) = selected_start_pos_protein + positions_seq(i) - 1;
-                    if obj.m_site_position_count_initial_m
-                        site_pos = mod_prot_pos(i);
-                    else
-                        site_pos = mod_prot_pos(i) - 1;
-                    end
+                    site_pos = mod_prot_pos(i) - site_offset;
                     site_name = [selected_abbr_protein, mod_specificity{i} , num2str(site_pos), abbr_mod];
                 end
 
@@ -199,8 +199,6 @@ end
 result_output_string(result_output_length+1:end) = [];
 result_output_sum(result_output_length+1:end) = [];
 result_uninterested_string(result_uninterested_length+1:end) = [];
-
-fclose(fin);
 
 % update the members of obj
 obj.m_result_output_index = result_output_index;

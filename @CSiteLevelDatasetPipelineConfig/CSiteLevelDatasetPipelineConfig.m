@@ -7,6 +7,8 @@ classdef CSiteLevelDatasetPipelineConfig
         mod_name_abbr                        % containers.Map: modification full name -> abbreviation
         ignore_strings                       % 1 x M cell: strings ignored in modified peptide sequence
         site_position_count_initial_m        % logical: whether the first initial M is counted in site numbering
+        fasta_file_path                      % Required when site_position_count_initial_m is false
+        regular_express                      % Same protein-name extraction rule as upstream mapping
         column_idxs                          % struct: column index settings (icol_seq, icol_dataset, icol_auc)
     end
 
@@ -30,6 +32,8 @@ classdef CSiteLevelDatasetPipelineConfig
             obj.mod_name_abbr = cfg.mod_name_abbr;
             obj.ignore_strings = cfg.ignore_strings;
             obj.site_position_count_initial_m = cfg.site_position_count_initial_m;
+            obj.fasta_file_path = cfg.fasta_file_path;
+            obj.regular_express = cfg.regular_express;
             obj.column_idxs = cfg.column_idxs;
         end
     end
@@ -41,6 +45,8 @@ classdef CSiteLevelDatasetPipelineConfig
     methods (Static, Access = private)
         function cfg = finalize(cfg)
             if ~isfield(cfg, 'input_path'); cfg.input_path = ''; end
+            if ~isfield(cfg, 'fasta_file_path') || isempty(cfg.fasta_file_path); cfg.fasta_file_path = ''; end
+            if ~isfield(cfg, 'regular_express') || isempty(cfg.regular_express); cfg.regular_express = ''; end
             if ~isfield(cfg, 'output_site_dataset_matrix_path'); cfg.output_site_dataset_matrix_path = ''; end
             if ~isfield(cfg, 'mod_name_abbr') || isempty(cfg.mod_name_abbr); cfg.mod_name_abbr = containers.Map; end
             if ~isfield(cfg, 'ignore_strings') || isempty(cfg.ignore_strings); cfg.ignore_strings = {}; end

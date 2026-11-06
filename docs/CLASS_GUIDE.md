@@ -19,7 +19,7 @@ Use this guide as a "which class do I need?" index.
 | IMP group aggregation | `CIMPGroupAggregator` | `CIMPGroup`, `CIMPProcessingExecutor` |
 | Draw XIC plots | `CXICDrawService`, `CIMPQuantPlotter` | `CXICDrawServiceConfig` |
 | Draw one MS/MS matching plot | `CReviewPSM.plotMatch` | optional plot options struct |
-| Site-level summaries | `CSiteLevelSummary`, `CSiteLevelDatasetSummary` | `CSiteLevel*Config` |
+| Site-level summaries | `CSiteLevelSummary`, `CSiteLevelDatasetSummary` | `CSiteLevel*Config`, `CSitePositionNumbering` |
 | Pairwise comparison output | `CMergeEachPair`, `CMergePairs` | `CMergeEachPairConfig`, `CMergePairsConfig` |
 | Logging | `CLogger` | `CLoggerCore` |
 | Path handling | `CPathResolver` | stage config output path fields |
@@ -92,6 +92,13 @@ utilities.
 - `CIMPGroupAggregator` groups IMP candidates within each raw file by mass and
   charge. Each aggregated `CIMPGroup` is then processed by
   `CIMPProcessingExecutor` for quantification, re-quantification, or drawing.
+
+### Site-Level Coordinate Numbering
+
+`CSitePositionNumbering` owns the shared coordinate-offset policy for site
+summaries and traceability reports. See the
+[class documentation](../@CSitePositionNumbering/CSitePositionNumbering.m) for
+configuration and boundary behavior.
 
 ### Alignment
 
