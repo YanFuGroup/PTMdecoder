@@ -90,14 +90,6 @@ For more information about PTMdecoder and more test data, please see [PTMdecoder
 
 # Developer Notes
 
-For site reports, `site_position_count_initial_m=0` excludes the initial M only
-when the corresponding protein sequence confirms it. Supply the same
-`fasta_file_path` and `regular_express` used for peptide-to-protein mapping.
-Missing sequence evidence preserves original coordinates and produces a warning;
-`site_position_count_initial_m=1` preserves all coordinates without reading FASTA.
-See the [site-numbering contract](docs/CLASS_GUIDE.md#site-level-coordinate-numbering)
-for defaults and terminal-site behavior.
-
 Developer-facing architecture notes are kept under [docs](docs/README.md):
 
 - [Architecture Overview](docs/ARCHITECTURE.md) explains the current workflow

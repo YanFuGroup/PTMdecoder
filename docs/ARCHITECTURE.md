@@ -42,13 +42,6 @@ The currently supported stage names are defined in `CPTMdecoderWorkflowConfig`:
 5. Result objects are written through dedicated IO classes such as
    `CMS2ResultIO`, `CIMPQuantResultIO`, and `CFdrFilteredResultIO`.
 
-Site summaries and the traceability sidecar share `CSitePositionNumbering` for
-optional initial-M coordinate exclusion. It reads the configured upstream FASTA
-through `CFastaReader` and resolves each original protein ID independently; the
-peptide report itself contains no full protein sequence. See the
-[site-numbering contract](CLASS_GUIDE.md#site-level-coordinate-numbering) for
-missing evidence, conflicting sequences, and terminal coordinate behavior.
-
 ## Layering
 
 | Layer | Classes |

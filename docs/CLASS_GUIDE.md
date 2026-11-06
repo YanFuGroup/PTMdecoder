@@ -95,44 +95,25 @@ utilities.
 
 ### Site-Level Coordinate Numbering
 
-`CSitePositionNumbering` supplies the same sequence-backed coordinate offset to
-`CSiteLevelSummary`, `CSiteLevelDatasetSummary`, and `CTraceabilityReportService`.
-The peptide report stores protein names and peptide start positions, not full
-protein sequences. When excluding initial M, pass `fasta_file_path` and
-`regular_express` through each stage config (or the parameter file), using the
-same FASTA and name extraction rule that produced the peptide report. Lookup
-uses the original protein ID, before any display abbreviation.
+`CSitePositionNumbering` handles reporting coordinates for `CSiteLevelSummary`,
+`CSiteLevelDatasetSummary`, and `CTraceabilityReportService`.
 
-- `site_position_count_initial_m=true` preserves the input coordinate convention
-  and does not read or validate FASTA settings. It remains the default for the
-  dataset matrix and traceability reports.
-- `false` subtracts one only when the matching full protein sequence begins
-  with M (case-insensitive). It remains the legacy site-report default. An
-  internal peptide starting with M is not evidence of an initial protein M.
-- An omitted FASTA, missing protein ID, or empty protein sequence retains that
-  protein's original coordinates. `CLogger` warns once per affected protein per
-  numbering instance; retain these diagnostics when interpreting mixed-evidence
-  reports. Existing logger settings control whether warnings are emitted.
-- An explicitly configured unavailable/unreadable FASTA or missing/invalid
-  `regular_express` raises an error when `false` is selected. The existing
-  `CFastaReader` header-name fallback is preserved; unmatched report IDs are
-  treated as missing sequence evidence rather than guessed from peptides.
-- Site numbering calls `CFastaReader.read(true)` to reject different sequences
-  resolving to the same protein name, including conflicts between two non-M
-  sequences. Identical duplicate entries are allowed. Other FASTA callers keep
-  the default last-entry-wins behavior.
+- `site_position_count_initial_m=true` preserves coordinates without reading
+  FASTA; this is the matrix and traceability default.
+- `false` subtracts one only when the full protein sequence starts with M
+  (case-insensitive); this is the site-list default. Supply `fasta_file_path`
+  and `regular_express` matching the upstream protein mapping.
+- Lookup uses the original protein ID. Omitted FASTA, absent IDs, or empty
+  sequences preserve coordinates with a per-protein `CLogger` warning.
+  Configured unreadable FASTA, missing/invalid name rules, or conflicting
+  sequences for one ID raise errors. Identical duplicates are accepted;
+  strict conflict checking is specific to site numbering.
 
-Multi-protein matrix and trace keys apply the rule independently to every
-protein context. The legacy report still selects the first protein with an
-abbreviation mapping. Output columns and aggregation rules are unchanged.
-
-This option changes reporting coordinates only; it does not assess or infer
-initiator-M cleavage. Existing terminal conventions are retained: the legacy
-report uses unnumbered `N-term`/`C-term` labels, while matrix/trace coordinates
-place N-term before the peptide's first residue and C-term after its last.
-Consequently, excluding a confirmed initial M can produce `M0` and an N-term
-coordinate of `-1` for a peptide beginning at protein position 1. These values
-are deliberate reporting offsets, not evidence of a biological cleavage event.
+Matrix/trace outputs check each protein independently; the site-list report
+uses its first mapped protein. This controls numbering, not M-cleavage inference.
+Site-list terminal labels are unnumbered. Matrix/trace N- and C-term coordinates
+lie before and after the peptide, respectively; excluding initial M can yield
+M0 or N-term -1 for a peptide starting at protein position 1.
 
 ### Alignment
 
