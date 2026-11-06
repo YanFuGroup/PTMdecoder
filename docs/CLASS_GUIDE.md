@@ -95,25 +95,10 @@ utilities.
 
 ### Site-Level Coordinate Numbering
 
-`CSitePositionNumbering` handles reporting coordinates for `CSiteLevelSummary`,
-`CSiteLevelDatasetSummary`, and `CTraceabilityReportService`.
-
-- `site_position_count_initial_m=true` preserves coordinates without reading
-  FASTA; this is the matrix and traceability default.
-- `false` subtracts one only when the full protein sequence starts with M
-  (case-insensitive); this is the site-list default. Supply `fasta_file_path`
-  and `regular_express` matching the upstream protein mapping.
-- Lookup uses the original protein ID. Omitted FASTA, absent IDs, or empty
-  sequences preserve coordinates with a per-protein `CLogger` warning.
-  Configured unreadable FASTA, missing/invalid name rules, or conflicting
-  sequences for one ID raise errors. Identical duplicates are accepted;
-  strict conflict checking is specific to site numbering.
-
-Matrix/trace outputs check each protein independently; the site-list report
-uses its first mapped protein. This controls numbering, not M-cleavage inference.
-Site-list terminal labels are unnumbered. Matrix/trace N- and C-term coordinates
-lie before and after the peptide, respectively; excluding initial M can yield
-M0 or N-term -1 for a peptide starting at protein position 1.
+`CSitePositionNumbering` owns the shared coordinate-offset policy for site
+summaries and traceability reports. See the
+[class documentation](../@CSitePositionNumbering/CSitePositionNumbering.m) for
+configuration and boundary behavior.
 
 ### Alignment
 

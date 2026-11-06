@@ -1,6 +1,30 @@
 classdef CSitePositionNumbering < handle
     % Shared, sequence-backed coordinate offset for site report writers.
     % This changes reporting coordinates only; it does not infer M cleavage.
+    %
+    % Configuration:
+    %   count_initial_m is supplied by site_position_count_initial_m.
+    %   true returns zero offsets without reading or validating FASTA settings;
+    %   this is the matrix and traceability default. false subtracts one only
+    %   for a full protein sequence starting with M (case-insensitive), and is
+    %   the site-list default. Supply fasta_file_path and regular_express from
+    %   the upstream protein mapping; lookup uses the original protein ID.
+    %
+    % Missing sequence evidence:
+    %   Omitted FASTA, absent IDs, and empty sequences return zero offsets and
+    %   log one warning per protein per instance through CLogger. When false
+    %   and a FASTA path is supplied, unavailable/unreadable files, missing or
+    %   invalid name rules, and conflicting sequences for one ID raise errors.
+    %   Identical duplicates are accepted. Strict duplicate checking is opt-in
+    %   for these reports; other CFastaReader callers retain their defaults.
+    %
+    % Report integration:
+    %   CSiteLevelDatasetSummary and CTraceabilityReportService query each
+    %   protein independently. CSiteLevelSummary queries its first mapped
+    %   protein and uses unnumbered terminal labels. Matrix/trace N- and C-term
+    %   coordinates lie before and after the peptide, respectively. Excluding
+    %   initial M can yield M0 or N-term -1 for a peptide starting at protein
+    %   position 1; this class does not clamp or reinterpret those coordinates.
 
     properties (Access = private)
         count_initial_m
