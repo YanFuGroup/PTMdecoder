@@ -9,6 +9,9 @@ classdef CSitePositionNumbering < handle
     %   for a full protein sequence starting with M (case-insensitive), and is
     %   the site-list default. Supply fasta_file_path and regular_express from
     %   the upstream protein mapping; lookup uses the original protein ID.
+    %   The expression is passed unchanged to the FASTA reader. Validation uses
+    %   regexp syntax, allowing literal pipes in character classes but rejecting
+    %   malformed expressions.
     %
     % Required sequence evidence when false:
     %   Omitted FASTA is a configuration error. Referenced IDs must exist and
@@ -85,29 +88,93 @@ classdef CSitePositionNumbering < handle
     methods (Static, Access = private)
         function validateRegularExpression(expression)
             % Use the reader's regex dialect, including backreferences.
-            % regexp otherwise tolerates malformed syntax as literal text.
             previous_state = warning;
+            previous_backtrace = warning('query', 'backtrace');
+            previous_verbose = warning('query', 'verbose');
             [previous_message, previous_id] = lastwarn;
             cleanup = onCleanup(@() CSitePositionNumbering.restoreWarnings( ...
-                previous_state, previous_message, previous_id)); %#ok<NASGU>
+                previous_state, previous_message, previous_id, ...
+                previous_backtrace, previous_verbose)); %#ok<NASGU>
             warning('on', 'all');
             warning('off', 'backtrace');
+            warning('on', 'verbose');
             lastwarn('');
             try
-                regexp('>PTMdecoder_regex_validation', expression, 'tokens', 'once', 'warnings');
+                diagnostics = evalc(['regexp(''>PTMdecoder_regex_validation'', ', ...
+                    'expression, ''tokens'', ''once'', ''warnings'');']);
             catch cause
                 error('CSitePositionNumbering:InvalidRegularExpression', ...
                     'Invalid FASTA protein-name regular expression: %s', cause.message);
             end
-            [message, id] = lastwarn;
-            if startsWith(id, 'MATLAB:REGEXP:')
-                error('CSitePositionNumbering:InvalidRegularExpression', ...
-                    'Invalid FASTA protein-name regular expression: %s', message);
+            % Inspect every diagnostic: lastwarn can hide earlier syntax errors.
+            % Remove only MATLAB's warning-off hyperlinks, preserving expression
+            % text such as named groups. Verbose IDs do not depend on locale.
+            diagnostics = regexprep(diagnostics, ...
+                '<a href="matlab:warning off [^"]*">|</a>', '');
+            diagnostic_ids = regexp(diagnostics, ...
+                'warning off (MATLAB:REGEXP:[A-Za-z0-9_]+)', 'tokens');
+            [~, last_id] = lastwarn;
+            if isempty(diagnostic_ids) && ~startsWith(last_id, 'MATLAB:REGEXP:')
+                return;
+            end
+            if ~isempty(diagnostic_ids)
+                ids = cellfun(@(x) x{1}, diagnostic_ids, 'UniformOutput', false);
+                if all(strcmp(ids, 'MATLAB:REGEXP:ErrorLiteral'))
+                    % ErrorLiteral also describes malformed ')' or '**'. Only
+                    % exempt diagnostics pointing to a pipe inside a character
+                    % class; do not rewrite the expression or stop parsing early.
+                    expression_text = char(expression);
+                    markers = regexp(diagnostics, ['\r?\n\t', ...
+                        regexptranslate('escape', expression_text), ...
+                        '\r?\n\t( *)\S'], 'tokens');
+                    positions = cellfun(@(x) numel(x{1}) + 1, markers);
+                    allowed = CSitePositionNumbering.literalPipePositions(expression_text);
+                    if numel(positions) == numel(ids) && ...
+                            all(positions <= numel(allowed)) && all(allowed(positions))
+                        return;
+                    end
+                end
+                last_id = ids{1};
+            end
+            error('CSitePositionNumbering:InvalidRegularExpression', ...
+                'Invalid FASTA protein-name regular expression "%s" (%s).', ...
+                expression, last_id);
+        end
+
+        function positions = literalPipePositions(expression)
+            % Classify diagnostic locations, leaving syntax validation to regexp.
+            positions = false(size(expression));
+            in_class = false;
+            first_member = false;
+            idx = 1;
+            while idx <= numel(expression)
+                ch = expression(idx);
+                if ch == '\'
+                    idx = idx + 2;
+                    first_member = false;
+                    continue;
+                end
+                if ~in_class && ch == '['
+                    in_class = true;
+                    first_member = true;
+                elseif in_class
+                    if ch == ']' && ~first_member
+                        in_class = false;
+                    elseif ch == '|'
+                        positions(idx) = true;
+                    end
+                    if ~(first_member && ch == '^' && expression(idx - 1) == '[')
+                        first_member = false;
+                    end
+                end
+                idx = idx + 1;
             end
         end
 
-        function restoreWarnings(state, message, id)
+        function restoreWarnings(state, message, id, backtrace, verbose)
             warning(state);
+            warning(backtrace);
+            warning(verbose);
             lastwarn(message, id);
         end
     end
